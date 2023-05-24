@@ -1,73 +1,115 @@
 package com.wso2.swamedia.reportusageapi.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.wso2.swamedia.reportusageapi.dto.MonthlySummary;
-import com.wso2.swamedia.reportusageapi.dto.MonthlySummaryDetails;
-import com.wso2.swamedia.reportusageapi.dto.ResourceSummary;
-import com.wso2.swamedia.reportusageapi.dto.ResourceSummaryDetails;
+import com.wso2.swamedia.reportusageapi.dto.ApiResponse;
 import com.wso2.swamedia.reportusageapi.service.ReportUsageService;
 
 @RestController
 @RequestMapping("/report")
 public class ReportUsageController {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(ReportUsageController.class);
+
 	@Autowired
 	private ReportUsageService reportUsageService;
 
 	@GetMapping("/monthly-summary")
-	public ResponseEntity<MonthlySummary> getMonthlySummary(@RequestParam(required = false) Integer year,
-			@RequestParam(required = false) Integer month, @RequestParam(required = false) String application,
+	public ResponseEntity<?> getMonthlySummary(@RequestParam(required = false) Integer year,
+			@RequestParam(required = false) Integer month, @RequestParam(required = false) String applicationId,
 			@RequestParam(required = false) String apiId, @RequestParam(required = false) String username,
 			@RequestParam(required = false) String search, @RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size, Authentication authentication) {
-		System.out.println(authentication.getName());
-		return ResponseEntity.ok(reportUsageService.getMonthlyReport(year, month, application, apiId,
-				authentication.getName(), page, size, search));
+			@RequestParam(value = "size", defaultValue = "10") int size) {
+
+		LOGGER.info("Received request for monthly summary");
+		try {
+
+			ApiResponse<?> response = ApiResponse.success("Monthly summary retrieval successful.", reportUsageService
+					.getMonthlyReport(year, month, applicationId, apiId, username, page, size, search));
+			LOGGER.info("Monthly summary retrieval completed");
+
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			ApiResponse<?> responseError = ApiResponse.error(e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseError);
+		}
+
 	}
 
 	@GetMapping("/monthly-summary/details")
-	public ResponseEntity<Page<MonthlySummaryDetails>> getApiDataUsage(
-			@RequestParam(value = "applicationId") String applicationId, @RequestParam(value = "apiId") String apiId,
+	public ResponseEntity<?> getApiDataUsage(@RequestParam(value = "applicationId") String applicationId,
+			@RequestParam(value = "apiId") String apiId,
 			@RequestParam(value = "search", required = false) String search,
 			@RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size, Authentication authentication) {
-		Pageable pageable = PageRequest.of(page, size);
-		Page<MonthlySummaryDetails> apiDataPage = reportUsageService.getApiDataUsage(authentication.getName(),
-				applicationId, apiId, search, pageable);
+			@RequestParam(value = "size", defaultValue = "10") int size,
+			@RequestParam(required = false) String username) {
 
-		return ResponseEntity.ok(apiDataPage);
+		LOGGER.info("Received request for API Monthly detail log");
+		try {
+			Pageable pageable = PageRequest.of(page, size);
+			ApiResponse<?> response = ApiResponse.success("Monthly detail log retrieval successful.",
+					reportUsageService.getMonthlyDetailLog(username, applicationId, apiId, search, pageable));
+
+			LOGGER.info("API Monthly detail log retrieval completed");
+
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			ApiResponse<?> responseError = ApiResponse.error(e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseError);
+		}
 	}
 
 	@GetMapping("/resource-summary")
-	public ResponseEntity<ResourceSummary> getResourceSummary(@RequestParam(required = false) Integer year,
+	public ResponseEntity<?> getResourceSummary(@RequestParam(required = false) Integer year,
 			@RequestParam(required = false) Integer month, @RequestParam(required = false) String resource,
-			@RequestParam(required = false) String apiId, @RequestParam(required = false) String username,
+			@RequestParam(required = false) String apiId, @RequestParam(required = true) String username,
 			@RequestParam(required = false) String search, @RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size, Authentication authentication) {
-		System.out.println(authentication.getName());
-		return ResponseEntity.ok(reportUsageService.getResourceReport(year, month, resource, apiId,
-				authentication.getName(), page, size, search));
+			@RequestParam(value = "size", defaultValue = "10") int size) {
+
+		LOGGER.info("Received request for resource summary");
+		try {
+			ApiResponse<?> response = ApiResponse.success("Resource summary retrieval successful.",
+					reportUsageService.getResourceReport(year, month, resource, apiId, username, page, size, search));
+
+			LOGGER.info("Resource summary retrieval completed");
+
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			ApiResponse<?> responseError = ApiResponse.error(e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseError);
+		}
 	}
-	
+
 	@GetMapping("/resource-summary/details")
-	public ResponseEntity<Page<ResourceSummaryDetails>> getResourceDetailLog(
-			@RequestParam(value = "resource") String resource, @RequestParam(value = "apiId") String apiId,
+	public ResponseEntity<?> getResourceDetailLog(@RequestParam(value = "resource") String resource,
+			@RequestParam(value = "apiId") String apiId,
 			@RequestParam(value = "search", required = false) String search,
 			@RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size, Authentication authentication) {
-		Pageable pageable = PageRequest.of(page, size);
-		Page<ResourceSummaryDetails> apiDataPage = reportUsageService.getDetailLogResourceSum(authentication.getName(), resource, apiId, search, pageable);
+			@RequestParam(value = "size", defaultValue = "10") int size,
+			@RequestParam(required = true) String username) {
 
-		return ResponseEntity.ok(apiDataPage);
+		LOGGER.info("Received request for resource detail log");
+		try {
+			Pageable pageable = PageRequest.of(page, size);
+			ApiResponse<?> response = ApiResponse.success("Resource detail log retrieval successful.",
+					reportUsageService.getDetailLogResourceSum(username, resource, apiId, search, pageable));
+
+			LOGGER.info("Resource detail log retrieval completed");
+
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			ApiResponse<?> responseError = ApiResponse.error(e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseError);
+		}
 	}
 }
