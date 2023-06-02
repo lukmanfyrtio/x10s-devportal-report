@@ -90,7 +90,7 @@ public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, Stri
 
 	// resource summary table list
 	@Query(value = "SELECT API_NAME ,API_VERSION ,API_RESOURCE_TEMPLATE,API_METHOD "
-			+ ",COUNT(*) as request_count,API_ID "
+			+ ",COUNT(*) as request_count,API_ID ,APPLICATION_ID,APPLICATION_NAME "
 			+ "FROM DATA_USAGE_API " 
 			+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner )"
 			+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
@@ -99,7 +99,7 @@ public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, Stri
 			+ "AND (:resource IS NULL OR API_RESOURCE_TEMPLATE = :resource) "
 			+ "AND (:search IS NULL OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :search, '%')) "
 			+ "OR LOWER(API_RESOURCE_TEMPLATE) LIKE LOWER(CONCAT('%', :search, '%'))) "
-			+ "GROUP BY API_NAME , API_VERSION , API_RESOURCE_TEMPLATE , API_METHOD,API_ID " 
+			+ "GROUP BY API_NAME , API_VERSION , API_RESOURCE_TEMPLATE , API_METHOD,API_ID,APPLICATION_ID,APPLICATION_NAME " 
 			+ "ORDER "
 			+ " BY request_count DESC", 
 			countQuery = "SELECT COUNT(DISTINCT API_RESOURCE_TEMPLATE,API_ID) "
@@ -118,7 +118,8 @@ public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, Stri
 
 	@Query(value = "SELECT  APPLICATION_NAME ,API_NAME,COUNT(*) as request_count, "
 			+ "COUNT(CASE WHEN PROXY_RESPONSE_CODE != 200 THEN 1 END) AS count_not_200,COUNT(CASE WHEN PROXY_RESPONSE_CODE = 200 THEN 1 END) AS count_200,"
-			+ "API_ID, APPLICATION_ID " + "FROM DATA_USAGE_API "
+			+ "API_ID, APPLICATION_ID ,REQUEST_TIMESTAMP,APPLICATION_OWNER " 
+			+ " FROM DATA_USAGE_API "
 			+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner )" + "AND API_RESOURCE_TEMPLATE = :resource "
 			+ "AND API_ID = :apiId " 
 			+ "   AND (:searchFilter IS NULL OR LOWER(APPLICATION_NAME) LIKE LOWER(CONCAT('%', :searchFilter, '%'))  "
@@ -127,7 +128,9 @@ public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, Stri
 			+ "  APPLICATION_ID ," 
 			+ "  APPLICATION_NAME ,"
 			+ "  API_NAME, " 
-			+ "  API_ID "
+			+ "  API_ID ,"
+			+ "REQUEST_TIMESTAMP,"
+			+ "APPLICATION_OWNER "
 			+ "ORDER BY request_count desc", 
 			countQuery = " SELECT COUNT(DISTINCT APPLICATION_ID)"
 					+ "FROM DATA_USAGE_API " 

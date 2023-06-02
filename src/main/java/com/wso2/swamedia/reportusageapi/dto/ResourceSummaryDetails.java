@@ -10,10 +10,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ResourceSummaryDetails {
+	private String applicationId;
 	private String applicationName;
+	private String apiId;
+	private String apiName;
 	private BigInteger requestCount;
 	private BigInteger responseOK;
 	private BigInteger responseNOK;
-	private String apiId;
+	private String applicationOwner;
+	private String organization;
+
 
 }

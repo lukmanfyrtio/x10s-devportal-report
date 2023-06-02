@@ -27,6 +27,7 @@ public class MonthlySummary {
 		private String applicationOwner;
 		private BigInteger requestCount;
 		private String applicationId;
+		private String organization;
 
 	}
 
