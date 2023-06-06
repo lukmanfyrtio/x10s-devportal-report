@@ -41,18 +41,17 @@ public class DashboardService {
 
 	@Autowired
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-	
+
 	@Autowired
 	private DBUtilsBilling dbUtilsBilling;
 
-	public List<?> getTopTenApiUsage(String filter, String owner,int top) throws Exception {
+	public List<?> getTopTenApiUsage(String filter, String owner, int top) throws Exception {
 		String query = "";
 		List<LinkedHashMap<String, Object>> finalResult = new ArrayList<>();
 		switch (filter) {
 		case "today":
 			query = "SELECT 'today' as type,DATE_FORMAT(du.REQUEST_TIMESTAMP, '%Y-%m-%d %H') AS intervalData, "
-					+ "du.API_NAME, COUNT(*) AS total_usage " 
-					+ "FROM DATA_USAGE_API du "
+					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
 					+ "INNER JOIN (SELECT API_NAME, COUNT(*) AS Usage_Count " 
 					+ "            FROM DATA_USAGE_API "
 					+ "            WHERE DATE(REQUEST_TIMESTAMP) = CURDATE() " 
@@ -60,7 +59,9 @@ public class DashboardService {
 					+ "            ORDER BY Usage_Count DESC "
 					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME "
 					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) AND "
-					+ "DATE(du.REQUEST_TIMESTAMP) = CURDATE() " + "GROUP BY intervalData, du.API_NAME "
+					+ "DATE(du.REQUEST_TIMESTAMP) = CURDATE() " 
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+					+ "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
 			break;
 
@@ -70,10 +71,13 @@ public class DashboardService {
 					+ "INNER JOIN (SELECT API_NAME, COUNT(*) AS Usage_Count " 
 					+ "            FROM DATA_USAGE_API WHERE"
 					+ "			   YEARWEEK(REQUEST_TIMESTAMP) = YEARWEEK(CURDATE()) "
-					+ "            GROUP BY API_NAME " + "            ORDER BY Usage_Count DESC "
+					+ "            GROUP BY API_NAME " 
+					+ "            ORDER BY Usage_Count DESC "
 					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME "
 					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) AND "
-					+ "YEARWEEK(du.REQUEST_TIMESTAMP) = YEARWEEK(CURDATE()) " + "GROUP BY intervalData, du.API_NAME "
+					+ "YEARWEEK(du.REQUEST_TIMESTAMP) = YEARWEEK(CURDATE()) "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
+					+ "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
 		case "month":
 			query = "SELECT 'month' as type,DATE_FORMAT(du.REQUEST_TIMESTAMP, '%Y-%m-%d') AS intervalData, "
@@ -85,22 +89,25 @@ public class DashboardService {
 					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME "
 					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) AND "
 					+ "YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
-					+ "AND MONTH(du.REQUEST_TIMESTAMP) = MONTH(CURDATE()) " + "GROUP BY intervalData, du.API_NAME "
+					+ "AND MONTH(du.REQUEST_TIMESTAMP) = MONTH(CURDATE()) "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
+					+ "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
 			break;
 
 		case "year":
 			query = "SELECT 'year' as type,DATE_FORMAT(du.REQUEST_TIMESTAMP, '%Y-%m') AS intervalData,"
-					+ "du.API_NAME, COUNT(*) AS total_usage " 
-					+ "FROM DATA_USAGE_API du "
+					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
 					+ "INNER JOIN (SELECT API_NAME, COUNT(*) AS Usage_Count " 
 					+ "            FROM DATA_USAGE_API "
-					+ "            WHERE " + "			   YEAR(REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
+					+ "            WHERE " 
+					+ "			   YEAR(REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
 					+ "            GROUP BY API_NAME " 
 					+ "            ORDER BY Usage_Count DESC "
 					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME "
 					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) AND "
-					+ "YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) " 
+					+ "YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
 					+ "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
 			break;
@@ -256,7 +263,9 @@ public class DashboardService {
 		case "today":
 			query = "SELECT 'today' as type,DATE_FORMAT(du.REQUEST_TIMESTAMP, '%Y-%m-%d %H') AS intervalData, "
 					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) " + "AND du.PROXY_RESPONSE_CODE !=200 "
+					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
+					+ "AND du.PROXY_RESPONSE_CODE !=200 "
 					+ "AND " + "DATE(du.REQUEST_TIMESTAMP) = CURDATE() " + "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
 			break;
@@ -264,13 +273,18 @@ public class DashboardService {
 		case "week":
 			query = "SELECT 'week' as type,DATE_FORMAT(du.REQUEST_TIMESTAMP, '%Y-%m-%d') AS intervalData, "
 					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) " + "AND du.PROXY_RESPONSE_CODE !=200 "
+					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
+					+ "AND du.PROXY_RESPONSE_CODE !=200 "
 					+ "AND " + "YEARWEEK(du.REQUEST_TIMESTAMP) = YEARWEEK(CURDATE()) "
 					+ "GROUP BY intervalData, du.API_NAME " + "ORDER BY intervalData DESC, total_usage DESC ";
 		case "month":
 			query = "SELECT 'month' as type,DATE_FORMAT(du.REQUEST_TIMESTAMP, '%Y-%m-%d') AS intervalData, "
-					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) " + "AND du.PROXY_RESPONSE_CODE !=200 "
+					+ "du.API_NAME, COUNT(*) AS total_usage " 
+					+ "FROM DATA_USAGE_API du "
+					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
+					+ "AND du.PROXY_RESPONSE_CODE !=200 "
 					+ "AND " + "YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
 					+ "AND MONTH(du.REQUEST_TIMESTAMP) = MONTH(CURDATE()) " + "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
@@ -279,8 +293,12 @@ public class DashboardService {
 		case "year":
 			query = "SELECT 'year' as type,DATE_FORMAT(du.REQUEST_TIMESTAMP, '%Y-%m') AS intervalData,"
 					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) " + "AND du.PROXY_RESPONSE_CODE !=200 "
-					+ "AND " + "YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) " + "GROUP BY intervalData, du.API_NAME "
+					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
+					+ "AND du.PROXY_RESPONSE_CODE !=200 "
+					+ "AND " 
+					+ "YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) " 
+					+ "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
 			break;
 
@@ -426,225 +444,243 @@ public class DashboardService {
 		return finalResult;
 	}
 
-	public List<DashboardPercentageDTO> getApiUsageByApi(LocalDate startDate, LocalDate endDate, String username) {
+	public List<DashboardPercentageDTO> getApiUsageByApi(String username,Integer top) {
 		String query = "SELECT API_ID, API_NAME, COUNT(*) AS row_count, (COUNT(*) / (SELECT COUNT(*) FROM DATA_USAGE_API WHERE 1=1"
 				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
-				+ getOptionalDateRangeCondition(startDate, endDate)
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+//				+ getOptionalDateRangeCondition(startDate, endDate)
 				+ ") * 100) AS percentage FROM DATA_USAGE_API WHERE 1=1"
 				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
-				+ getOptionalDateRangeCondition(startDate, endDate) + " GROUP BY API_ID, API_NAME";
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+//				+ getOptionalDateRangeCondition(startDate, endDate) 
+				+ " GROUP BY API_ID, API_NAME "
+				+ " ORDER BY row_count DESC LIMIT :top";
 
-		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
+		Map<String, Object> params = new HashMap<>();
 		params.put("owner", username);
+		params.put("top", top);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
 		LOGGER.info(query);
 		return namedParameterJdbcTemplate.query(query, parameters, new DashboardApiPercentageMapper());
 	}
 
-	public List<DashboardPercentageDTO> getApiUsageByApplication(LocalDate startDate, LocalDate endDate,
-			String username) {
+	public List<DashboardPercentageDTO> getApiUsageByApplication(String username,Integer top) {
 		String query = "SELECT APPLICATION_ID, APPLICATION_NAME, COUNT(*) AS row_count, (COUNT(*) / (SELECT COUNT(*) FROM DATA_USAGE_API WHERE 1=1"
 				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
-				+ getOptionalDateRangeCondition(startDate, endDate)
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+//				+ getOptionalDateRangeCondition(startDate, endDate)
 				+ ") * 100) AS percentage FROM DATA_USAGE_API WHERE 1=1"
 				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
-				+ getOptionalDateRangeCondition(startDate, endDate) + " GROUP BY APPLICATION_ID, APPLICATION_NAME";
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+//				+ getOptionalDateRangeCondition(startDate, endDate) 
+				+ " GROUP BY APPLICATION_ID, APPLICATION_NAME "
+				+ " ORDER BY row_count DESC LIMIT :top";
 
-		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
+		Map<String, Object> params = new HashMap<>();
 		params.put("owner", username);
+		params.put("top", top);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
 		LOGGER.info(query);
 		return namedParameterJdbcTemplate.query(query, parameters, new DashboardAppPercentageMapper());
 	}
 
-	public List<DashboardPercentageDTO> getApiUsageByResponseCode(LocalDate startDate, LocalDate endDate,
-			String username) {
-		String query = "SELECT PROXY_RESPONSE_CODE, COUNT(*) AS row_count, (COUNT(*) / (SELECT COUNT(*) FROM DATA_USAGE_API WHERE 1=1"
-				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
-				+ getOptionalDateRangeCondition(startDate, endDate)
-				+ ") * 100) AS percentage FROM DATA_USAGE_API WHERE 1=1"
-				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
-				+ getOptionalDateRangeCondition(startDate, endDate) + " GROUP BY PROXY_RESPONSE_CODE";
+	public List<DashboardPercentageDTO> getApiUsageByResponseCode(String username,Integer top) {
+		String query = "SELECT " +
+		        "response_category, " +
+		        "total_count AS row_count, " +
+		        "ROUND((total_count / SUM(total_count) OVER ()) * 100, 2) AS percentage " +
+		        "FROM " +
+		        "( " +
+		        "    SELECT " +
+		        "        CASE " +
+		        "            WHEN PROXY_RESPONSE_CODE BETWEEN 100 AND 199 THEN '1xx' " +
+		        "            WHEN PROXY_RESPONSE_CODE BETWEEN 200 AND 299 THEN '2xx' " +
+		        "            WHEN PROXY_RESPONSE_CODE BETWEEN 300 AND 399 THEN '3xx' " +
+		        "            WHEN PROXY_RESPONSE_CODE BETWEEN 400 AND 499 THEN '4xx' " +
+		        "            WHEN PROXY_RESPONSE_CODE BETWEEN 500 AND 599 THEN '5xx' " +
+		        "            ELSE 'OTHERS' " +
+		        "        END AS response_category, " +
+		        "        COUNT(*) AS total_count " +
+		        "    FROM " +
+		        "        DATA_USAGE_API " +
+		        "    WHERE " +
+		        "        (:owner IS NULL OR DATA_USAGE_API.APPLICATION_OWNER = :owner) " +
+		        "        AND DATA_USAGE_API.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " +
+		        "    GROUP BY " +
+		        "        response_category " +
+		        "    ORDER BY total_count DESC LIMIT :top " +
+		        ") AS subquery";
 
-		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
+
+
+		Map<String, Object> params = new HashMap<>();
 		params.put("owner", username);
+		params.put("top", top);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
 		LOGGER.info(query);
 		return namedParameterJdbcTemplate.query(query, parameters, new DashboardResCodePercentageMapper());
 	}
-	
+
 	public TotalReportDashboard getDashboardTotalReport(String username) {
-		TotalReportDashboard totalReportDashboard=new TotalReportDashboard();
-		if(username!=null) {
+		TotalReportDashboard totalReportDashboard = new TotalReportDashboard();
+		if (username != null) {
 			totalReportDashboard.setTotalUnpaid(getTotalUnpaidInvoicesByUsername(username));
 			totalReportDashboard.setTotalResponseFault(getTotalResponseFaultByUsername(username));
 			totalReportDashboard.setTotalApplication(getTotalAppsByUsername(username));
 			totalReportDashboard.setTotalSubscriptionAPI(getTotalSubscriptionAPIByUsername(username));
-		}else {
+		} else {
 			totalReportDashboard.setTotalUnpaid(getTotalUnpaidInvoicesByUsername(username));
 			totalReportDashboard.setTotalApi(getTotalAPIsByUsername(username));
 			totalReportDashboard.setTotalApplication(getTotalAppsByUsername(username));
 			totalReportDashboard.setTotalSubscriber(getTotalSubscriberByUsername(username));
 		}
-		
-		
-		
+
 		return totalReportDashboard;
 	}
-	
+
 	public int getTotalAPIsByUsername(String username) {
-	    String query = "SELECT COUNT(*) AS totalAPI "
-	            + "FROM AM_API WHERE "
-	            + "(:username IS NULL OR AM_API.API_PROVIDER = :username) ";
+		String query = "SELECT COUNT(*) AS totalAPI " + "FROM AM_API WHERE "
+				+ "(:username IS NULL OR AM_API.API_PROVIDER = :username) ";
 
-	    try {
-	        // Create parameters for the named query
-	        MapSqlParameterSource params = new MapSqlParameterSource();
-	        params.addValue("username", username);
+		try {
+			// Create parameters for the named query
+			MapSqlParameterSource params = new MapSqlParameterSource();
+			params.addValue("username", username);
 
-	        // Execute the query and retrieve the result
-	        return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return 0;
-	    }
+			// Execute the query and retrieve the result
+			return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
 	}
 
 	public int getTotalAppsByUsername(String username) {
-	    String query = "SELECT COUNT(*) AS totalApps "
-	            + "FROM AM_APPLICATION "
-	            + "LEFT JOIN "
-	            + "AM_SUBSCRIBER ON "
-	            + "AM_SUBSCRIBER.SUBSCRIBER_ID =AM_APPLICATION.SUBSCRIBER_ID "
-	            + "WHERE "
-	            + "(:username IS NULL "
-	            + " OR AM_SUBSCRIBER.USER_ID =:username ) ";
+		String query = "SELECT COUNT(*) AS totalApps " + "FROM AM_APPLICATION " + "LEFT JOIN " + "AM_SUBSCRIBER ON "
+				+ "AM_SUBSCRIBER.SUBSCRIBER_ID =AM_APPLICATION.SUBSCRIBER_ID " + "WHERE " + "(:username IS NULL "
+				+ " OR AM_SUBSCRIBER.USER_ID =:username ) ";
 
-	    try {
-	        // Create parameters for the named query
-	        MapSqlParameterSource params = new MapSqlParameterSource();
-	        params.addValue("username", username);
+		try {
+			// Create parameters for the named query
+			MapSqlParameterSource params = new MapSqlParameterSource();
+			params.addValue("username", username);
 
-	        // Execute the query and retrieve the result
-	        return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return 0;
-	    }
+			// Execute the query and retrieve the result
+			return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
 	}
 
 	public int getTotalSubscriberByUsername(String username) {
-	    String query = "SELECT COUNT(*) AS totalSubscriber "
-	            + "FROM AM_SUBSCRIBER "
-	            + "WHERE "
-	            + "(:username IS NULL "
-	            + " OR AM_SUBSCRIBER.USER_ID =:username )";
+		String query = "SELECT COUNT(*) AS totalSubscriber " + "FROM AM_SUBSCRIBER " + "WHERE " + "(:username IS NULL "
+				+ " OR AM_SUBSCRIBER.USER_ID =:username )";
 
-	    try {
-	        // Create parameters for the named query
-	        MapSqlParameterSource params = new MapSqlParameterSource();
-	        params.addValue("username", username);
+		try {
+			// Create parameters for the named query
+			MapSqlParameterSource params = new MapSqlParameterSource();
+			params.addValue("username", username);
 
-	        // Execute the query and retrieve the result
-	        return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return 0;
-	    }
+			// Execute the query and retrieve the result
+			return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
 	}
 
 	public int getTotalSubscriptionAPIByUsername(String username) {
-	    String query = "SELECT COUNT(*) AS totalSubscriptionAPI " +
-	            "FROM AM_SUBSCRIPTION " +
-	            "LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID " +
-	            "LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID = AM_SUBSCRIBER.SUBSCRIBER_ID " +
-	            "LEFT JOIN AM_API ON AM_API.API_ID = AM_SUBSCRIPTION.API_ID " +
-	            "WHERE (:username IS NULL OR AM_SUBSCRIBER.USER_ID = :username)";
+		String query = "SELECT COUNT(*) AS totalSubscriptionAPI " + "FROM AM_SUBSCRIPTION "
+				+ "LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID "
+				+ "LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID = AM_SUBSCRIBER.SUBSCRIBER_ID "
+				+ "LEFT JOIN AM_API ON AM_API.API_ID = AM_SUBSCRIPTION.API_ID "
+				+ "WHERE (:username IS NULL OR AM_SUBSCRIBER.USER_ID = :username)";
 
-	    try {
-	        // Create parameters for the named query
-	        MapSqlParameterSource params = new MapSqlParameterSource();
-	        params.addValue("username", username);
+		try {
+			// Create parameters for the named query
+			MapSqlParameterSource params = new MapSqlParameterSource();
+			params.addValue("username", username);
 
-	        // Execute the query and retrieve the result
-	        return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return 0;
-	    }
+			// Execute the query and retrieve the result
+			return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
 	}
 
-	
 	public int getTotalResponseFaultByUsername(String username) {
-	    String query = "SELECT COUNT(*) AS totalResponseFault " +
-	            "FROM DATA_USAGE_API " +
-	            "WHERE DATA_USAGE_API.PROXY_RESPONSE_CODE != 200 " +
-	            "AND (:username IS NULL OR DATA_USAGE_API.APPLICATION_OWNER = :username)";
+		String query = "SELECT COUNT(*) AS totalResponseFault " + "FROM DATA_USAGE_API "
+				+ "WHERE DATA_USAGE_API.PROXY_RESPONSE_CODE != 200 "
+				+ "AND (:username IS NULL OR DATA_USAGE_API.APPLICATION_OWNER = :username) "
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') ";
 
-	    try {
-	        // Create parameters for the named query
-	        MapSqlParameterSource params = new MapSqlParameterSource();
-	        params.addValue("username", username);
+		try {
+			// Create parameters for the named query
+			MapSqlParameterSource params = new MapSqlParameterSource();
+			params.addValue("username", username);
 
-	        // Execute the query and retrieve the result
-	        return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return 0;
-	    }
+			// Execute the query and retrieve the result
+			return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
 	}
-	
+
 	public int getTotalUnpaidInvoicesByUsername(String username) {
-	    String query = "SELECT COUNT(i.id) FROM invoice i WHERE paid != 1 AND (? IS NULL OR i.customer_id = ?)";
-	    
-	    try (Connection connection = dbUtilsBilling.getConnection();
-	         PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+		String query = "SELECT COUNT(i.id) FROM invoice i WHERE paid != 1 AND (? IS NULL OR i.customer_id = ?)";
 
-	        preparedStatement.setString(1, username);
-	        preparedStatement.setString(2, username);
+		try (Connection connection = dbUtilsBilling.getConnection();
+				PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
-	        try (ResultSet resultSet = preparedStatement.executeQuery()) {
-	            if (resultSet.next()) {
-	                return resultSet.getInt(1);
-	            } else {
-	                return 0;
-	            }
-	        }
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return 0;
-	    }
+			preparedStatement.setString(1, username);
+			preparedStatement.setString(2, username);
+
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				if (resultSet.next()) {
+					return resultSet.getInt(1);
+				} else {
+					return 0;
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
 	}
 
+//	private String getOptionalDateRangeCondition(LocalDate startDate, LocalDate endDate) {
+//		StringBuilder condition = new StringBuilder();
+//		if (startDate != null && endDate != null) {
+//			condition.append(" AND REQUEST_TIMESTAMP >= :startDate AND REQUEST_TIMESTAMP <= :endDate");
+//		} else if (startDate != null) {
+//			condition.append(" AND REQUEST_TIMESTAMP >= :startDate");
+//		} else if (endDate != null) {
+//			condition.append(" AND REQUEST_TIMESTAMP <= :endDate");
+//		}
+//		return condition.toString();
+//	}
 
-	private String getOptionalDateRangeCondition(LocalDate startDate, LocalDate endDate) {
-		StringBuilder condition = new StringBuilder();
-		if (startDate != null && endDate != null) {
-			condition.append(" AND REQUEST_TIMESTAMP >= :startDate AND REQUEST_TIMESTAMP <= :endDate");
-		} else if (startDate != null) {
-			condition.append(" AND REQUEST_TIMESTAMP >= :startDate");
-		} else if (endDate != null) {
-			condition.append(" AND REQUEST_TIMESTAMP <= :endDate");
-		}
-		return condition.toString();
-	}
+	
+//	private Map<String, Object> getOptionalDateRangeNamedParams(LocalDate startDate, LocalDate endDate) {
+//		Map<String, Object> namedParams = new HashMap<>();
+//		if (startDate != null) {
+//			namedParams.put("startDate", startDate);
+//		}
+//		if (endDate != null) {
+//			namedParams.put("endDate", endDate);
+//		}
+//		return namedParams;
+//	}
 
-	private Map<String, Object> getOptionalDateRangeNamedParams(LocalDate startDate, LocalDate endDate) {
-		Map<String, Object> namedParams = new HashMap<>();
-		if (startDate != null) {
-			namedParams.put("startDate", startDate);
-		}
-		if (endDate != null) {
-			namedParams.put("endDate", endDate);
-		}
-		return namedParams;
-	}
-
-	public LinkedHashMap<String, Object> getUsagePercentage(LocalDate startDate, LocalDate endDate, String username) {
+	public LinkedHashMap<String, Object> getUsagePercentage(String username,Integer top,
+			Boolean byApplication,Boolean byResponseCode,Boolean byApi) {
 		LinkedHashMap<String, Object> result = new LinkedHashMap<>();
-		result.put("byApplication", getApiUsageByApplication(startDate, endDate, username));
-		result.put("byApi", getApiUsageByApi(startDate, endDate, username));
-		result.put("byResponseCode", getApiUsageByResponseCode(startDate, endDate, username));
+		if(byApplication)result.put("byApplication", getApiUsageByApplication(username,top));
+		if(byApi)result.put("byApi", getApiUsageByApi(username,top));
+		if(byResponseCode)result.put("byResponseCode", getApiUsageByResponseCode(username,top));
 		return result;
 	}
 }

@@ -3,6 +3,8 @@ package com.wso2.swamedia.reportusageapi.controller;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +35,7 @@ public class ReportUsageController {
 	@GetMapping("/monthly-summary")
 	public ResponseEntity<?> getMonthlySummary(@RequestParam(required = false) Integer year,
 			@RequestParam(required = false) Integer month, @RequestParam(required = false) String applicationId,
+			@RequestParam(required = false) String organization,
 			@RequestParam(required = false) String apiId, @RequestParam(required = false) String username,
 			@RequestParam(required = false) String search, @RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size) {
@@ -41,7 +44,7 @@ public class ReportUsageController {
 		try {
 
 			ApiResponse<?> response = ApiResponse.success("Monthly summary retrieval successful.", reportUsageService
-					.getMonthlyReport(year, month, applicationId, apiId, username, page, size, search));
+					.getMonthlyReport(year, month, applicationId, apiId, username, page, size, search,organization));
 			LOGGER.info("Monthly summary retrieval completed");
 
 			return ResponseEntity.ok(response);
@@ -53,7 +56,10 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/monthly-summary/details")
-	public ResponseEntity<?> getApiDataUsage(@RequestParam(value = "applicationId") String applicationId,
+	public ResponseEntity<?> getApiDataUsage(
+			@RequestParam(required = false) Integer year,
+			@RequestParam(required = false) Integer month,
+			@RequestParam(value = "applicationId") String applicationId,
 			@RequestParam(value = "apiId") String apiId,
 			@RequestParam(value = "search", required = false) String search,
 			@RequestParam(value = "page", defaultValue = "0") int page,
@@ -62,9 +68,17 @@ public class ReportUsageController {
 
 		LOGGER.info("Received request for API Monthly detail log");
 		try {
+			Map<String, Object> total = reportUsageService.totalMonthlyDetailLog(username, applicationId, apiId,
+					search,year,month);
 			Pageable pageable = PageRequest.of(page, size);
-			ApiResponse<?> response = ApiResponse.success("Monthly detail log retrieval successful.",
-					reportUsageService.getMonthlyDetailLog(username, applicationId, apiId, search, pageable));
+			LinkedHashMap<String, Object> result = new LinkedHashMap<>();
+			result.put("requestCount",total.get("request_count"));
+			result.put("requestOK",total.get("count_200"));
+			result.put("requestNOK",total.get("count_not_200"));
+			result.put("details",
+					reportUsageService.getMonthlyDetailLog(username, applicationId, apiId, search, pageable,year,month));
+
+			ApiResponse<?> response = ApiResponse.success("Monthly detail log retrieval successful.", result);
 
 			LOGGER.info("API Monthly detail log retrieval completed");
 
@@ -118,6 +132,82 @@ public class ReportUsageController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseError);
 		}
 	}
+	
+	@GetMapping("/backend-api")
+	public ResponseEntity<?> getBackendAPIUsage(
+			@RequestParam(required = false) Integer year,
+			@RequestParam(required = false) Integer month,
+			@RequestParam(required = false) String apiId, 
+			@RequestParam(required = false) String username,
+			@RequestParam(required = false) String search, 
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "size", defaultValue = "10") int size) {
+
+		LOGGER.info("Received request for backend api usage summary");
+		try {
+			Pageable pageable = PageRequest.of(page, size);
+			ApiResponse<?> response = ApiResponse.success("Backend api usage summary retrieval successful.",
+					reportUsageService.getBackendAPIUsage(username, year, month, apiId, search, pageable));
+
+			LOGGER.info("Backend api usage summary retrieval completed");
+
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			ApiResponse<?> responseError = ApiResponse.error(e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseError);
+		}
+	}
+	
+	
+	@GetMapping("/error-summary")
+	public ResponseEntity<?> getErrorSummary(
+			@RequestParam(required = false) String apiId, 
+			@RequestParam(required = false) String version,
+			@RequestParam(required = false) String search, 
+			@RequestParam(required = false,defaultValue = "false") boolean asPercent,
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "size", defaultValue = "10") int size) {
+
+		LOGGER.info("Received request for Error summary ");
+		try {
+			Pageable pageable = PageRequest.of(page, size);
+			ApiResponse<?> response = ApiResponse.success("Error summary retrieval successful.",
+					reportUsageService.getErrorSummary(apiId, version, asPercent,search, pageable));
+
+			LOGGER.info("Error summary retrieval completed");
+
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			ApiResponse<?> responseError = ApiResponse.error(e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseError);
+		}
+	}
+	
+	@GetMapping("/backend-api/details")
+	public ResponseEntity<?> getBackendAPIUsageDetails(
+			@RequestParam(required = false) String apiId, 
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "size", defaultValue = "10") int size) {
+
+		LOGGER.info("Received request for backend api usage summary details");
+		try {
+			if (apiId == null) {
+			ApiResponse<?> response = ApiResponse
+					.error("apiId parameters is required.");
+			return ResponseEntity.badRequest().body(response);
+		}
+			Pageable pageable = PageRequest.of(page, size);
+			ApiResponse<?> response = ApiResponse.success("Backend api usage summary details retrieval successful.",
+					reportUsageService.getBackendAPIUsageDetails(apiId, pageable));
+
+			LOGGER.info("Backend api usage summary details retrieval completed");
+
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			ApiResponse<?> responseError = ApiResponse.error(e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseError);
+		}
+	}
 
 	@GetMapping("/apis")
 	public ResponseEntity<?> getListAPIName(@RequestParam(value = "username", required = false) String username,
@@ -142,6 +232,20 @@ public class ReportUsageController {
 			List<Map<String, Object>> apiResources = reportUsageService.getApiResourceByAPI(username, apiId);
 			ApiResponse<List<Map<String, Object>>> response = ApiResponse
 					.success("API resources retrieved successfully", apiResources);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			ApiResponse<?> responseError = ApiResponse.error("Failed to retrieve API resources: " + e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseError);
+		}
+	}
+	
+	@GetMapping("/versions")
+	public ResponseEntity<?> getListAPIResource(@RequestParam(value = "apiName") String apiName) {
+		LOGGER.info("Received request to get the list of versions for API with NAME: {}", apiName);
+		try {
+			List<Map<String, Object>> apiResources = reportUsageService.getVersions(apiName);
+			ApiResponse<List<Map<String, Object>>> response = ApiResponse
+					.success("API versions retrieved successfully", apiResources);
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			ApiResponse<?> responseError = ApiResponse.error("Failed to retrieve API resources: " + e.getMessage());
@@ -182,6 +286,22 @@ public class ReportUsageController {
 		try {
 			ApiResponse<?> response = ApiResponse.success("List of customers retrieved successfully",
 					reportUsageService.getCustomers(username));
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			ApiResponse<?> responseError = ApiResponse.error("Failed to retrieve customers: " + e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseError);
+		}
+	}
+	
+	@GetMapping("/v2/customers")
+	public ResponseEntity<?> getListCustomersv2(@RequestParam(value = "username", required = false) String username) {
+		LOGGER.info("Received request to get the list of customers");
+		try {
+			Map<String, Object>result=new HashMap<>();
+			result.put("content", reportUsageService.getCustomersv2(username));
+			result.put("total", reportUsageService.getTotalCustomers(username));
+			ApiResponse<?> response = ApiResponse.success("List of customers retrieved successfully",
+					result);
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			ApiResponse<?> responseError = ApiResponse.error("Failed to retrieve customers: " + e.getMessage());

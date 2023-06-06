@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 public class MonthlySummary {
 	private int totalApis;
 	private int requestCount;
+	private int totalCustomers;
 	private Page<ApiDetails> details;
 
 	@Data

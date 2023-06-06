@@ -27,6 +27,8 @@ public class ResourceSummary {
 		private String apiMethod;
 		private BigInteger requestCount;
 		private String apiId;
+		private String applicationId;
+		private String applicationName;
 
 	}
 

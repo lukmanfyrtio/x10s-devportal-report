@@ -33,15 +33,19 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wso2.swamedia.reportusageapi.DBUtilsUser;
 import com.wso2.swamedia.reportusageapi.dto.DashboardPercentageDTO;
+import com.wso2.swamedia.reportusageapi.dto.DataUsageApiResponse;
+import com.wso2.swamedia.reportusageapi.dto.ErrorSummary;
 import com.wso2.swamedia.reportusageapi.dto.MonthlySummary;
 import com.wso2.swamedia.reportusageapi.dto.MonthlySummaryDetails;
 import com.wso2.swamedia.reportusageapi.dto.OrganizationDTO;
+import com.wso2.swamedia.reportusageapi.dto.RequestCountDTO;
 import com.wso2.swamedia.reportusageapi.dto.ResourceSummary;
 import com.wso2.swamedia.reportusageapi.dto.ResourceSummaryDetails;
 import com.wso2.swamedia.reportusageapi.dto.TableRemainingDayQuota;
 import com.wso2.swamedia.reportusageapi.mapper.DashboardApiPercentageMapper;
 import com.wso2.swamedia.reportusageapi.mapper.DashboardAppPercentageMapper;
 import com.wso2.swamedia.reportusageapi.mapper.DashboardResCodePercentageMapper;
+import com.wso2.swamedia.reportusageapi.repo.AmApiRepository;
 import com.wso2.swamedia.reportusageapi.repo.DataUsageApiRepository;
 
 @Service
@@ -53,37 +57,41 @@ public class ReportUsageService {
 	private DataUsageApiRepository dataUsageApiRepository;
 
 	@Autowired
+	private AmApiRepository amApiRepository;
+
+	@Autowired
 	private DBUtilsUser dbUtilsUser;
 
 	@Autowired
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
 	public MonthlySummary getMonthlyReport(Integer year, Integer month, String applicationId, String apiId,
-			String username, int page, int size, String search) throws Exception {
+			String username, int page, int size, String search, String organization) throws Exception {
 		LOGGER.info("Retrieving monthly report for year: {}, month: {}, username: {}", year, month, username);
 
 		MonthlySummary monthlySummary = new MonthlySummary();
 		try {
 			Map<String, Object> dataTotal = dataUsageApiRepository.getTotalApisAndRequestsByOwnerAndFilters(username,
-					year, month, apiId, applicationId);
+					year, month, apiId, applicationId, organization);
 			monthlySummary.setTotalApis(Integer.valueOf(dataTotal.get("total_apis").toString()));
 			monthlySummary.setRequestCount(Integer.valueOf(dataTotal.get("total_request").toString()));
+			monthlySummary.setTotalCustomers(Integer.valueOf(dataTotal.get("total_customer").toString()));
 		} catch (Exception e) {
 			String error = String.format("Error retrieving total APIs and requests: {}", e.getMessage());
 			LOGGER.error(error);
 			// Handle the exception or throw a custom exception
 			throw new Exception(e.getMessage());
 		}
-		List<OrganizationDTO> organizationDTOs = getOrganizations();
+//		List<OrganizationDTO> organizationDTOs = getOrganizations();
 		try {
 			Pageable pageable = PageRequest.of(page, size);
 			Page<Object[]> result = dataUsageApiRepository.getMonthlyTotalRowByGroupByWithSearchAndPageable(username,
-					year, month, apiId, applicationId, search, pageable);
+					year, month, apiId, applicationId, search, organization, pageable);
 
 			Page<MonthlySummary.ApiDetails> pageM = result.map(row -> {
-				OrganizationDTO org = findOrganizationByUsername(organizationDTOs, (String) row[2]);
+//				OrganizationDTO org = findOrganizationByUsername(organizationDTOs, (String) row[2]);
 				return new MonthlySummary.ApiDetails((String) row[0], (String) row[3], (String) row[1], (String) row[4],
-						(String) row[2], (BigInteger) row[5], (String) row[6], org != null ? org.getValue() : null);
+						(String) row[2], (BigInteger) row[5], (String) row[6], (String) row[7]);
 			});
 			monthlySummary.setDetails(pageM);
 		} catch (Exception e) {
@@ -101,14 +109,14 @@ public class ReportUsageService {
 	}
 
 	public Page<MonthlySummaryDetails> getMonthlyDetailLog(String owner, String applicationId, String apiId,
-			String searchFilter, Pageable pageable) throws Exception {
+			String searchFilter, Pageable pageable,Integer year, Integer month) throws Exception {
 		LOGGER.info("Retrieving API Monthly detail log report for owner: {}, applicationId: {}, apiId: {}", owner,
 				applicationId, apiId);
 
 		Page<MonthlySummaryDetails> pageM = null;
 		try {
 			Page<Object[]> result = dataUsageApiRepository.getMonthlyDetailLog(pageable, owner, applicationId, apiId,
-					searchFilter);
+					searchFilter,year,month);
 
 			pageM = result.map(row -> {
 				String requestTimestamp = (String) row[0];
@@ -118,9 +126,10 @@ public class ReportUsageService {
 				String applicationIdres = (String) row[4];
 				String apiNameQ = (String) row[5];
 				String appNameQ = (String) row[6];
+				String organtization = (String) row[7];
 
 				return new MonthlySummaryDetails(requestTimestamp, resource, proxyResponseCode, apiIdRes,
-						applicationIdres, apiNameQ, appNameQ);
+						applicationIdres, apiNameQ, appNameQ,organtization);
 			});
 		} catch (Exception e) {
 			String error = String.format("Error retrieving API monthly detail log report: {}", e.getMessage());
@@ -162,7 +171,8 @@ public class ReportUsageService {
 				String apiMethodQ = (String) row[3];
 				BigInteger count = (BigInteger) row[4];
 				String apiIdQ = (String) row[5];
-				return new ResourceSummary.ApiDetails(apiNameQ, apiVersionQ, resourceQ, apiMethodQ, count, apiIdQ);
+				return new ResourceSummary.ApiDetails(apiNameQ, apiVersionQ, resourceQ, apiMethodQ, count, apiIdQ,
+						(String) row[6], (String) row[7]);
 			});
 			resourceSummary.setDetails(pageM);
 		} catch (Exception e) {
@@ -194,8 +204,8 @@ public class ReportUsageService {
 				BigInteger countOK = (BigInteger) row[4];
 				String apiIds = (String) row[5];
 				String appId = (String) row[6];
-				String appOwner = (String) row[8];
-				OrganizationDTO org = findOrganizationByUsername(organizationDTOs, (String) row[8]);
+				String appOwner = (String) row[7];
+				OrganizationDTO org = findOrganizationByUsername(organizationDTOs, appOwner);
 				return new ResourceSummaryDetails(appId, appName, apiIds, apiName, requestCount, countOK, countNOK,
 						appOwner, org != null ? org.getValue() : null);
 
@@ -214,9 +224,11 @@ public class ReportUsageService {
 	public List<DashboardPercentageDTO> getApiUsageByApi(LocalDate startDate, LocalDate endDate, String username) {
 		String query = "SELECT API_ID, API_NAME, COUNT(*) AS row_count, (COUNT(*) / (SELECT COUNT(*) FROM DATA_USAGE_API WHERE 1=1"
 				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 				+ getOptionalDateRangeCondition(startDate, endDate)
 				+ ") * 100) AS percentage FROM DATA_USAGE_API WHERE 1=1"
 				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 				+ getOptionalDateRangeCondition(startDate, endDate) + " GROUP BY API_ID, API_NAME";
 
 		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
@@ -230,9 +242,11 @@ public class ReportUsageService {
 			String username) {
 		String query = "SELECT APPLICATION_ID, APPLICATION_NAME, COUNT(*) AS row_count, (COUNT(*) / (SELECT COUNT(*) FROM DATA_USAGE_API WHERE 1=1"
 				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 				+ getOptionalDateRangeCondition(startDate, endDate)
 				+ ") * 100) AS percentage FROM DATA_USAGE_API WHERE 1=1"
 				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 				+ getOptionalDateRangeCondition(startDate, endDate) + " GROUP BY APPLICATION_ID, APPLICATION_NAME";
 
 		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
@@ -246,9 +260,11 @@ public class ReportUsageService {
 			String username) {
 		String query = "SELECT PROXY_RESPONSE_CODE, COUNT(*) AS row_count, (COUNT(*) / (SELECT COUNT(*) FROM DATA_USAGE_API WHERE 1=1"
 				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 				+ getOptionalDateRangeCondition(startDate, endDate)
 				+ ") * 100) AS percentage FROM DATA_USAGE_API WHERE 1=1"
 				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 				+ getOptionalDateRangeCondition(startDate, endDate) + " GROUP BY PROXY_RESPONSE_CODE";
 
 		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
@@ -289,18 +305,15 @@ public class ReportUsageService {
 		return result;
 	}
 
-	public List<Map<String, Object>> getApiNameAndId(String owner,String organization) {
-		String query = "SELECT DISTINCT AM_API.API_ID, AM_API.API_NAME,AM_API.API_UUID " +
-		        "FROM AM_SUBSCRIPTION " +
-		        "LEFT JOIN AM_API ON AM_SUBSCRIPTION.API_ID = AM_API.API_ID " +
-		        "LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID " +
-		        "LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID = AM_SUBSCRIBER.SUBSCRIBER_ID " +
-		        "LEFT JOIN apim_shareddb.UM_USER uu ON AM_SUBSCRIBER.USER_ID = uu.UM_USER_NAME " +
-		        "LEFT JOIN apim_shareddb.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID " +
-		        "AND attr.UM_ATTR_NAME = 'organizationName' " +
-		        "WHERE (:owner IS NULL OR uu.UM_USER_ID = :owner) " +
-		        "AND (:organizationName IS NULL OR attr.UM_ATTR_VALUE = :organizationName)";
-
+	public List<Map<String, Object>> getApiNameAndId(String owner, String organization) {
+		String query = "SELECT DISTINCT AM_API.API_ID, AM_API.API_NAME,AM_API.API_UUID " + "FROM AM_SUBSCRIPTION "
+				+ "LEFT JOIN AM_API ON AM_SUBSCRIPTION.API_ID = AM_API.API_ID "
+				+ "LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID "
+				+ "LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID = AM_SUBSCRIBER.SUBSCRIBER_ID "
+				+ "LEFT JOIN apim_shareddb.UM_USER uu ON AM_SUBSCRIBER.USER_ID = uu.UM_USER_NAME "
+				+ "LEFT JOIN apim_shareddb.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+				+ "AND attr.UM_ATTR_NAME = 'organizationName' " + "WHERE (:owner IS NULL OR uu.UM_USER_ID = :owner) "
+				+ "AND (:organizationName IS NULL OR attr.UM_ATTR_VALUE = :organizationName)";
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -316,7 +329,8 @@ public class ReportUsageService {
 	}
 
 	public List<Map<String, Object>> getYears(String owner) {
-		String query = "SELECT DISTINCT YEAR(REQUEST_TIMESTAMP) AS year FROM DATA_USAGE_API WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner)";
+		String query = "SELECT DISTINCT YEAR(REQUEST_TIMESTAMP) AS year FROM DATA_USAGE_API WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') ";
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -348,10 +362,43 @@ public class ReportUsageService {
 		});
 	}
 
+	public int getTotalCustomers(String username) {
+		String sqlQuery = "select COUNT(DISTINCT UM_ATTR_VALUE)" + "from apim_shareddb.UM_USER_ATTRIBUTE "
+				+ "where UM_ATTR_NAME='organizationName'";
+		try {
+
+			Integer result = namedParameterJdbcTemplate.queryForObject(sqlQuery, new MapSqlParameterSource(),
+					Integer.class);
+			return (result != null ? result : 0);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
+
+	public List<Map<String, Object>> getCustomersv2(String owner) {
+		String sqlQuery = "select DISTINCT UM_ATTR_VALUE as organizationName " + "from apim_shareddb.UM_USER_ATTRIBUTE "
+				+ "where UM_ATTR_NAME='organizationName'";
+
+		MapSqlParameterSource parameters = new MapSqlParameterSource();
+//		parameters.addValue("owner", owner);
+
+		return namedParameterJdbcTemplate.query(sqlQuery, parameters, (rs, rowNum) -> {
+			Map<String, Object> customers = new HashMap<>();
+//			customers.put("username", rs.getString("UM_USER_NAME"));
+//			customers.put("userId", rs.getString("UM_USER_ID"));
+//			customers.put("tenantId", rs.getString("UM_TENANT_ID"));
+			customers.put("organizationName", rs.getString("organizationName"));
+			return customers;
+		});
+	}
+
 	public List<Map<String, Object>> getMonth(String owner, int year) {
 		String query = "SELECT DISTINCT MONTH(REQUEST_TIMESTAMP) AS year FROM DATA_USAGE_API "
 				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) AND "
-				+ " (:year IS NULL OR  YEAR(REQUEST_TIMESTAMP) = :year )";
+				+ " (:year IS NULL OR  YEAR(REQUEST_TIMESTAMP) = :year ) "
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') ";
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -368,8 +415,9 @@ public class ReportUsageService {
 
 	public List<Map<String, Object>> getApiResourceByAPI(String owner, String apiId) {
 		String query = "SELECT DISTINCT API_RESOURCE_TEMPLATE  FROM DATA_USAGE_API WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner)"
-				+ " AND (:apiId IS NULL OR API_ID = :apiId)";
-
+				+ " AND (:apiId IS NULL OR API_ID = :apiId) "
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') AND API_RESOURCE_TEMPLATE IS NOT NULL";
+		LOGGER.info(query);
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
 		parameters.addValue("apiId", apiId);
@@ -381,8 +429,21 @@ public class ReportUsageService {
 		});
 	}
 	
-	
-	
+	public List<Map<String, Object>> getVersions(String apiName) {
+		String query = "SELECT API_VERSION,API_NAME ,API_UUID  FROM AM_API WHERE "
+				+ " (:apiName IS NULL OR API_NAME = :apiName)";
+		LOGGER.info(query);
+		MapSqlParameterSource parameters = new MapSqlParameterSource();
+		parameters.addValue("apiName", apiName);
+
+		return namedParameterJdbcTemplate.query(query, parameters, (rs, rowNum) -> {
+			Map<String, Object> apiInfo = new HashMap<>();
+			apiInfo.put("version", rs.getString("API_VERSION"));
+			apiInfo.put("apiId", rs.getString("API_UUID"));
+			apiInfo.put("apiName", rs.getString("API_NAME"));
+			return apiInfo;
+		});
+	}
 
 	public List<OrganizationDTO> getOrganizations() throws Exception {
 		List<OrganizationDTO> result = new ArrayList<>();
@@ -421,12 +482,12 @@ public class ReportUsageService {
 				+ "LEFT JOIN apim_shareddb.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID AND attr.UM_ATTR_NAME = 'organizationName' "
 				+ "LEFT JOIN AM_API ON AM_SUBSCRIPTION.API_ID  = AM_API.API_ID "
 				+ "LEFT JOIN AM_POLICY_SUBSCRIPTION ON AM_SUBSCRIPTION.TIER_ID = AM_POLICY_SUBSCRIPTION.NAME "
-				+ "LEFT JOIN ( " + "SELECT SUBSCRIPTION_ID, API_ID, APPLICATION_ID, COUNT(*) AS USAGE_COUNT ,APPLICATION_OWNER "
+				+ "LEFT JOIN ( "
+				+ "SELECT SUBSCRIPTION_ID, API_ID, APPLICATION_ID, COUNT(*) AS USAGE_COUNT ,APPLICATION_OWNER "
 				+ "FROM DATA_USAGE_API " + "GROUP BY SUBSCRIPTION_ID, API_ID, APPLICATION_ID ,APPLICATION_OWNER "
 				+ ") AS DATA_USAGE ON AM_SUBSCRIPTION.SUBSCRIPTION_ID = DATA_USAGE.SUBSCRIPTION_ID "
 				+ "AND AM_API.API_UUID  = DATA_USAGE.API_ID " + "AND AM_APPLICATION.UUID = DATA_USAGE.APPLICATION_ID "
-				+ "WHERE " 
-				+ "AM_SUBSCRIPTION.SUBS_CREATE_STATE = 'SUBSCRIBE' "
+				+ "WHERE " + "AM_SUBSCRIPTION.SUBS_CREATE_STATE = 'SUBSCRIBE' "
 				+ "AND AM_SUBSCRIPTION.SUB_STATUS = 'UNBLOCKED' "
 				+ "AND (:owner IS NULL OR DATA_USAGE.APPLICATION_OWNER = :owner) "
 				+ "ORDER BY REMAINING_DAYS ASC, REMAINING_QUOTA DESC, API_USAGE DESC;";
@@ -500,6 +561,60 @@ public class ReportUsageService {
 			}
 		}
 		return null; // Return null if the organization is not found
+	}
+
+	public Page<DataUsageApiResponse> getBackendAPIUsage(String owner, Integer year, Integer month, String apiId,
+			String searchFilter, Pageable pageable) {
+		Page<DataUsageApiResponse> dataUsageApiResponsePage = amApiRepository
+				.findByOwnerAndYearAndMonthAndApiIdAndSearchFilter(owner, year, month, apiId, searchFilter, pageable);
+
+		for (DataUsageApiResponse dataUsageApiResponse : dataUsageApiResponsePage.getContent()) {
+			List<RequestCountDTO> requestCountDTOList = dataUsageApiRepository
+					.countRequestByResource(dataUsageApiResponse.getApiId());
+			dataUsageApiResponse.setDetails(requestCountDTOList);
+		}
+
+		return dataUsageApiResponsePage;
+	}
+
+	public Page<RequestCountDTO> getBackendAPIUsageDetails(String apiId, Pageable pageable) {
+
+		Page<RequestCountDTO> requestCountDTOList = dataUsageApiRepository.countRequestByResource(apiId, pageable);
+
+		return requestCountDTOList;
+	}
+
+	public Map<String, Object> totalMonthlyDetailLog(String owner, String applicationId, String apiId,
+			String searchFilter,Integer year, Integer month) {
+		return dataUsageApiRepository.totalMonthlyDetailLog(owner, applicationId, apiId, searchFilter,year,month);
+	}
+
+	public Page<ErrorSummary> getErrorSummary(String apiId, String version, boolean asPercent,String search, Pageable pageable) {
+		Page<ErrorSummary> apiUsagePage = dataUsageApiRepository.getAPIUsageByFilters(apiId, version,search, pageable);
+
+		if (asPercent) {
+			apiUsagePage.getContent().forEach(this::calculatePercentages);
+		}
+
+		return apiUsagePage;
+	}
+
+	private void calculatePercentages(ErrorSummary apiUsage) {
+		Long totalCount = apiUsage.getTotalCount();
+
+		if (totalCount > 0) {
+			apiUsage.setPercent1xx(apiUsage.getCount1xx() * 100.0 / totalCount);
+			apiUsage.setPercent2xx(apiUsage.getCount2xx() * 100.0 / totalCount);
+			apiUsage.setPercent3xx(apiUsage.getCount3xx() * 100.0 / totalCount);
+			apiUsage.setPercent4xx(apiUsage.getCount4xx() * 100.0 / totalCount);
+			apiUsage.setPercent5xx(apiUsage.getCount5xx() * 100.0 / totalCount);
+			
+			apiUsage.setCount1xx(null);
+			apiUsage.setCount2xx(null);
+			apiUsage.setCount3xx(null);
+			apiUsage.setCount4xx(null);
+			apiUsage.setCount5xx(null);
+		}
 	}
 
 }

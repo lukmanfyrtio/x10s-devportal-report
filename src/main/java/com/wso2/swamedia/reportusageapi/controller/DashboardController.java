@@ -28,23 +28,29 @@ public class DashboardController {
 	private DashboardService dashboardService;
 
 	@GetMapping("/percentage-report")
-	public ResponseEntity<?> getApiUsagePercentage(@RequestParam(value = "username", required = false) String username,
-			@RequestParam(value = "periodStartDate", required = false) String periodStartDate,
-			@RequestParam(value = "periodEndDate", required = false) String periodEndDate) {
+	public ResponseEntity<?> getApiUsagePercentage(@RequestParam(value = "username", required = false) String username
+//			@RequestParam(value = "periodStartDate", required = false) String periodStartDate,
+//			@RequestParam(value = "periodEndDate", required = false) String periodEndDate
+			,@RequestParam(value = "top", required = false,defaultValue = "10") Integer top
+			,@RequestParam(value = "byApplication", required = false,defaultValue = "false") Boolean byApplication
+			,@RequestParam(value = "byApi", required = false,defaultValue = "false") Boolean byApi
+			,@RequestParam(value = "byResponseCode", required = false,defaultValue = "false") Boolean byResponseCode
+			
+	) {
 		LOGGER.info("Received request for get percentage usage");
 
-		LocalDate pStartDate = parseDate(periodStartDate);
-		LocalDate pEndDate = parseDate(periodEndDate);
+//		LocalDate pStartDate = parseDate(periodStartDate);
+//		LocalDate pEndDate = parseDate(periodEndDate);
 
-		if (pStartDate == null || pEndDate == null) {
-			ApiResponse<?> response = ApiResponse
-					.error("Invalid date format. The date should be in the format yyyy-MM-dd.");
-			return ResponseEntity.badRequest().body(response);
-		}
+//		if (pStartDate == null || pEndDate == null) {
+//			ApiResponse<?> response = ApiResponse
+//					.error("Invalid date format. The date should be in the format yyyy-MM-dd.");
+//			return ResponseEntity.badRequest().body(response);
+//		}
 
 		try {
 			ApiResponse<?> response = ApiResponse.success("Percentage usage  retrieved successfully .",
-					dashboardService.getUsagePercentage(pStartDate, pEndDate, username));
+					dashboardService.getUsagePercentage(username, top, byApplication, byResponseCode, byApi));
 
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
@@ -102,7 +108,8 @@ public class DashboardController {
 		LOGGER.info("Received request to retrieve the dashboard total report");
 		try {
 
-			ApiResponse<TotalReportDashboard> response = ApiResponse.success("The dashboard total report has been retrieved successfully",
+			ApiResponse<TotalReportDashboard> response = ApiResponse.success(
+					"The dashboard total report has been retrieved successfully",
 					dashboardService.getDashboardTotalReport(username));
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
