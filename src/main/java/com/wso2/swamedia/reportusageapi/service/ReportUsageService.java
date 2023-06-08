@@ -589,32 +589,39 @@ public class ReportUsageService {
 		return dataUsageApiRepository.totalMonthlyDetailLog(owner, applicationId, apiId, searchFilter,year,month);
 	}
 
-	public Page<ErrorSummary> getErrorSummary(String apiId, String version, boolean asPercent,String search, Pageable pageable) {
+	public Page<?> getErrorSummary(String apiId, String version, boolean asPercent,String search, Pageable pageable) {
 		Page<ErrorSummary> apiUsagePage = dataUsageApiRepository.getAPIUsageByFilters(apiId, version,search, pageable);
-
+		List<Map<String, Object>> errorSummaryList = new ArrayList<>();
 		if (asPercent) {
-			apiUsagePage.getContent().forEach(this::calculatePercentages);
+			 apiUsagePage.getContent().forEach(errorSummary -> {
+			        Map<String, Object> errorSummaryMap = convertErrorSummaryToMap(errorSummary);
+			        errorSummaryList.add(errorSummaryMap);
+			    });
+
+			    return new PageImpl<>(errorSummaryList, pageable, apiUsagePage.getTotalElements());
 		}
 
 		return apiUsagePage;
 	}
 
-	private void calculatePercentages(ErrorSummary apiUsage) {
-		Long totalCount = apiUsage.getTotalCount();
 
+	private LinkedHashMap<String, Object> convertErrorSummaryToMap(ErrorSummary errorSummary) {
+		LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+		Long totalCount = errorSummary.getTotalCount();
 		if (totalCount > 0) {
-			apiUsage.setPercent1xx(apiUsage.getCount1xx() * 100.0 / totalCount);
-			apiUsage.setPercent2xx(apiUsage.getCount2xx() * 100.0 / totalCount);
-			apiUsage.setPercent3xx(apiUsage.getCount3xx() * 100.0 / totalCount);
-			apiUsage.setPercent4xx(apiUsage.getCount4xx() * 100.0 / totalCount);
-			apiUsage.setPercent5xx(apiUsage.getCount5xx() * 100.0 / totalCount);
-			
-			apiUsage.setCount1xx(null);
-			apiUsage.setCount2xx(null);
-			apiUsage.setCount3xx(null);
-			apiUsage.setCount4xx(null);
-			apiUsage.setCount5xx(null);
+		map.put("apiId", errorSummary.getApiId());
+		map.put("apiName", errorSummary.getApiName());
+		map.put("apiResourceTemplate", errorSummary.getApiResourceTemplate());
+		map.put("apiMethod", errorSummary.getApiMethod());
+		map.put("count1xx", errorSummary.getCount1xx() * 100.0 / totalCount);
+		map.put("count2xx", errorSummary.getCount2xx() * 100.0 / totalCount);
+		map.put("count3xx", errorSummary.getCount3xx() * 100.0 / totalCount);
+		map.put("count4xx", errorSummary.getCount4xx() * 100.0 / totalCount);
+		map.put("count5xx", errorSummary.getCount5xx() * 100.0 / totalCount);
+		map.put("totalCount", errorSummary.getTotalCount());
 		}
+		return map;
 	}
+
 
 }
