@@ -31,11 +31,11 @@ public class DashboardController {
 	public ResponseEntity<?> getApiUsagePercentage(@RequestParam(value = "username", required = false) String username
 //			@RequestParam(value = "periodStartDate", required = false) String periodStartDate,
 //			@RequestParam(value = "periodEndDate", required = false) String periodEndDate
-			,@RequestParam(value = "top", required = false,defaultValue = "10") Integer top
-			,@RequestParam(value = "byApplication", required = false,defaultValue = "false") Boolean byApplication
-			,@RequestParam(value = "byApi", required = false,defaultValue = "false") Boolean byApi
-			,@RequestParam(value = "byResponseCode", required = false,defaultValue = "false") Boolean byResponseCode
-			
+			, @RequestParam(value = "top", required = false, defaultValue = "10") Integer top,
+			@RequestParam(value = "byApplication", required = false, defaultValue = "false") Boolean byApplication,
+			@RequestParam(value = "byApi", required = false, defaultValue = "false") Boolean byApi,
+			@RequestParam(value = "byResponseCode", required = false, defaultValue = "false") Boolean byResponseCode
+
 	) {
 		LOGGER.info("Received request for get percentage usage");
 
@@ -94,6 +94,23 @@ public class DashboardController {
 		try {
 			ApiResponse<?> response = ApiResponse.success("Api fault overtime retrieved successfully .",
 					dashboardService.getFaultOvertime(filter, username));
+
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			ApiResponse<?> responseError = ApiResponse.error(e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseError);
+		}
+	}
+
+	@GetMapping("/api-fault/details")
+	public ResponseEntity<?> getDashboardApiFaultDetails(
+			@RequestParam(value = "username", required = false) String username, @RequestParam("filter") String filter,
+			@RequestParam(required = false) String search, @RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "size", defaultValue = "10") int size) {
+		LOGGER.info("Received request for get api fault details");
+		try {
+			ApiResponse<?> response = ApiResponse.success("Api fault overtime details retrieved successfully .",
+					dashboardService.getFaultOvertimeDetails(filter, username, page, size, search));
 
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {

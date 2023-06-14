@@ -27,5 +27,7 @@ public class TableRemainingDayQuota {
 	private String typeSubscription;
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private Integer remaining;
+	private String organization;
+	private String applicationOwner;
 //    private Integer remainingDays;
 }

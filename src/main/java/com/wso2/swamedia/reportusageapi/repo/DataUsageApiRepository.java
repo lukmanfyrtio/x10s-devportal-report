@@ -109,7 +109,7 @@ public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, Stri
 			@Param("searchFilter") String searchFilter,@Param("year") Integer year, @Param("month") Integer month);
 	
 	@Query(value = "SELECT COUNT(*) as request_count, "
-					+ "COUNT(CASE WHEN PROXY_RESPONSE_CODE != 200 THEN 1 END) AS count_not_200,COUNT(CASE WHEN PROXY_RESPONSE_CODE = 200 THEN 1 END) AS count_200 " 
+					+ "COUNT(CASE WHEN PROXY_RESPONSE_CODE NOT BETWEEN 200 AND 299 THEN 1 END) AS count_not_200,COUNT(CASE WHEN PROXY_RESPONSE_CODE = 200 THEN 1 END) AS count_200 " 
 			+ "FROM DATA_USAGE_API "
 			+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner )" 
 			+ "AND APPLICATION_ID = :applicationId "
@@ -160,7 +160,7 @@ public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, Stri
 					+ "AND (:apiId IS NULL OR API_ID = :apiId) "
 					+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 					+ "AND (:resource IS NULL OR API_RESOURCE_TEMPLATE = :resource) "
-					+ "AND (:search IS NULL OR LOWER(API_NAME LIKE) LOWER(CONCAT('%', :search, '%')) "
+					+ "AND (:search IS NULL OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :search, '%')) "
 					+ "OR LOWER(API_RESOURCE_TEMPLATE) LIKE LOWER(CONCAT('%', :search, '%'))) ", 
 					nativeQuery = true)
 	Page<Object[]> getResourceSumList(@Param("owner") String owner, @Param("year") Integer year,
@@ -168,7 +168,7 @@ public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, Stri
 			@Param("search") String search, Pageable pageable);
 
 	@Query(value = "SELECT  APPLICATION_NAME ,API_NAME,COUNT(*) as request_count, "
-			+ "COUNT(CASE WHEN PROXY_RESPONSE_CODE != 200 THEN 1 END) AS count_not_200,COUNT(CASE WHEN PROXY_RESPONSE_CODE = 200 THEN 1 END) AS count_200,"
+			+ "COUNT(CASE WHEN PROXY_RESPONSE_CODE NOT BETWEEN 200 AND 299  THEN 1 END) AS count_not_200,COUNT(CASE WHEN PROXY_RESPONSE_CODE BETWEEN 200 AND 299  THEN 1 END) AS count_200,"
 			+ "API_ID, APPLICATION_ID ,APPLICATION_OWNER " 
 			+ " FROM DATA_USAGE_API "
 			+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner )" + "AND API_RESOURCE_TEMPLATE = :resource "

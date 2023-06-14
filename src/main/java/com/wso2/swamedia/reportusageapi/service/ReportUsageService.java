@@ -10,11 +10,14 @@ import java.time.Month;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,14 +112,14 @@ public class ReportUsageService {
 	}
 
 	public Page<MonthlySummaryDetails> getMonthlyDetailLog(String owner, String applicationId, String apiId,
-			String searchFilter, Pageable pageable,Integer year, Integer month) throws Exception {
+			String searchFilter, Pageable pageable, Integer year, Integer month) throws Exception {
 		LOGGER.info("Retrieving API Monthly detail log report for owner: {}, applicationId: {}, apiId: {}", owner,
 				applicationId, apiId);
 
 		Page<MonthlySummaryDetails> pageM = null;
 		try {
 			Page<Object[]> result = dataUsageApiRepository.getMonthlyDetailLog(pageable, owner, applicationId, apiId,
-					searchFilter,year,month);
+					searchFilter, year, month);
 
 			pageM = result.map(row -> {
 				String requestTimestamp = (String) row[0];
@@ -129,7 +132,7 @@ public class ReportUsageService {
 				String organtization = (String) row[7];
 
 				return new MonthlySummaryDetails(requestTimestamp, resource, proxyResponseCode, apiIdRes,
-						applicationIdres, apiNameQ, appNameQ,organtization);
+						applicationIdres, apiNameQ, appNameQ, organtization);
 			});
 		} catch (Exception e) {
 			String error = String.format("Error retrieving API monthly detail log report: {}", e.getMessage());
@@ -237,6 +240,48 @@ public class ReportUsageService {
 		LOGGER.info(query);
 		return namedParameterJdbcTemplate.query(query, parameters, new DashboardApiPercentageMapper());
 	}
+	
+	
+	public List<LinkedHashMap<String, Object>> getPlanByPaymentType(Integer subsTypeId) {
+	    String sqlQuery = "SELECT * FROM AM_POLICY_SUBSCRIPTION ";
+
+	    if (subsTypeId == 2) {
+	        sqlQuery += "WHERE CUSTOM_ATTRIBUTES = '[{\"name\":\"type_subscription\",\"value\":\"time\"}]'";
+	    }
+
+	    return namedParameterJdbcTemplate.query(sqlQuery, (rs, rowNum) -> {
+	        LinkedHashMap<String, Object> policyInfo = new LinkedHashMap<>();
+
+	        policyInfo.put("policyId", rs.getInt("POLICY_ID"));
+	        policyInfo.put("name", rs.getString("NAME"));
+	        policyInfo.put("displayName", rs.getString("DISPLAY_NAME"));
+	        policyInfo.put("tenantId", rs.getInt("TENANT_ID"));
+	        policyInfo.put("description", rs.getString("DESCRIPTION"));
+	        policyInfo.put("quotaType", rs.getString("QUOTA_TYPE"));
+	        policyInfo.put("quota", rs.getInt("QUOTA"));
+	        policyInfo.put("quotaUnit", rs.getString("QUOTA_UNIT"));
+	        policyInfo.put("unitTime", rs.getInt("UNIT_TIME"));
+	        policyInfo.put("timeUnit", rs.getString("TIME_UNIT"));
+	        policyInfo.put("rateLimitCount", rs.getInt("RATE_LIMIT_COUNT"));
+	        policyInfo.put("rateLimitTimeUnit", rs.getString("RATE_LIMIT_TIME_UNIT"));
+	        policyInfo.put("isDeployed", rs.getBoolean("IS_DEPLOYED"));
+	        policyInfo.put("customAttributes", rs.getString("CUSTOM_ATTRIBUTES"));
+	        policyInfo.put("stopOnQuotaReach", rs.getBoolean("STOP_ON_QUOTA_REACH"));
+	        policyInfo.put("billingPlan", rs.getString("BILLING_PLAN"));
+	        policyInfo.put("uuid", rs.getString("UUID"));
+	        policyInfo.put("monetizationPlan", rs.getString("MONETIZATION_PLAN"));
+	        policyInfo.put("fixedRate", rs.getString("FIXED_RATE"));
+	        policyInfo.put("billingCycle", rs.getString("BILLING_CYCLE"));
+	        policyInfo.put("pricePerRequest", rs.getString("PRICE_PER_REQUEST"));
+	        policyInfo.put("currency", rs.getString("CURRENCY"));
+	        policyInfo.put("maxComplexity", rs.getInt("MAX_COMPLEXITY"));
+	        policyInfo.put("maxDepth", rs.getInt("MAX_DEPTH"));
+	        policyInfo.put("connectionsCount", rs.getInt("CONNECTIONS_COUNT"));
+
+	        return policyInfo;
+	    });
+	}
+
 
 	public List<DashboardPercentageDTO> getApiUsageByApplication(LocalDate startDate, LocalDate endDate,
 			String username) {
@@ -306,13 +351,14 @@ public class ReportUsageService {
 	}
 
 	public List<Map<String, Object>> getApiNameAndId(String owner, String organization) {
-		String query = "SELECT DISTINCT AM_API.API_ID, AM_API.API_NAME,AM_API.API_UUID " + "FROM AM_SUBSCRIPTION "
-				+ "LEFT JOIN AM_API ON AM_SUBSCRIPTION.API_ID = AM_API.API_ID "
+		String query = "SELECT DISTINCT AM_API.API_ID, AM_API.API_NAME,AM_API.API_UUID,AM_SUBSCRIBER.USER_ID  "
+				+ "FROM AM_SUBSCRIPTION " + "LEFT JOIN AM_API ON AM_SUBSCRIPTION.API_ID = AM_API.API_ID "
 				+ "LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID "
 				+ "LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID = AM_SUBSCRIBER.SUBSCRIBER_ID "
 				+ "LEFT JOIN apim_shareddb.UM_USER uu ON AM_SUBSCRIBER.USER_ID = uu.UM_USER_NAME "
 				+ "LEFT JOIN apim_shareddb.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
-				+ "AND attr.UM_ATTR_NAME = 'organizationName' " + "WHERE (:owner IS NULL OR uu.UM_USER_ID = :owner) "
+				+ "AND attr.UM_ATTR_NAME = 'organizationName' "
+				+ "WHERE (:owner IS NULL OR AM_SUBSCRIBER.USER_ID  = :owner) "
 				+ "AND (:organizationName IS NULL OR attr.UM_ATTR_VALUE = :organizationName)";
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -428,7 +474,7 @@ public class ReportUsageService {
 			return apiInfo;
 		});
 	}
-	
+
 	public List<Map<String, Object>> getVersions(String apiName) {
 		String query = "SELECT API_VERSION,API_NAME ,API_UUID  FROM AM_API WHERE "
 				+ " (:apiName IS NULL OR API_NAME = :apiName)";
@@ -468,13 +514,15 @@ public class ReportUsageService {
 	}
 
 	public Page<TableRemainingDayQuota> getSubscriptionsRemaining(String owner, Pageable pageable) {
-		String query = "SELECT " + "attr.UM_ATTR_VALUE as organizationName, " + "AM_SUBSCRIPTION.SUBSCRIPTION_ID, "
-				+ "AM_APPLICATION.NAME AS APPLICATION_NAME, " + "AM_API.API_NAME  AS API_NAME, "
-				+ "AM_POLICY_SUBSCRIPTION.NAME AS POLICY_NAME, " + "AM_POLICY_SUBSCRIPTION.QUOTA AS INIT_QUOTA, "
-				+ "AM_POLICY_SUBSCRIPTION.CUSTOM_ATTRIBUTES," + "COALESCE(DATA_USAGE.USAGE_COUNT, 0) AS API_USAGE, "
+		String query = "SELECT " + "attr.UM_ATTR_VALUE as organizationName, uu.UM_USER_NAME, "
+				+ "AM_SUBSCRIPTION.SUBSCRIPTION_ID, " + "AM_APPLICATION.NAME AS APPLICATION_NAME, "
+				+ "AM_API.API_NAME  AS API_NAME, " + "AM_POLICY_SUBSCRIPTION.NAME AS POLICY_NAME, "
+				+ "AM_POLICY_SUBSCRIPTION.QUOTA AS INIT_QUOTA, " + "AM_POLICY_SUBSCRIPTION.CUSTOM_ATTRIBUTES,"
+				+ "COALESCE(DATA_USAGE.USAGE_COUNT, 0) AS API_USAGE, "
 				+ "COALESCE(AM_POLICY_SUBSCRIPTION.QUOTA, 0) - COALESCE(DATA_USAGE.USAGE_COUNT, 0) AS REMAINING_QUOTA, "
 				+ "AM_SUBSCRIPTION.CREATED_TIME AS START_DATE, "
-				+ "DATEDIFF(DATE_ADD(AM_SUBSCRIPTION.CREATED_TIME, INTERVAL 30 DAY), CURDATE()) AS REMAINING_DAYS "
+				+ "DATEDIFF(DATE_ADD(AM_SUBSCRIPTION.CREATED_TIME, INTERVAL 30 DAY), CURDATE()) AS REMAINING_DAYS,"
+				+ " AM_POLICY_SUBSCRIPTION.TIME_UNIT AS TIME_UNIT, " + "AM_POLICY_SUBSCRIPTION.UNIT_TIME AS UNIT_TIME "
 				+ "FROM " + "AM_SUBSCRIPTION "
 				+ "LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID "
 				+ "LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID  = AM_SUBSCRIBER.SUBSCRIBER_ID "
@@ -501,6 +549,8 @@ public class ReportUsageService {
 			dto.setApplicationName(resultSet.getString("APPLICATION_NAME"));
 			dto.setApiName(resultSet.getString("API_NAME"));
 			dto.setPolicyName(resultSet.getString("POLICY_NAME"));
+			dto.setOrganization(resultSet.getString("organizationName"));
+			dto.setApplicationOwner(resultSet.getString("UM_USER_NAME"));
 			// Retrieve the blob as a string
 			String jsonString = resultSet.getString("CUSTOM_ATTRIBUTES");
 
@@ -516,15 +566,38 @@ public class ReportUsageService {
 							.filter(node -> "type_subscription".equals(node.get("name").asText()))
 							.map(node -> node.get("value").asText()).findFirst();
 					String value = typeSubscriptionValue.orElse("");
+
 					if (value.equalsIgnoreCase("time")) {
+
 						dto.setStartDate(resultSet.getDate("START_DATE"));
-						dto.setQuota(30);
-						dto.setRemaining(resultSet.getInt("REMAINING_DAYS"));
+
+						if (resultSet.getString("TIME_UNIT").equals("days")) {
+							dto.setQuota(resultSet.getInt("UNIT_TIME"));
+						} else if (resultSet.getString("TIME_UNIT").equals("months")) {
+							dto.setQuota(resultSet.getInt("UNIT_TIME") * 30);
+						} else if (resultSet.getString("TIME_UNIT").equals("years")) {
+							dto.setQuota(resultSet.getInt("UNIT_TIME") * 365);
+						} else {
+							dto.setQuota(0);
+						}
+
+						Calendar calendar = Calendar.getInstance();
+						calendar.setTime(dto.getStartDate());
+
+						calendar.add(Calendar.DAY_OF_YEAR, dto.getQuota() + 1); // Add 1 day to the current date
+
+						Date newDate = calendar.getTime();
+						long diffInMilliseconds = newDate.getTime() - new Date().getTime();
+
+						// Convert milliseconds to days
+						Integer remainingDays = (int) TimeUnit.DAYS.convert(diffInMilliseconds, TimeUnit.MILLISECONDS);
+						remainingDays = remainingDays < 0 ? 0 : remainingDays;
+						dto.setRemaining(dto.getQuota().equals(0) ? 0 : remainingDays);
 						dto.setTypeSubscription("time");
 					} else {
 						dto.setQuota(resultSet.getInt("INIT_QUOTA"));
 						dto.setApiUsage(resultSet.getInt("API_USAGE"));
-						dto.setRemaining(resultSet.getInt("REMAINING_QUOTA"));
+						dto.setRemaining(resultSet.getInt("REMAINING_QUOTA")<0?0:resultSet.getInt("REMAINING_QUOTA"));
 						dto.setTypeSubscription("quota");
 					}
 				}
@@ -585,43 +658,41 @@ public class ReportUsageService {
 	}
 
 	public Map<String, Object> totalMonthlyDetailLog(String owner, String applicationId, String apiId,
-			String searchFilter,Integer year, Integer month) {
-		return dataUsageApiRepository.totalMonthlyDetailLog(owner, applicationId, apiId, searchFilter,year,month);
+			String searchFilter, Integer year, Integer month) {
+		return dataUsageApiRepository.totalMonthlyDetailLog(owner, applicationId, apiId, searchFilter, year, month);
 	}
 
-	public Page<?> getErrorSummary(String apiId, String version, boolean asPercent,String search, Pageable pageable) {
-		Page<ErrorSummary> apiUsagePage = dataUsageApiRepository.getAPIUsageByFilters(apiId, version,search, pageable);
+	public Page<?> getErrorSummary(String apiId, String version, boolean asPercent, String search, Pageable pageable) {
+		Page<ErrorSummary> apiUsagePage = dataUsageApiRepository.getAPIUsageByFilters(apiId, version, search, pageable);
 		List<Map<String, Object>> errorSummaryList = new ArrayList<>();
 		if (asPercent) {
-			 apiUsagePage.getContent().forEach(errorSummary -> {
-			        Map<String, Object> errorSummaryMap = convertErrorSummaryToMap(errorSummary);
-			        errorSummaryList.add(errorSummaryMap);
-			    });
+			apiUsagePage.getContent().forEach(errorSummary -> {
+				Map<String, Object> errorSummaryMap = convertErrorSummaryToMap(errorSummary);
+				errorSummaryList.add(errorSummaryMap);
+			});
 
-			    return new PageImpl<>(errorSummaryList, pageable, apiUsagePage.getTotalElements());
+			return new PageImpl<>(errorSummaryList, pageable, apiUsagePage.getTotalElements());
 		}
 
 		return apiUsagePage;
 	}
 
-
 	private LinkedHashMap<String, Object> convertErrorSummaryToMap(ErrorSummary errorSummary) {
 		LinkedHashMap<String, Object> map = new LinkedHashMap<>();
 		Long totalCount = errorSummary.getTotalCount();
 		if (totalCount > 0) {
-		map.put("apiId", errorSummary.getApiId());
-		map.put("apiName", errorSummary.getApiName());
-		map.put("apiResourceTemplate", errorSummary.getApiResourceTemplate());
-		map.put("apiMethod", errorSummary.getApiMethod());
-		map.put("count1xx", errorSummary.getCount1xx() * 100.0 / totalCount);
-		map.put("count2xx", errorSummary.getCount2xx() * 100.0 / totalCount);
-		map.put("count3xx", errorSummary.getCount3xx() * 100.0 / totalCount);
-		map.put("count4xx", errorSummary.getCount4xx() * 100.0 / totalCount);
-		map.put("count5xx", errorSummary.getCount5xx() * 100.0 / totalCount);
-		map.put("totalCount", errorSummary.getTotalCount());
+			map.put("apiId", errorSummary.getApiId());
+			map.put("apiName", errorSummary.getApiName());
+			map.put("apiResourceTemplate", errorSummary.getApiResourceTemplate());
+			map.put("apiMethod", errorSummary.getApiMethod());
+			map.put("count1xx", errorSummary.getCount1xx() * 100.0 / totalCount);
+			map.put("count2xx", errorSummary.getCount2xx() * 100.0 / totalCount);
+			map.put("count3xx", errorSummary.getCount3xx() * 100.0 / totalCount);
+			map.put("count4xx", errorSummary.getCount4xx() * 100.0 / totalCount);
+			map.put("count5xx", errorSummary.getCount5xx() * 100.0 / totalCount);
+			map.put("totalCount", errorSummary.getTotalCount());
 		}
 		return map;
 	}
-
 
 }

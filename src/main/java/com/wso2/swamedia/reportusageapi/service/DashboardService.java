@@ -22,6 +22,10 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -255,6 +259,160 @@ public class DashboardService {
 		return finalResult;
 
 	}
+	
+
+	public Page<LinkedHashMap<String, Object>> getFaultOvertimeDetails(String filter, String owner, int page, int pageSize, String searchQuery) throws Exception {
+	    String countQuery = "";
+	    String query = "";
+	    
+	    switch (filter) {
+	        case "today":
+	            countQuery = "SELECT COUNT(DISTINCT API_NAME,APPLICATION_NAME,du.APPLICATION_OWNER) FROM DATA_USAGE_API du "
+	        			+ "LEFT JOIN apim_shareddb.UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME "
+	        			+ "LEFT JOIN apim_shareddb.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
+	            		+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
+	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
+	                    + "AND DATE(du.REQUEST_TIMESTAMP) = CURDATE() ";
+	            query = "SELECT attr.UM_ATTR_VALUE ,du.APPLICATION_OWNER,'today' as type, DATE_FORMAT(du.REQUEST_TIMESTAMP, '%Y-%m-%d %H') AS intervalData, "
+	                    + "du.API_NAME, du.APPLICATION_NAME, COUNT(*) AS total_usage "
+	                    + "FROM DATA_USAGE_API du "
+	                    + "LEFT JOIN apim_shareddb.UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME "
+	        			+ "LEFT JOIN apim_shareddb.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
+	                    + "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
+	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
+	                    + "AND DATE(du.REQUEST_TIMESTAMP) = CURDATE() ";
+	            break;
+	        case "week":
+	            countQuery = "SELECT COUNT(DISTINCT API_NAME,APPLICATION_NAME,du.APPLICATION_OWNER) FROM DATA_USAGE_API du "
+	        			+ "LEFT JOIN apim_shareddb.UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME "
+	        			+ "LEFT JOIN apim_shareddb.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
+	        			+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
+	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
+	                    + "AND YEARWEEK(du.REQUEST_TIMESTAMP) = YEARWEEK(CURDATE()) ";
+	            query = "SELECT attr.UM_ATTR_VALUE ,du.APPLICATION_OWNER,'week' as type, DATE_FORMAT(du.REQUEST_TIMESTAMP, '%Y-%m-%d') AS intervalData, "
+	                    + "du.API_NAME, du.APPLICATION_NAME, COUNT(*) AS total_usage "
+	                    + "FROM DATA_USAGE_API du "
+	        			+ "LEFT JOIN apim_shareddb.UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME "
+	        			+ "LEFT JOIN apim_shareddb.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
+	                    + "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
+	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
+	                    + "AND YEARWEEK(du.REQUEST_TIMESTAMP) = YEARWEEK(CURDATE()) ";
+	            break;
+	        case "month":
+	            countQuery = "SELECT COUNT(DISTINCT API_NAME,APPLICATION_NAME,du.APPLICATION_OWNER) FROM DATA_USAGE_API du "
+	        			+ "LEFT JOIN apim_shareddb.UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME "
+	        			+ "LEFT JOIN apim_shareddb.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
+	            		+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
+	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
+	                    + "AND YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
+	                    + "AND MONTH(du.REQUEST_TIMESTAMP) = MONTH(CURDATE()) ";
+	            query = "SELECT attr.UM_ATTR_VALUE ,du.APPLICATION_OWNER,'month' as type, DATE_FORMAT(du.REQUEST_TIMESTAMP, '%Y-%m-%d') AS intervalData, "
+	                    + "du.API_NAME, du.APPLICATION_NAME, COUNT(*) AS total_usage "
+	                    + "FROM DATA_USAGE_API du "
+	        			+ "LEFT JOIN apim_shareddb.UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME "
+	        			+ "LEFT JOIN apim_shareddb.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
+	                    + "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
+	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
+	                    + "AND YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
+	                    + "AND MONTH(du.REQUEST_TIMESTAMP) = MONTH(CURDATE()) ";
+	            break;
+	        case "year":
+	            countQuery = "SELECT COUNT(DISTINCT API_NAME,APPLICATION_NAME,du.APPLICATION_OWNER) FROM DATA_USAGE_API du "
+	        			+ "LEFT JOIN apim_shareddb.UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME "
+	        			+ "LEFT JOIN apim_shareddb.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
+	            		+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
+	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
+	                    + "AND YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) ";
+	            query = "SELECT attr.UM_ATTR_VALUE ,du.APPLICATION_OWNER, 'year' as type, DATE_FORMAT(du.REQUEST_TIMESTAMP, '%Y-%m') AS intervalData, "
+	                    + "du.API_NAME, du.APPLICATION_NAME, COUNT(*) AS total_usage "
+	                    + "FROM DATA_USAGE_API du "
+	        			+ "LEFT JOIN apim_shareddb.UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME "
+	        			+ "LEFT JOIN apim_shareddb.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
+	                    + "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
+	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
+	                    + "AND YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) ";
+	            break;
+	        default:
+	            throw new Exception("Invalid filter provided. Valid filters: today, week, month, year");
+	    }
+
+	    // Add search condition if provided
+	    if (searchQuery != null && !searchQuery.isEmpty()) {
+	        countQuery += "AND (du.API_NAME LIKE CONCAT('%', :searchQuery, '%') OR du.APPLICATION_NAME LIKE CONCAT('%', :searchQuery, '%')) ";
+	        query += "AND (du.API_NAME LIKE CONCAT('%', :searchQuery, '%') OR du.APPLICATION_NAME LIKE CONCAT('%', :searchQuery, '%')) ";
+	    }
+	    query += "GROUP BY intervalData, du.API_NAME, du.APPLICATION_NAME,attr.UM_ATTR_VALUE ,du.APPLICATION_OWNER "
+	            + "ORDER BY intervalData DESC, total_usage DESC ";
+
+	    // Count total records per filter
+	    MapSqlParameterSource countParams = new MapSqlParameterSource();
+	    countParams.addValue("owner", owner);
+	    countParams.addValue("searchQuery", searchQuery);
+	    int totalRecords = namedParameterJdbcTemplate.queryForObject(countQuery, countParams, Integer.class);
+
+	    // Fetch paginated data
+	    Pageable pageable = PageRequest.of(page, pageSize);
+	    query += "LIMIT :pageSize OFFSET :offset";
+	    MapSqlParameterSource queryParams = new MapSqlParameterSource();
+	    queryParams.addValue("owner", owner);
+	    queryParams.addValue("searchQuery", searchQuery);
+	    queryParams.addValue("pageSize", pageable.getPageSize());
+	    queryParams.addValue("offset", pageable.getOffset());
+
+	    List<LinkedHashMap<String, Object>> queryResult = namedParameterJdbcTemplate.query(query, queryParams, (rs, rowNum) -> {
+			LinkedHashMap<String, Object> data = new LinkedHashMap<String, Object>();
+			LocalDate dateTime = null;
+			if (rs.getString("type").equalsIgnoreCase("today")) {
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH");
+				LocalDateTime dateTime1 = LocalDateTime.parse(rs.getString("intervalData"), formatter);
+				DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("HH:mm");
+				data.put("time", dateTime1.format(formatter2));
+			} else if (rs.getString("type").equalsIgnoreCase("week")) {
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+				dateTime = LocalDate.parse(rs.getString("intervalData"), formatter);
+				data.put("time", dateTime);
+			} else if (rs.getString("type").equalsIgnoreCase("month")) {
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+				dateTime = LocalDate.parse(rs.getString("intervalData"), formatter);
+				data.put("time", dateTime);
+			} else {
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
+				YearMonth yearMonth = YearMonth.parse(rs.getString("intervalData"), formatter);
+				dateTime = yearMonth.atDay(1);
+				data.put("time",yearMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault()));
+			}
+			String apiName = rs.getString("API_NAME");
+			int totalUsage = rs.getInt("total_usage");
+			data.put("apiName", apiName);
+			data.put("applicationName", rs.getString("APPLICATION_NAME"));
+			data.put("applicationOwner", rs.getString("APPLICATION_OWNER"));
+			data.put("organization", rs.getString("UM_ATTR_VALUE"));
+			data.put("totalUsage", totalUsage);
+
+			return data;
+		});
+	    
+	    Page<LinkedHashMap<String, Object>> pageResult = new PageImpl<>(queryResult, pageable, totalRecords);
+
+	    return pageResult;
+	}
+
 
 	public List<LinkedHashMap<String, Object>> getFaultOvertime(String filter, String owner) throws Exception {
 		String query = "";
@@ -265,8 +423,9 @@ public class DashboardService {
 					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
 					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
-					+ "AND du.PROXY_RESPONSE_CODE !=200 "
-					+ "AND " + "DATE(du.REQUEST_TIMESTAMP) = CURDATE() " + "GROUP BY intervalData, du.API_NAME "
+					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
+					+ "AND " + "DATE(du.REQUEST_TIMESTAMP) = CURDATE() " 
+					+ "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
 			break;
 
@@ -275,7 +434,7 @@ public class DashboardService {
 					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
 					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
-					+ "AND du.PROXY_RESPONSE_CODE !=200 "
+					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 					+ "AND " + "YEARWEEK(du.REQUEST_TIMESTAMP) = YEARWEEK(CURDATE()) "
 					+ "GROUP BY intervalData, du.API_NAME " + "ORDER BY intervalData DESC, total_usage DESC ";
 		case "month":
@@ -284,7 +443,7 @@ public class DashboardService {
 					+ "FROM DATA_USAGE_API du "
 					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
-					+ "AND du.PROXY_RESPONSE_CODE !=200 "
+					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 					+ "AND " + "YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
 					+ "AND MONTH(du.REQUEST_TIMESTAMP) = MONTH(CURDATE()) " + "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
@@ -295,7 +454,7 @@ public class DashboardService {
 					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
 					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
-					+ "AND du.PROXY_RESPONSE_CODE !=200 "
+					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 					+ "AND " 
 					+ "YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) " 
 					+ "GROUP BY intervalData, du.API_NAME "
@@ -443,6 +602,8 @@ public class DashboardService {
 
 		return finalResult;
 	}
+	
+	
 
 	public List<DashboardPercentageDTO> getApiUsageByApi(String username,Integer top) {
 		String query = "SELECT API_ID, API_NAME, COUNT(*) AS row_count, (COUNT(*) / (SELECT COUNT(*) FROM DATA_USAGE_API WHERE 1=1"
@@ -612,7 +773,7 @@ public class DashboardService {
 
 	public int getTotalResponseFaultByUsername(String username) {
 		String query = "SELECT COUNT(*) AS totalResponseFault " + "FROM DATA_USAGE_API "
-				+ "WHERE DATA_USAGE_API.PROXY_RESPONSE_CODE != 200 "
+				+ "WHERE DATA_USAGE_API.PROXY_RESPONSE_CODE BETWEEN 200 AND 299  "
 				+ "AND (:username IS NULL OR DATA_USAGE_API.APPLICATION_OWNER = :username) "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') ";
 
