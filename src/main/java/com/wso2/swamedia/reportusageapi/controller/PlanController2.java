@@ -17,10 +17,10 @@ import com.wso2.swamedia.reportusageapi.dto.ApiResponse;
 import com.wso2.swamedia.reportusageapi.dto.SubPoliciesResponse;
 
 @RestController
-@RequestMapping("/plan")
-public class PlanController {
+@RequestMapping("/v1/plan")
+public class PlanController2 {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(PlanController.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(PlanController2.class);
 
 	private static final int POST_PAID_SUBS_TYPE = 2;
 	private static final int PRE_PAID_SUBS_TYPE = 1;

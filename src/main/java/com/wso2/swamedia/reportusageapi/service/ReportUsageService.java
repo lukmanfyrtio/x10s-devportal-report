@@ -242,11 +242,13 @@ public class ReportUsageService {
 	}
 	
 	
-	public List<LinkedHashMap<String, Object>> getPlanByPaymentType(Integer subsTypeId) {
+	public List<LinkedHashMap<String, Object>> getPlanByPaymentType(Integer subsTypeId,Boolean isDeployed) {
 	    String sqlQuery = "SELECT * FROM AM_POLICY_SUBSCRIPTION ";
-
+	    int val = (isDeployed) ? 1 : 0;
 	    if (subsTypeId == 2) {
-	        sqlQuery += "WHERE CUSTOM_ATTRIBUTES = '[{\"name\":\"type_subscription\",\"value\":\"time\"}]'";
+	        sqlQuery += "WHERE CUSTOM_ATTRIBUTES = '[{\"name\":\"type_subscription\",\"value\":\"time\"}]' AND IS_DEPLOYED = "+val;
+	    }else {
+	    	sqlQuery+="WHERE IS_DEPLOYED = "+val;
 	    }
 
 	    return namedParameterJdbcTemplate.query(sqlQuery, (rs, rowNum) -> {
