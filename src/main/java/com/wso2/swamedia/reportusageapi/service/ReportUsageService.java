@@ -357,8 +357,8 @@ public class ReportUsageService {
 				+ "FROM AM_SUBSCRIPTION " + "LEFT JOIN AM_API ON AM_SUBSCRIPTION.API_ID = AM_API.API_ID "
 				+ "LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID "
 				+ "LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID = AM_SUBSCRIBER.SUBSCRIBER_ID "
-				+ "LEFT JOIN apim_shareddb.UM_USER uu ON AM_SUBSCRIBER.USER_ID = uu.UM_USER_NAME "
-				+ "LEFT JOIN apim_shareddb.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+				+ "LEFT JOIN apim_shareddb_test.UM_USER uu ON AM_SUBSCRIBER.USER_ID = uu.UM_USER_NAME "
+				+ "LEFT JOIN apim_shareddb_test.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
 				+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 				+ "WHERE (:owner IS NULL OR AM_SUBSCRIBER.USER_ID  = :owner) "
 				+ "AND (:organizationName IS NULL OR attr.UM_ATTR_VALUE = :organizationName)";
@@ -393,8 +393,8 @@ public class ReportUsageService {
 
 	public List<Map<String, Object>> getCustomers(String owner) {
 		String sqlQuery = "SELECT uu.*, attr.UM_ATTR_VALUE AS organizationName " + "FROM apim_db.AM_SUBSCRIBER as2 "
-				+ "JOIN apim_shareddb.UM_USER uu ON as2.USER_ID = uu.UM_USER_NAME "
-				+ "LEFT JOIN apim_shareddb.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+				+ "JOIN apim_shareddb_test.UM_USER uu ON as2.USER_ID = uu.UM_USER_NAME "
+				+ "LEFT JOIN apim_shareddb_test.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
 				+ "AND attr.UM_ATTR_NAME = 'organizationName'";
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -411,7 +411,7 @@ public class ReportUsageService {
 	}
 
 	public int getTotalCustomers(String username) {
-		String sqlQuery = "select COUNT(DISTINCT UM_ATTR_VALUE)" + "from apim_shareddb.UM_USER_ATTRIBUTE "
+		String sqlQuery = "select COUNT(DISTINCT UM_ATTR_VALUE)" + "from apim_shareddb_test.UM_USER_ATTRIBUTE "
 				+ "where UM_ATTR_NAME='organizationName'";
 		try {
 
@@ -426,7 +426,7 @@ public class ReportUsageService {
 	}
 
 	public List<Map<String, Object>> getCustomersv2(String owner) {
-		String sqlQuery = "select DISTINCT UM_ATTR_VALUE as organizationName " + "from apim_shareddb.UM_USER_ATTRIBUTE "
+		String sqlQuery = "select DISTINCT UM_ATTR_VALUE as organizationName " + "from apim_shareddb_test.UM_USER_ATTRIBUTE "
 				+ "where UM_ATTR_NAME='organizationName'";
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
@@ -528,8 +528,8 @@ public class ReportUsageService {
 				+ "FROM " + "AM_SUBSCRIPTION "
 				+ "LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID "
 				+ "LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID  = AM_SUBSCRIBER.SUBSCRIBER_ID "
-				+ "LEFT JOIN apim_shareddb.UM_USER uu ON AM_SUBSCRIBER.USER_ID = uu.UM_USER_NAME "
-				+ "LEFT JOIN apim_shareddb.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID AND attr.UM_ATTR_NAME = 'organizationName' "
+				+ "LEFT JOIN apim_shareddb_test.UM_USER uu ON AM_SUBSCRIBER.USER_ID = uu.UM_USER_NAME "
+				+ "LEFT JOIN apim_shareddb_test.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID AND attr.UM_ATTR_NAME = 'organizationName' "
 				+ "LEFT JOIN AM_API ON AM_SUBSCRIPTION.API_ID  = AM_API.API_ID "
 				+ "LEFT JOIN AM_POLICY_SUBSCRIPTION ON AM_SUBSCRIPTION.TIER_ID = AM_POLICY_SUBSCRIPTION.NAME "
 				+ "LEFT JOIN ( "
