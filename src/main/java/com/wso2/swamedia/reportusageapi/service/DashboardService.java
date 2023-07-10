@@ -801,8 +801,14 @@ public class DashboardService {
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
+					 connection.close();
+					 preparedStatement.close();
+					 resultSet.close();
 					return resultSet.getInt(1);
 				} else {
+					 connection.close();
+					 preparedStatement.close();
+					 resultSet.close();
 					return 0;
 				}
 			}

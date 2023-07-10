@@ -392,7 +392,7 @@ public class ReportUsageService {
 	}
 
 	public List<Map<String, Object>> getCustomers(String owner) {
-		String sqlQuery = "SELECT uu.*, attr.UM_ATTR_VALUE AS organizationName " + "FROM apim_db.AM_SUBSCRIBER as2 "
+		String sqlQuery = "SELECT uu.*, attr.UM_ATTR_VALUE AS organizationName " + "FROM apim_db_test.AM_SUBSCRIBER as2 "
 				+ "JOIN apim_shareddb_test.UM_USER uu ON as2.USER_ID = uu.UM_USER_NAME "
 				+ "LEFT JOIN apim_shareddb_test.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
 				+ "AND attr.UM_ATTR_NAME = 'organizationName'";
@@ -508,7 +508,10 @@ public class ReportUsageService {
 				organization.setValue(resultSet.getString("value"));
 				result.add(organization);
 			}
-		} catch (SQLException e) {
+			connection.close();
+			resultSet.close();
+			statement.close();
+			} catch (SQLException e) {
 			e.printStackTrace();
 			throw new Exception("Error occurred while retrieving organization details.", e);
 		}
