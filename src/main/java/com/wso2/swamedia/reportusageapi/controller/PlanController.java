@@ -24,6 +24,7 @@ public class PlanController {
 
 	private static final int POST_PAID_SUBS_TYPE = 2;
 	private static final int PRE_PAID_SUBS_TYPE = 1;
+	private static final int FREE_SUBS_TYPE = 3;
 
 	@Autowired
 	private Utils utils;
@@ -37,7 +38,9 @@ public class PlanController {
 
 			List<SubPoliciesResponse> resData = utils.getSubscriptionThrottlingPoliciesPublisher(apiId);
 			ApiResponse<?> response = ApiResponse.success("Get plan by payment type retrieval successful.",
-					subsTypeId.equals(PRE_PAID_SUBS_TYPE) ? Utils.getTierAttributesOfTypeTimeAndQuota(resData) : Utils.getTierAttributesOfTypeTime(resData));
+					subsTypeId.equals(PRE_PAID_SUBS_TYPE) ? Utils.getTierAttributesOfTypeTimeAndQuota(resData)
+							: subsTypeId.equals(POST_PAID_SUBS_TYPE) ? Utils.getTierAttributesOfTypeTime(resData)
+									: Utils.getTierAttributesOfTypeTimeAndFree(resData));
 			LOGGER.info("Get plan by payment type retrieval completed");
 
 			return ResponseEntity.ok(response);
@@ -48,8 +51,8 @@ public class PlanController {
 	}
 
 	private void validateSubsTypeId(int subsTypeId) {
-		if (subsTypeId != POST_PAID_SUBS_TYPE && subsTypeId != PRE_PAID_SUBS_TYPE) {
-			throw new IllegalArgumentException("Invalid subsTypeId. Allowed values: 0 (post-paid) or 1 (pre-paid)");
+		if (subsTypeId != POST_PAID_SUBS_TYPE && subsTypeId != PRE_PAID_SUBS_TYPE&& subsTypeId != FREE_SUBS_TYPE) {
+			throw new IllegalArgumentException("Invalid subsTypeId. Allowed values: 1 (pre-paid), 2 (post-paid) or 3 (free)");
 		}
 	}
 }

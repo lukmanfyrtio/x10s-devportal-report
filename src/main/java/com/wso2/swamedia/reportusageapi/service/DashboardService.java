@@ -752,7 +752,8 @@ public class DashboardService {
 	}
 
 	public int getTotalSubscriptionAPIByUsername(String username) {
-		String query = "SELECT COUNT(*) AS totalSubscriptionAPI " + "FROM AM_SUBSCRIPTION "
+		String query = "SELECT COUNT(*) AS totalSubscriptionAPI " 
+				+ "FROM AM_SUBSCRIPTION "
 				+ "LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID "
 				+ "LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID = AM_SUBSCRIBER.SUBSCRIBER_ID "
 				+ "LEFT JOIN AM_API ON AM_API.API_ID = AM_SUBSCRIPTION.API_ID "
@@ -772,10 +773,12 @@ public class DashboardService {
 	}
 
 	public int getTotalResponseFaultByUsername(String username) {
-		String query = "SELECT COUNT(*) AS totalResponseFault " + "FROM DATA_USAGE_API "
+		String query = "SELECT COUNT(*) AS totalResponseFault " 
+				+ "FROM DATA_USAGE_API "
+				+ "LEFT JOIN billing_db.subscription s on s.subscription_id = DATA_USAGE_API.subscription_id "
 				+ "WHERE DATA_USAGE_API.PROXY_RESPONSE_CODE BETWEEN 200 AND 299  "
 				+ "AND (:username IS NULL OR DATA_USAGE_API.APPLICATION_OWNER = :username) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') ";
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') AND s.is_active = 1";
 
 		try {
 			// Create parameters for the named query
@@ -791,7 +794,7 @@ public class DashboardService {
 	}
 
 	public int getTotalUnpaidInvoicesByUsername(String username) {
-		String query = "SELECT COUNT(i.id) FROM invoice i WHERE paid != 1 AND (? IS NULL OR i.customer_id = ?)";
+		String query = "SELECT COUNT(i.id) as total FROM invoice i WHERE paid != 1 AND (? IS NULL OR i.customer_id = ?)";
 
 		try (Connection connection = dbUtilsBilling.getConnection();
 				PreparedStatement preparedStatement = connection.prepareStatement(query)) {
@@ -800,11 +803,13 @@ public class DashboardService {
 			preparedStatement.setString(2, username);
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				
 				if (resultSet.next()) {
+					 int res=resultSet.getInt("total");
 					 connection.close();
 					 preparedStatement.close();
 					 resultSet.close();
-					return resultSet.getInt(1);
+					return res;
 				} else {
 					 connection.close();
 					 preparedStatement.close();

@@ -146,6 +146,18 @@ public class Utils {
 
 		return tierAttributesList;
 	}
+	
+	public static List<SubPoliciesResponse> getTierAttributesOfTypeTimeAndFree(List<SubPoliciesResponse> dtoList) {
+		List<SubPoliciesResponse> tierAttributesList = new ArrayList<>();
+
+		for (SubPoliciesResponse dto : dtoList) {
+			if (dto.getTierPlan().equals("FREE")) {
+				tierAttributesList.add(dto);
+			}
+		}
+
+		return tierAttributesList;
+	}
 
 	public SearchAPIResponse searchAPIs(String query, int limit, int offset) {
 //        int limit = size;
