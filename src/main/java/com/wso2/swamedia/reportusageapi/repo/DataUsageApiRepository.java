@@ -18,48 +18,58 @@ import com.wso2.swamedia.reportusageapi.model.DataUsageApi;
 public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, String> {
 
 	// monthly summary total APIs and total request count
-	@Query(value = "SELECT COUNT(DISTINCT API_ID) AS total_apis, COUNT(*) AS total_request,COUNT(DISTINCT attr.UM_ATTR_VALUE) AS total_customer "
+	@Query(value = "SELECT COUNT(DISTINCT DATA_USAGE_API.API_ID) AS total_apis, COUNT(*) AS total_request,COUNT(DISTINCT attr.UM_ATTR_VALUE) AS total_customer "
 			+ "FROM DATA_USAGE_API "
+			+ "LEFT JOIN billing_db.subscription s on "
+			+ "s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID " 
 			+ "LEFT JOIN apim_shareddb_test.UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
 			+ "LEFT JOIN apim_shareddb_test.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
 			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 			+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner )"
+			+ "AND (:showDeleted = true OR s.is_active = true) "
 			+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 			+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) " 
-			+ "AND (:apiId IS NULL OR API_ID = :apiId) "
+			+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
 			+ "AND (:applicationId IS NULL OR APPLICATION_ID = :applicationId) "
 			+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-			+ "AND (:organization IS NULL OR attr.UM_ATTR_VALUE = :organization) ", nativeQuery = true)
+			+ "AND (:organization IS NULL OR attr.UM_ATTR_VALUE = :organization) "
+			+ "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' ", nativeQuery = true)
 	Map<String, Object> getTotalApisAndRequestsByOwnerAndFilters(@Param("owner") String owner,
 			@Param("year") Integer year, @Param("month") Integer month, @Param("apiId") String apiId,
-			@Param("applicationId") String applicationId,@Param("organization") String organization);
+			@Param("applicationId") String applicationId,@Param("organization") String organization,@Param("showDeleted") Boolean showDeleted);
 
-	
 	// monthly summary table list
-	@Query(value = "SELECT API_NAME,API_VERSION ,APPLICATION_OWNER ,API_ID, APPLICATION_NAME, "
+	@Query(value = "SELECT DATA_USAGE_API.API_NAME,DATA_USAGE_API.API_VERSION ,APPLICATION_OWNER ,DATA_USAGE_API.API_ID, APPLICATION_NAME, "
 			+ "COUNT(*) AS total_row_count ,APPLICATION_ID ,attr.UM_ATTR_VALUE "
-			+ "FROM DATA_USAGE_API " 
+			+ "FROM DATA_USAGE_API "
+			+ "LEFT JOIN billing_db.subscription s on "
+			+ "s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID " 
 			+ "LEFT JOIN apim_shareddb_test.UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
 			+ "LEFT JOIN apim_shareddb_test.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
 			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 			+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner )"
+			+ "AND (:showDeleted = true OR s.is_active = true) "
 			+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 			+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) " 
-			+ "AND (:apiId IS NULL OR API_ID = :apiId) "
-			+ "AND (:applicationId IS NULL OR APPLICATION_ID = :applicationId) "
+			+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
+			+ "AND (:applicationId IS NULL OR DATA_USAGE_API.APPLICATION_ID = :applicationId) "
 			+ "AND (:organization IS NULL OR attr.UM_ATTR_VALUE = :organization) "
 			+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 			+ "AND (:search IS NULL OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :search, '%')) "
 			+ "OR LOWER(APPLICATION_NAME) LIKE LOWER(CONCAT('%', :search, '%'))) "
-			+ "GROUP BY APPLICATION_ID,API_NAME,API_VERSION "
-			+ ",APPLICATION_OWNER ,API_ID, APPLICATION_NAME ,attr.UM_ATTR_VALUE " 
+			+ "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' "
+			+ "GROUP BY DATA_USAGE_API.APPLICATION_ID,API_NAME,API_VERSION "
+			+ ",DATA_USAGE_API.APPLICATION_OWNER ,DATA_USAGE_API.API_ID, APPLICATION_NAME ,attr.UM_ATTR_VALUE " 
 			+ "ORDER "
 			+ " BY API_ID, APPLICATION_NAME ", countQuery = "SELECT COUNT(DISTINCT APPLICATION_ID) "
 					+ "FROM DATA_USAGE_API " 
+					+ "LEFT JOIN billing_db.subscription s on "
+					+ "s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID " 
 					+ "LEFT JOIN apim_shareddb_test.UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
 					+ "LEFT JOIN apim_shareddb_test.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
 					+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 					+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner )"
+					+ "AND (:showDeleted = true OR s.is_active = true) "
 					+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 					+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
 					+ "AND (:apiId IS NULL OR API_ID = :apiId) "
@@ -67,36 +77,45 @@ public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, Stri
 					+ "AND (:organization IS NULL OR attr.UM_ATTR_VALUE = :organization) "
 					+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 					+ "AND (:search IS NULL OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :search, '%')) "
+					+ "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' "
 					+ "OR LOWER(APPLICATION_NAME) LIKE LOWER(CONCAT('%', :search, '%'))) ", nativeQuery = true)
 	Page<Object[]> getMonthlyTotalRowByGroupByWithSearchAndPageable(@Param("owner") String owner,
-			@Param("year") Integer year, @Param("month") Integer month, @Param("apiId") String apiId,
+			@Param("year") Integer year, @Param("month") Integer month, @Param("apiId") String apiId,@Param("showDeleted") Boolean showDeleted,
 			@Param("applicationId") String applicationId, @Param("search") String search,@Param("organization") String organization, Pageable pageable);
 
 	@Query(value = "SELECT DATE_FORMAT(REQUEST_TIMESTAMP, '%Y-%b-%d %H:%i:%s') AS requestTimestamp, "
 			+ "CONCAT(API_METHOD, ' ', API_RESOURCE_TEMPLATE) AS resource, "
-			+ "PROXY_RESPONSE_CODE, API_ID, APPLICATION_ID ,API_NAME,APPLICATION_NAME ,attr.UM_ATTR_VALUE " 
+			+ "PROXY_RESPONSE_CODE, DATA_USAGE_API.API_ID, APPLICATION_ID ,API_NAME,APPLICATION_NAME ,attr.UM_ATTR_VALUE " 
 			+ "FROM DATA_USAGE_API "
+			+ "LEFT JOIN billing_db.subscription s on "
+			+ "s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID " 
 			+ "LEFT JOIN apim_shareddb_test.UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
 			+ "LEFT JOIN apim_shareddb_test.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
 			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 			+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner )" 
+			+ "AND (:showDeleted = true OR s.is_active = true) "
 			+ "AND APPLICATION_ID = :applicationId "
 			+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 			+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 			+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
-			+ "AND API_ID = :apiId " 
+			+ "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' "
+			+ "AND DATA_USAGE_API.API_ID = :apiId " 
 			+ "   AND (:searchFilter IS NULL "
 			+ "OR (LOWER(API_RESOURCE_TEMPLATE) LIKE LOWER(CONCAT('%', :searchFilter, '%'))  "
 			+ "    OR LOWER(PROXY_RESPONSE_CODE) LIKE LOWER(CONCAT('%', :searchFilter, '%'))  )) "
 			+ "ORDER BY REQUEST_TIMESTAMP", 
 			countQuery = "SELECT COUNT(*) " 
 			+ "FROM DATA_USAGE_API "
+			+ "LEFT JOIN billing_db.subscription s on "
+			+ "s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID " 
 			+ "LEFT JOIN apim_shareddb_test.UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
 			+ "LEFT JOIN apim_shareddb_test.UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
 			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 					+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner )" 
+					+ "AND (:showDeleted = true OR s.is_active = true) "
 					+ "AND APPLICATION_ID = :applicationId "
-					+ "AND API_ID = :apiId "
+					+ "AND DATA_USAGE_API.API_ID = :apiId "
+					+ "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' "
 					+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 					+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
 					+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
@@ -106,14 +125,19 @@ public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, Stri
 					nativeQuery = true)
 	Page<Object[]> getMonthlyDetailLog(Pageable pageable, @Param("owner") String owner,
 			@Param("applicationId") String applicationId, @Param("apiId") String apiId,
-			@Param("searchFilter") String searchFilter,@Param("year") Integer year, @Param("month") Integer month);
+			@Param("searchFilter") String searchFilter,@Param("year") Integer year, @Param("month") Integer month,
+			@Param("showDeleted") Boolean showDeleted);
 	
 	@Query(value = "SELECT COUNT(*) as request_count, "
 					+ "COUNT(CASE WHEN PROXY_RESPONSE_CODE NOT BETWEEN 200 AND 299 THEN 1 END) AS count_not_200,COUNT(CASE WHEN PROXY_RESPONSE_CODE = 200 THEN 1 END) AS count_200 " 
 			+ "FROM DATA_USAGE_API "
+			+ "LEFT JOIN billing_db.subscription s on "
+			+ "s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID " 
 			+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner )" 
+			+ "AND (:showDeleted = true OR s.is_active = true) "
 			+ "AND APPLICATION_ID = :applicationId "
-			+ "AND API_ID = :apiId " 
+			+ "AND DATA_USAGE_API.API_ID = :apiId "
+			+ "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' " 
 			+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 			+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
 			+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
@@ -124,40 +148,54 @@ public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, Stri
 					nativeQuery = true)
 	Map<String, Object> totalMonthlyDetailLog(@Param("owner") String owner,
 			@Param("applicationId") String applicationId, @Param("apiId") String apiId,
-			@Param("searchFilter") String searchFilter,@Param("year") Integer year, @Param("month") Integer month);
+			@Param("searchFilter") String searchFilter,@Param("year") Integer year, @Param("month") Integer month,@Param("showDeleted") Boolean showDeleted);
 
 	// resource summary total APIs and total request count
-	@Query(value = "SELECT COUNT(DISTINCT API_ID) AS total_apis, COUNT(*) AS total_request FROM DATA_USAGE_API "
+	@Query(value = "SELECT COUNT(DISTINCT DATA_USAGE_API.API_ID) AS total_apis, COUNT(*) AS total_request "
+			+ "FROM DATA_USAGE_API "
+			+ "LEFT JOIN billing_db.subscription s on "
+			+ "s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID " 
 			+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner )"
+			+ "AND (:showDeleted = true OR s.is_active = true) "
 			+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 			+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) " 
-			+ "AND (:apiId IS NULL OR API_ID = :apiId) "
+			+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
+			+ "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' "
 			+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 			+ "AND (:resource IS NULL OR API_RESOURCE_TEMPLATE = :resource)", nativeQuery = true)
 	Map<String, Object> getResourceSumTotal(@Param("owner") String owner, @Param("year") Integer year,
-			@Param("month") Integer month, @Param("apiId") String apiId, @Param("resource") String resource);
+			@Param("month") Integer month, @Param("apiId") String apiId, @Param("resource") String resource
+			,@Param("showDeleted") Boolean showDeleted);
 
 	// resource summary table list
 	@Query(value = "SELECT API_NAME ,API_VERSION ,API_RESOURCE_TEMPLATE,API_METHOD "
-			+ ",COUNT(*) as request_count,API_ID ,APPLICATION_ID,APPLICATION_NAME "
+			+ ",COUNT(*) as request_count,DATA_USAGE_API.API_ID "
 			+ "FROM DATA_USAGE_API " 
+			+ "LEFT JOIN billing_db.subscription s on "
+			+ "s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID " 
 			+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner )"
+			+ "AND (:showDeleted = true OR s.is_active = true) "
 			+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 			+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) " 
-			+ "AND (:apiId IS NULL OR API_ID = :apiId) "
+			+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
 			+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 			+ "AND (:resource IS NULL OR API_RESOURCE_TEMPLATE = :resource) "
 			+ "AND (:search IS NULL OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :search, '%')) "
+			+ "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' "
 			+ "OR LOWER(API_RESOURCE_TEMPLATE) LIKE LOWER(CONCAT('%', :search, '%'))) "
-			+ "GROUP BY API_NAME, API_VERSION, API_RESOURCE_TEMPLATE, API_METHOD, API_ID"
+			+ "GROUP BY API_NAME, API_VERSION, API_RESOURCE_TEMPLATE, API_METHOD, DATA_USAGE_API.API_ID " 
 			+ "ORDER "
 			+ " BY request_count DESC", 
-			countQuery = "SELECT COUNT(DISTINCT API_RESOURCE_TEMPLATE,API_ID,API_VERSION) "
+			countQuery = "SELECT COUNT(DISTINCT API_NAME, API_VERSION, API_RESOURCE_TEMPLATE, API_METHOD,DATA_USAGE_API.API_ID) "
 					+ "FROM DATA_USAGE_API " 
+					+ "LEFT JOIN billing_db.subscription s on "
+					+ "s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID " 
 					+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner )"
+					+ "AND (:showDeleted = true OR s.is_active = true) "
 					+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 					+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
-					+ "AND (:apiId IS NULL OR API_ID = :apiId) "
+					+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
+					+ "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' "
 					+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 					+ "AND (:resource IS NULL OR API_RESOURCE_TEMPLATE = :resource) "
 					+ "AND (:search IS NULL OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :search, '%')) "
@@ -165,14 +203,18 @@ public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, Stri
 					nativeQuery = true)
 	Page<Object[]> getResourceSumList(@Param("owner") String owner, @Param("year") Integer year,
 			@Param("month") Integer month, @Param("apiId") String apiId, @Param("resource") String resource,
-			@Param("search") String search, Pageable pageable);
+			@Param("search") String search, Pageable pageable,@Param("showDeleted") Boolean showDeleted);
 
 	@Query(value = "SELECT  APPLICATION_NAME ,API_NAME,COUNT(*) as request_count, "
 			+ "COUNT(CASE WHEN PROXY_RESPONSE_CODE NOT BETWEEN 200 AND 299  THEN 1 END) AS count_not_200,COUNT(CASE WHEN PROXY_RESPONSE_CODE BETWEEN 200 AND 299  THEN 1 END) AS count_200,"
-			+ "API_ID, APPLICATION_ID ,APPLICATION_OWNER " 
+			+ "DATA_USAGE_API.API_ID, APPLICATION_ID ,APPLICATION_OWNER " 
 			+ " FROM DATA_USAGE_API "
-			+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner )" + "AND API_RESOURCE_TEMPLATE = :resource "
-			+ "AND API_ID = :apiId " 
+			+ "LEFT JOIN billing_db.subscription s on "
+			+ "s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID " 
+			+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner )" 
+			+ "AND (:showDeleted = true OR s.is_active = true) "
+			+ "AND API_RESOURCE_TEMPLATE = :resource "
+			+ "AND DATA_USAGE_API.API_ID = :apiId " 
 			+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 			+ "   AND (:searchFilter IS NULL OR LOWER(APPLICATION_NAME) LIKE LOWER(CONCAT('%', :searchFilter, '%'))  "
 			+ "    OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :searchFilter, '%'))  ) " 
@@ -180,13 +222,16 @@ public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, Stri
 			+ "  APPLICATION_ID ," 
 			+ "  APPLICATION_NAME ,"
 			+ "  API_NAME, " 
-			+ "  API_ID ,"
+			+ "  DATA_USAGE_API.API_ID ,"
 			+ "APPLICATION_OWNER "
 			+ "ORDER BY request_count desc", 
 			countQuery = " SELECT COUNT(DISTINCT APPLICATION_ID)"
 					+ "FROM DATA_USAGE_API " 
+					+ "LEFT JOIN billing_db.subscription s on "
+					+ "s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID " 
 					+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner )"
-					+ "AND API_RESOURCE_TEMPLATE = :resource " + "AND API_ID = :apiId "
+					+ "AND (:showDeleted = true OR s.is_active = true) "
+					+ "AND API_RESOURCE_TEMPLATE = :resource " + "AND DATA_USAGE_API.API_ID = :apiId "
 					+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 					+ "AND (:searchFilter IS NULL "
 					+ "OR LOWER(APPLICATION_NAME) LIKE LOWER(CONCAT('%', :searchFilter, '%'))  "
@@ -194,7 +239,7 @@ public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, Stri
 					nativeQuery = true)
 	Page<Object[]> getDetailLogResourceSum(Pageable pageable, @Param("owner") String owner,
 			@Param("resource") String resource, @Param("apiId") String apiId,
-			@Param("searchFilter") String searchFilter);
+			@Param("searchFilter") String searchFilter,@Param("showDeleted") Boolean showDeleted);
 	
 	
 	

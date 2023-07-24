@@ -40,7 +40,8 @@ public class ReportUsageControllerv2 {
 			@RequestParam(required = false) Integer month, @RequestParam(required = false) String applicationId,
 			Authentication authentication, @RequestParam(value = "apiId",required = false) String apiId,
 			@RequestParam(required = false) String search, @RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size) {
+			@RequestParam(value = "size", defaultValue = "10") int size,
+			@RequestParam(value = "showDeletedSubscription", defaultValue = "false") Boolean showDeletedSubscription) {
 
 		LOGGER.info("Received request for monthly summary");
 		try {
@@ -51,7 +52,7 @@ public class ReportUsageControllerv2 {
 					: principal.getAttributes().get("http://wso2.org/claims/organization").toString();
 
 			ApiResponse<?> response = ApiResponse.success("Monthly summary retrieval successful.", reportUsageService
-					.getMonthlyReport(year, month, applicationId, apiId, username, page, size, search, organization));
+					.getMonthlyReport(year, month, applicationId, apiId, username, page, size, search, organization,showDeletedSubscription));
 			LOGGER.info("Monthly summary retrieval completed");
 
 			return ResponseEntity.ok(response);
@@ -69,7 +70,7 @@ public class ReportUsageControllerv2 {
 			@RequestParam(value = "search", required = false) String search,
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size,
-
+			@RequestParam(value = "showDeletedSubscription", defaultValue = "false") Boolean showDeletedSubscription,
 			Authentication authentication) {
 
 		LOGGER.info("Received request for API Monthly detail log");
@@ -79,14 +80,14 @@ public class ReportUsageControllerv2 {
 			String username = Utils.isAdmin(principal.getAttributes()) ? null : principal.getAttributes().get("http://wso2.org/claims/username").toString();
 
 			Map<String, Object> total = reportUsageService.totalMonthlyDetailLog(username, applicationId, apiId, search,
-					year, month);
+					year, month,showDeletedSubscription);
 			Pageable pageable = PageRequest.of(page, size);
 			LinkedHashMap<String, Object> result = new LinkedHashMap<>();
 			result.put("requestCount", total.get("request_count"));
 			result.put("requestOK", total.get("count_200"));
 			result.put("requestNOK", total.get("count_not_200"));
 			result.put("details", reportUsageService.getMonthlyDetailLog(username, applicationId, apiId, search,
-					pageable, year, month));
+					pageable, year, month,showDeletedSubscription));
 
 			ApiResponse<?> response = ApiResponse.success("Monthly detail log retrieval successful.", result);
 
@@ -104,7 +105,8 @@ public class ReportUsageControllerv2 {
 			@RequestParam(required = false) Integer month, @RequestParam(required = false) String resource,
 			@RequestParam(required = false) String apiId, Authentication authentication,
 			@RequestParam(required = false) String search, @RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size) {
+			@RequestParam(value = "size", defaultValue = "10") int size,
+			@RequestParam(value = "showDeletedSubscription", defaultValue = "false") Boolean showDeletedSubscription) {
 
 		LOGGER.info("Received request for resource summary");
 		try {
@@ -113,7 +115,7 @@ public class ReportUsageControllerv2 {
 			String username = Utils.isAdmin(principal.getAttributes()) ? null : principal.getAttributes().get("http://wso2.org/claims/username").toString();
 
 			ApiResponse<?> response = ApiResponse.success("Resource summary retrieval successful.",
-					reportUsageService.getResourceReport(year, month, resource, apiId, username, page, size, search));
+					reportUsageService.getResourceReport(year, month, resource, apiId, username, page, size, search,showDeletedSubscription));
 
 			LOGGER.info("Resource summary retrieval completed");
 
@@ -130,7 +132,9 @@ public class ReportUsageControllerv2 {
 			@RequestParam(value = "apiId") String apiId,
 			@RequestParam(value = "search", required = false) String search,
 			@RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size, Authentication authentication) {
+			@RequestParam(value = "size", defaultValue = "10") int size,
+			@RequestParam(value = "showDeletedSubscription", defaultValue = "false") Boolean showDeletedSubscription,
+			Authentication authentication) {
 
 		LOGGER.info("Received request for resource detail log");
 		try {
@@ -140,7 +144,7 @@ public class ReportUsageControllerv2 {
 
 			Pageable pageable = PageRequest.of(page, size);
 			ApiResponse<?> response = ApiResponse.success("Resource detail log retrieval successful.",
-					reportUsageService.getDetailLogResourceSum(username, resource, apiId, search, pageable));
+					reportUsageService.getDetailLogResourceSum(username, resource, apiId, search, pageable,showDeletedSubscription));
 
 			LOGGER.info("Resource detail log retrieval completed");
 

@@ -29,5 +29,7 @@ public class TableRemainingDayQuota {
 	private Integer remaining;
 	private String organization;
 	private String applicationOwner;
+	private String notes;
+	private String subsStateId;
 //    private Integer remainingDays;
 }

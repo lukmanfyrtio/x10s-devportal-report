@@ -38,13 +38,14 @@ public class ReportUsageController {
 			@RequestParam(required = false) String organization,
 			@RequestParam(required = false) String apiId, @RequestParam(required = false) String username,
 			@RequestParam(required = false) String search, @RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size) {
+			@RequestParam(value = "size", defaultValue = "10") int size,
+			@RequestParam(required = false,defaultValue = "false") Boolean showDeletedSubscription) {
 
 		LOGGER.info("Received request for monthly summary");
 		try {
 
 			ApiResponse<?> response = ApiResponse.success("Monthly summary retrieval successful.", reportUsageService
-					.getMonthlyReport(year, month, applicationId, apiId, username, page, size, search,organization));
+					.getMonthlyReport(year, month, applicationId, apiId, username, page, size, search,organization,showDeletedSubscription));
 			LOGGER.info("Monthly summary retrieval completed");
 
 			return ResponseEntity.ok(response);
@@ -64,19 +65,20 @@ public class ReportUsageController {
 			@RequestParam(value = "search", required = false) String search,
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size,
-			@RequestParam(required = false) String username) {
+			@RequestParam(required = false) String username,
+			@RequestParam(required = false,defaultValue = "false") Boolean showDeletedSubscription) {
 
 		LOGGER.info("Received request for API Monthly detail log");
 		try {
 			Map<String, Object> total = reportUsageService.totalMonthlyDetailLog(username, applicationId, apiId,
-					search,year,month);
+					search,year,month,showDeletedSubscription);
 			Pageable pageable = PageRequest.of(page, size);
 			LinkedHashMap<String, Object> result = new LinkedHashMap<>();
 			result.put("requestCount",total.get("request_count"));
 			result.put("requestOK",total.get("count_200"));
 			result.put("requestNOK",total.get("count_not_200"));
 			result.put("details",
-					reportUsageService.getMonthlyDetailLog(username, applicationId, apiId, search, pageable,year,month));
+					reportUsageService.getMonthlyDetailLog(username, applicationId, apiId, search, pageable,year,month,showDeletedSubscription));
 
 			ApiResponse<?> response = ApiResponse.success("Monthly detail log retrieval successful.", result);
 
@@ -94,12 +96,13 @@ public class ReportUsageController {
 			@RequestParam(required = false) Integer month, @RequestParam(required = false) String resource,
 			@RequestParam(required = false) String apiId, @RequestParam(required = false) String username,
 			@RequestParam(required = false) String search, @RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size) {
+			@RequestParam(value = "size", defaultValue = "10") int size,
+			@RequestParam(required = false,defaultValue = "false") Boolean showDeletedSubscription) {
 
 		LOGGER.info("Received request for resource summary");
 		try {
 			ApiResponse<?> response = ApiResponse.success("Resource summary retrieval successful.",
-					reportUsageService.getResourceReport(year, month, resource, apiId, username, page, size, search));
+					reportUsageService.getResourceReport(year, month, resource, apiId, username, page, size, search,showDeletedSubscription));
 
 			LOGGER.info("Resource summary retrieval completed");
 
@@ -116,13 +119,14 @@ public class ReportUsageController {
 			@RequestParam(value = "search", required = false) String search,
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size,
-			@RequestParam(required = false) String username) {
+			@RequestParam(required = false) String username,
+			@RequestParam(required = false,defaultValue = "false") Boolean showDeletedSubscription) {
 
 		LOGGER.info("Received request for resource detail log");
 		try {
 			Pageable pageable = PageRequest.of(page, size);
 			ApiResponse<?> response = ApiResponse.success("Resource detail log retrieval successful.",
-					reportUsageService.getDetailLogResourceSum(username, resource, apiId, search, pageable));
+					reportUsageService.getDetailLogResourceSum(username, resource, apiId, search, pageable,showDeletedSubscription));
 
 			LOGGER.info("Resource detail log retrieval completed");
 
@@ -214,7 +218,7 @@ public class ReportUsageController {
 			@RequestParam(value = "organization", required = false) String organization) {
 		LOGGER.info("Received request to get the list of API names");
 		try {
-			List<Map<String, Object>> apiNames = reportUsageService.getApiNameAndId(username,organization);
+			List<Map<String, Object>> apiNames = reportUsageService.getApis(username,organization);
 			ApiResponse<List<Map<String, Object>>> response = ApiResponse.success("API names retrieved successfully",
 					apiNames);
 			return ResponseEntity.ok(response);
