@@ -15,11 +15,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.DefaultOAuth2AuthenticatedPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.wso2.swamedia.reportusageapi.Utils;
 import com.wso2.swamedia.reportusageapi.dto.ApiResponse;
 import com.wso2.swamedia.reportusageapi.service.ReportUsageService;
 
@@ -324,12 +327,16 @@ public class ReportUsageController {
 	}
 	
 	@GetMapping("/subscriptions/remaining")
-	public ResponseEntity<?> getRemainingSubscriptions(@RequestParam(required = false) String username,
+	public ResponseEntity<?> getRemainingSubscriptions(Authentication authentication,
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size) {
 
 		LOGGER.info("Received request for remaining subscriptions.");
 		try {
+			DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
+					.getPrincipal();
+			String username = Utils.isAdmin(principal.getAttributes()) ? null
+					: principal.getAttributes().get("http://wso2.org/claims/username").toString();
 			Pageable pageable = PageRequest.of(page, size);
 			ApiResponse<?> response = ApiResponse.success("Successful retrieval of remaining subscriptions.",
 					reportUsageService.getSubscriptionsRemaining(username, pageable));

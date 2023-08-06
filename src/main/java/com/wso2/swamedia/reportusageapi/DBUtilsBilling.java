@@ -24,4 +24,11 @@ public class DBUtilsBilling {
 	public Connection getConnection() throws SQLException {
 		return DriverManager.getConnection(databaseUrl, databaseUsername, databasePassword);
 	}
+	
+	public String getSchemaName() {
+		// Extract database name from URL
+		String[] urlParts = databaseUrl.split("/");
+		String databaseName = urlParts[urlParts.length - 1];
+		return databaseName;
+	}
 }

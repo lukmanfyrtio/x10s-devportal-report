@@ -9,11 +9,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.DefaultOAuth2AuthenticatedPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.wso2.swamedia.reportusageapi.Utils;
 import com.wso2.swamedia.reportusageapi.dto.ApiResponse;
 import com.wso2.swamedia.reportusageapi.dto.TotalReportDashboard;
 import com.wso2.swamedia.reportusageapi.service.DashboardService;
@@ -28,10 +31,8 @@ public class DashboardController {
 	private DashboardService dashboardService;
 
 	@GetMapping("/percentage-report")
-	public ResponseEntity<?> getApiUsagePercentage(@RequestParam(value = "username", required = false) String username
-//			@RequestParam(value = "periodStartDate", required = false) String periodStartDate,
-//			@RequestParam(value = "periodEndDate", required = false) String periodEndDate
-			, @RequestParam(value = "top", required = false, defaultValue = "10") Integer top,
+	public ResponseEntity<?> getApiUsagePercentage(Authentication authentication,
+			@RequestParam(value = "top", required = false, defaultValue = "10") Integer top,
 			@RequestParam(value = "byApplication", required = false, defaultValue = "false") Boolean byApplication,
 			@RequestParam(value = "byApi", required = false, defaultValue = "false") Boolean byApi,
 			@RequestParam(value = "byResponseCode", required = false, defaultValue = "false") Boolean byResponseCode
@@ -39,15 +40,10 @@ public class DashboardController {
 	) {
 		LOGGER.info("Received request for get percentage usage");
 
-//		LocalDate pStartDate = parseDate(periodStartDate);
-//		LocalDate pEndDate = parseDate(periodEndDate);
-
-//		if (pStartDate == null || pEndDate == null) {
-//			ApiResponse<?> response = ApiResponse
-//					.error("Invalid date format. The date should be in the format yyyy-MM-dd.");
-//			return ResponseEntity.badRequest().body(response);
-//		}
-
+		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
+				.getPrincipal();
+		String username = Utils.isAdmin(principal.getAttributes()) ? null
+				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
 		try {
 			ApiResponse<?> response = ApiResponse.success("Percentage usage  retrieved successfully .",
 					dashboardService.getUsagePercentage(username, top, byApplication, byResponseCode, byApi));
@@ -72,10 +68,15 @@ public class DashboardController {
 
 	@GetMapping("/api-usage")
 	public ResponseEntity<?> getDashboardApiUsageByDate(
-			@RequestParam(value = "username", required = false) String username, @RequestParam("filter") String filter,
+			Authentication authentication, @RequestParam("filter") String filter,
 			@RequestParam(value = "top", defaultValue = "10") int top) {
 		LOGGER.info("Received request for get api usage");
 		try {
+			DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
+					.getPrincipal();
+			String username = Utils.isAdmin(principal.getAttributes()) ? null
+					: principal.getAttributes().get("http://wso2.org/claims/username").toString();
+			
 			ApiResponse<?> response = ApiResponse.success("Top 10 api usage retrieved successfully .",
 					dashboardService.getTopTenApiUsage(filter, username, top));
 
@@ -88,9 +89,13 @@ public class DashboardController {
 
 	@GetMapping("/api-fault")
 	public ResponseEntity<?> getDashboardApiFaultByDate(
-			@RequestParam(value = "username", required = false) String username,
+			Authentication authentication,
 			@RequestParam("filter") String filter) {
 		LOGGER.info("Received request for get api fault");
+		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
+				.getPrincipal();
+		String username = Utils.isAdmin(principal.getAttributes()) ? null
+				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
 		try {
 			ApiResponse<?> response = ApiResponse.success("Api fault overtime retrieved successfully .",
 					dashboardService.getFaultOvertime(filter, username));
@@ -104,11 +109,15 @@ public class DashboardController {
 
 	@GetMapping("/api-fault/details")
 	public ResponseEntity<?> getDashboardApiFaultDetails(
-			@RequestParam(value = "username", required = false) String username, @RequestParam("filter") String filter,
+			Authentication authentication, @RequestParam("filter") String filter,
 			@RequestParam(required = false) String search, @RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size) {
 		LOGGER.info("Received request for get api fault details");
 		try {
+			DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
+					.getPrincipal();
+			String username = Utils.isAdmin(principal.getAttributes()) ? null
+					: principal.getAttributes().get("http://wso2.org/claims/username").toString();
 			ApiResponse<?> response = ApiResponse.success("Api fault overtime details retrieved successfully .",
 					dashboardService.getFaultOvertimeDetails(filter, username, page, size, search));
 
@@ -121,10 +130,14 @@ public class DashboardController {
 
 	@GetMapping("/total-report")
 	public ResponseEntity<?> getDashboardTotalReport(
-			@RequestParam(value = "username", required = false) String username) {
+			Authentication authentication) {
 		LOGGER.info("Received request to retrieve the dashboard total report");
 		try {
-
+			DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
+					.getPrincipal();
+			String username = Utils.isAdmin(principal.getAttributes()) ? null
+					: principal.getAttributes().get("http://wso2.org/claims/username").toString();
+			
 			ApiResponse<TotalReportDashboard> response = ApiResponse.success(
 					"The dashboard total report has been retrieved successfully",
 					dashboardService.getDashboardTotalReport(username));

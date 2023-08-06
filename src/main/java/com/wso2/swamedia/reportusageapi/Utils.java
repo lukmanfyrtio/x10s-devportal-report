@@ -58,7 +58,7 @@ public class Utils {
 		// Cek apakah roles mengandung "Internal/admin"
 
 		String roles = map.get("http://wso2.org/claims/role").toString();
-		if (roles.contains("Internal/admin")) {
+		if (roles.contains("admin")) {
 			return true;
 		} else {
 			return false;
