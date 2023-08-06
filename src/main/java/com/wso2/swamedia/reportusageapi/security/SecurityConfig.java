@@ -21,43 +21,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	private String clientId;
 	@Value("${spring.security.oauth2.resourceserver.opaque.introspection-client-secret}")
 	private String clientSecret;
-	
-    @Autowired
-    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-//
-//	@Bean
-//	public JwtDecoder jwtDecoder() {
-//		return NimbusJwtDecoder.withJwkSetUri(host + "/oauth2/jwks").build();
-//	}
-//
-//	@Bean
-//	public JwtAuthenticationConverter jwtAuthenticationConverter() {
-//		JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-//		converter.setJwtGrantedAuthoritiesConverter(new CustomAuthoritiesConverter());
-//		return converter;
-//	}
-//
-//	@Override
-//	protected void configure(HttpSecurity http) throws Exception {
-//		http.antMatcher("/api/**").authorizeRequests().anyRequest().authenticated().and().oauth2ResourceServer().jwt()
-//				.jwtAuthenticationConverter(jwtAuthenticationConverter());
-//	}
+	@Autowired
+	private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http
-            .authorizeRequests()
-                .antMatchers("/v1/**","/dashboard/**","/report/subscriptions/remaining").authenticated()
-                .anyRequest().permitAll()
-                .and()
-                .exceptionHandling()
-                    .authenticationEntryPoint(customAuthenticationEntryPoint).and()
-            .oauth2ResourceServer()
-                .opaqueToken()
-                .introspector(introspector());
-           
-    }
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		http.authorizeRequests().antMatchers("/v1/**", "/dashboard/**", "/report/subscriptions/remaining")
+				.authenticated().anyRequest().permitAll().and().exceptionHandling()
+				.authenticationEntryPoint(customAuthenticationEntryPoint).and().oauth2ResourceServer().opaqueToken()
+				.introspector(introspector());
+
+	}
 
 	@Bean
 	public OpaqueTokenIntrospector introspector() {

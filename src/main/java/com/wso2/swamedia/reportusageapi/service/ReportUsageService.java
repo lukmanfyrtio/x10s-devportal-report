@@ -61,7 +61,7 @@ public class ReportUsageService {
 	@Value("${spring.billing-datasource.url}")
 	private String databaseUrl;
 
-	public String getDatabaseNameFromService() {
+	public String getBillingSchema() {
 		// Extract database name from URL
 		String[] urlParts = databaseUrl.split("/");
 		String databaseName = urlParts[urlParts.length - 1];
@@ -86,19 +86,18 @@ public class ReportUsageService {
 		LOGGER.info("Retrieving monthly report for year: {}, month: {}, username: {}", year, month, username);
 
 		MonthlySummary monthlySummary = new MonthlySummary();
+
 		try {
 			Map<String, Object> dataTotal = getTotalApisAndRequestsByOwnerAndFilters(username, year, month, apiId,
 					applicationId, organization, showDeleted);
-			monthlySummary.setTotalApis(Integer.valueOf(dataTotal.get("total_apis").toString()));
-			monthlySummary.setRequestCount(Integer.valueOf(dataTotal.get("total_request").toString()));
-			monthlySummary.setTotalCustomers(Integer.valueOf(dataTotal.get("total_customer").toString()));
+			monthlySummary.setTotalApis(Integer.parseInt(dataTotal.get("total_apis").toString()));
+			monthlySummary.setRequestCount(Integer.parseInt(dataTotal.get("total_request").toString()));
+			monthlySummary.setTotalCustomers(Integer.parseInt(dataTotal.get("total_customer").toString()));
 		} catch (Exception e) {
-			String error = String.format("Error retrieving total APIs and requests: {}", e.getMessage());
-			LOGGER.error(error);
-			// Handle the exception or throw a custom exception
-			throw new Exception(e.getMessage());
+			LOGGER.error("Error retrieving total APIs and requests: {}", e.getMessage());
+			throw e; // Rethrow the exception to the caller
 		}
-//		List<OrganizationDTO> organizationDTOs = getOrganizations();
+
 		try {
 			Pageable pageable = PageRequest.of(page, size);
 			Page<MonthlySummary.ApiDetails> result = getMonthlyTotalRowByGroupByWithSearchAndPageable(username, year,
@@ -106,12 +105,8 @@ public class ReportUsageService {
 
 			monthlySummary.setDetails(result);
 		} catch (Exception e) {
-			// Handle the exception or throw a custom exception
-
-			String error = String.format("Error retrieving monthly report details: {}", e.getMessage());
-			LOGGER.error(error);
-			// Handle the exception or throw a custom exception
-			throw new Exception(e.getMessage());
+			LOGGER.error("Error retrieving monthly report details: {}", e.getMessage());
+			throw e; // Rethrow the exception to the caller
 		}
 
 		LOGGER.info("Monthly report retrieval completed");
@@ -119,55 +114,48 @@ public class ReportUsageService {
 		return monthlySummary;
 	}
 
-	public Page<MonthlySummaryDetails> getMonthlyDetailLog(String owner, String applicationId, String apiId,
-			String searchFilter, Pageable pageable, Integer year, Integer month, Boolean showDeletedSubscription)
-			throws Exception {
+	public Page<MonthlySummaryDetails> getMonthlyDetailLogReport(String owner, String applicationId, String apiId,
+			String searchFilter, Pageable pageable, Integer year, Integer month, Boolean showDeletedSubscription) {
 		LOGGER.info("Retrieving API Monthly detail log report for owner: {}, applicationId: {}, apiId: {}", owner,
 				applicationId, apiId);
 
-		Page<MonthlySummaryDetails> pageM = null;
 		try {
-			pageM = getMonthlyDetailLog(pageable, owner, applicationId, apiId, searchFilter, year, month,
-					showDeletedSubscription);
+			Page<MonthlySummaryDetails> monthlyDetailLogPage = fetchMonthlyDetailLogData(pageable, owner, applicationId,
+					apiId, searchFilter, year, month, showDeletedSubscription);
 
+			LOGGER.info("API Monthly detail log report retrieval completed");
+			return monthlyDetailLogPage;
 		} catch (Exception e) {
-			String error = String.format("Error retrieving API monthly detail log report: {}", e.getMessage());
-			LOGGER.error(error);
-			throw new Exception(e.getMessage());
+			String errorMessage = "Error retrieving API monthly detail log report: " + e.getMessage();
+			LOGGER.error(errorMessage);
+			throw new RuntimeException(errorMessage, e); // Rethrow a runtime exception to indicate unexpected errors
 		}
-
-		LOGGER.info("API Monthly detail log report retrieval completed");
-
-		return pageM;
 	}
 
 	public ResourceSummary getResourceReport(Integer year, Integer month, String resource, String apiId,
-			String username, int page, int size, String search, Boolean showDeletedSubscription) throws Exception {
+			String username, int page, int size, String search, Boolean showDeletedSubscription) {
 		LOGGER.info("Retrieving resource summary for year: {}, month: {}, resource: {}, username: {}", year, month,
 				resource, username);
 
 		ResourceSummary resourceSummary = new ResourceSummary();
 		try {
-			Map<String, Object> dataTotal = getResourceSumTotal(username, year, month, apiId, resource,
+			Map<String, Object> resourceSumTotal = getResourceSumTotalData(username, year, month, apiId, resource,
 					showDeletedSubscription);
-			resourceSummary.setTotalApis(Integer.valueOf(dataTotal.get("total_apis").toString()));
-			resourceSummary.setRequestCount(Integer.valueOf(dataTotal.get("total_request").toString()));
+			resourceSummary.setTotalApis(Integer.valueOf(resourceSumTotal.get("total_apis").toString()));
+			resourceSummary.setRequestCount(Integer.valueOf(resourceSumTotal.get("total_request").toString()));
 		} catch (Exception e) {
-			String error = String.format("Error retrieving total APIs and requests for resource: {}", e.getMessage());
-			LOGGER.error(error);
-			throw new Exception(e.getMessage());
+			LOGGER.error("Error retrieving total APIs and requests for resource: {}", e.getMessage());
+			throw new RuntimeException("Error retrieving total APIs and requests for resource", e);
 		}
 
 		try {
 			Pageable pageable = PageRequest.of(page, size);
-
-			Page<ResourceSummary.ApiDetails> pageM = getResourceSumList(username, year, month, apiId, resource, search,
-					pageable, showDeletedSubscription);
-			resourceSummary.setDetails(pageM);
+			Page<ResourceSummary.ApiDetails> resourceSummaryPage = getResourceSumListData(username, year, month, apiId,
+					resource, search, pageable, showDeletedSubscription);
+			resourceSummary.setDetails(resourceSummaryPage);
 		} catch (Exception e) {
-			String error = String.format("Error retrieving resource summary details: {}", e.getMessage());
-			LOGGER.error(error);
-			throw new Exception(e.getMessage());
+			LOGGER.error("Error retrieving resource summary details: {}", e.getMessage());
+			throw new RuntimeException("Error retrieving resource summary details", e);
 		}
 
 		LOGGER.info("Resource summary retrieval completed");
@@ -182,8 +170,7 @@ public class ReportUsageService {
 		Page<ResourceSummaryDetails> pageM = null;
 		try {
 
-			pageM = getDetailLogResourceSum(pageable, owner, resource, apiId, searchFilter,
-					showDeletedSubscription);
+			pageM = getDetailLogResourceSum(pageable, owner, resource, apiId, searchFilter, showDeletedSubscription);
 		} catch (Exception e) {
 			String error = String.format("Error retrieving resource detail log: {}", e.getMessage());
 			LOGGER.error(error);
@@ -196,19 +183,14 @@ public class ReportUsageService {
 	}
 
 	public List<DashboardPercentageDTO> getApiUsageByApi(LocalDate startDate, LocalDate endDate, String username) {
-		String query = "SELECT API_ID, API_NAME, COUNT(*) AS row_count, (COUNT(*) / (SELECT COUNT(*) FROM DATA_USAGE_API WHERE 1=1"
-				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-				+ getOptionalDateRangeCondition(startDate, endDate)
-				+ ") * 100) AS percentage FROM DATA_USAGE_API WHERE 1=1"
-				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-				+ getOptionalDateRangeCondition(startDate, endDate) + " GROUP BY API_ID, API_NAME";
+		String query = SqlQueryReport.getApiUsageByApi(startDate, endDate);
 
 		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
 		params.put("owner", username);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
-		LOGGER.info(query);
+
+		LOGGER.info("SQL Query: {}", query); // Use parameterized logging
+
 		return namedParameterJdbcTemplate.query(query, parameters, new DashboardApiPercentageMapper());
 	}
 
@@ -257,15 +239,8 @@ public class ReportUsageService {
 
 	public List<DashboardPercentageDTO> getApiUsageByApplication(LocalDate startDate, LocalDate endDate,
 			String username) {
-		String query = "SELECT APPLICATION_ID, APPLICATION_NAME, COUNT(*) AS row_count, (COUNT(*) / (SELECT COUNT(*) FROM DATA_USAGE_API WHERE 1=1"
-				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-				+ getOptionalDateRangeCondition(startDate, endDate)
-				+ ") * 100) AS percentage FROM DATA_USAGE_API WHERE 1=1"
-				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-				+ getOptionalDateRangeCondition(startDate, endDate) + " GROUP BY APPLICATION_ID, APPLICATION_NAME";
 
+		String query = SqlQueryReport.getApiUsageByApplication(startDate, endDate);
 		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
 		params.put("owner", username);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
@@ -275,32 +250,13 @@ public class ReportUsageService {
 
 	public List<DashboardPercentageDTO> getApiUsageByResponseCode(LocalDate startDate, LocalDate endDate,
 			String username) {
-		String query = "SELECT PROXY_RESPONSE_CODE, COUNT(*) AS row_count, (COUNT(*) / (SELECT COUNT(*) FROM DATA_USAGE_API WHERE 1=1"
-				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-				+ getOptionalDateRangeCondition(startDate, endDate)
-				+ ") * 100) AS percentage FROM DATA_USAGE_API WHERE 1=1"
-				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-				+ getOptionalDateRangeCondition(startDate, endDate) + " GROUP BY PROXY_RESPONSE_CODE";
+		String query = SqlQueryReport.getApiUsageByResponseCode(startDate, endDate);
 
 		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
 		params.put("owner", username);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
 		LOGGER.info(query);
 		return namedParameterJdbcTemplate.query(query, parameters, new DashboardResCodePercentageMapper());
-	}
-
-	private String getOptionalDateRangeCondition(LocalDate startDate, LocalDate endDate) {
-		StringBuilder condition = new StringBuilder();
-		if (startDate != null && endDate != null) {
-			condition.append(" AND REQUEST_TIMESTAMP >= :startDate AND REQUEST_TIMESTAMP <= :endDate");
-		} else if (startDate != null) {
-			condition.append(" AND REQUEST_TIMESTAMP >= :startDate");
-		} else if (endDate != null) {
-			condition.append(" AND REQUEST_TIMESTAMP <= :endDate");
-		}
-		return condition.toString();
 	}
 
 	private Map<String, Object> getOptionalDateRangeNamedParams(LocalDate startDate, LocalDate endDate) {
@@ -323,15 +279,7 @@ public class ReportUsageService {
 	}
 
 	public List<Map<String, Object>> getApiNameAndId(String owner, String organization) {
-		String query = "SELECT DISTINCT AM_API.API_ID, AM_API.API_NAME,AM_API.API_UUID,AM_SUBSCRIBER.USER_ID  "
-				+ "FROM AM_SUBSCRIPTION " + "LEFT JOIN AM_API ON AM_SUBSCRIPTION.API_ID = AM_API.API_ID "
-				+ "LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID "
-				+ "LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID = AM_SUBSCRIBER.SUBSCRIBER_ID "
-				+ "LEFT JOIN " + dbUtilsUser.getSchemaName() + ".UM_USER uu ON AM_SUBSCRIBER.USER_ID = uu.UM_USER_NAME "
-				+ "LEFT JOIN " + dbUtilsUser.getSchemaName() + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
-				+ "AND attr.UM_ATTR_NAME = 'organizationName' "
-				+ "WHERE (:owner IS NULL OR AM_SUBSCRIBER.USER_ID  = :owner) "
-				+ "AND (:organizationName IS NULL OR attr.UM_ATTR_VALUE = :organizationName)";
+		String query = SqlQueryReport.getApiNameAndId(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -347,15 +295,7 @@ public class ReportUsageService {
 	}
 
 	public List<Map<String, Object>> getApis(String owner, String organization) {
-		String query = "SELECT DISTINCT AM_API.API_ID, AM_API.API_NAME,AM_API.API_UUID " + "FROM AM_SUBSCRIPTION "
-				+ "LEFT JOIN AM_API ON AM_SUBSCRIPTION.API_ID = AM_API.API_ID "
-				+ "LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID "
-				+ "LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID = AM_SUBSCRIBER.SUBSCRIBER_ID "
-				+ "LEFT JOIN " + dbUtilsUser.getSchemaName() + ".UM_USER uu ON AM_SUBSCRIBER.USER_ID = uu.UM_USER_NAME "
-				+ "LEFT JOIN " + dbUtilsUser.getSchemaName() + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
-				+ "AND attr.UM_ATTR_NAME = 'organizationName' "
-				+ "WHERE (:owner IS NULL OR AM_SUBSCRIBER.USER_ID  = :owner) "
-				+ "AND (:organizationName IS NULL OR attr.UM_ATTR_VALUE = :organizationName)";
+		String query = SqlQueryReport.getApis(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -371,8 +311,7 @@ public class ReportUsageService {
 	}
 
 	public List<Map<String, Object>> getYears(String owner) {
-		String query = "SELECT DISTINCT YEAR(REQUEST_TIMESTAMP) AS year FROM DATA_USAGE_API WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') ";
+		String query = SqlQueryReport.getYears();
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -386,11 +325,7 @@ public class ReportUsageService {
 	}
 
 	public List<Map<String, Object>> getCustomers(String owner) {
-		String sqlQuery = "SELECT uu.*, attr.UM_ATTR_VALUE AS organizationName "
-				+ "FROM AM_SUBSCRIBER as2 " + "JOIN " + dbUtilsUser.getSchemaName()
-				+ ".UM_USER uu ON as2.USER_ID = uu.UM_USER_NAME " + "LEFT JOIN " + dbUtilsUser.getSchemaName()
-				+ ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
-				+ "AND attr.UM_ATTR_NAME = 'organizationName'";
+		String sqlQuery = SqlQueryReport.getCustomers(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 //		parameters.addValue("owner", owner);
@@ -406,8 +341,7 @@ public class ReportUsageService {
 	}
 
 	public int getTotalCustomers(String username) {
-		String sqlQuery = "select COUNT(DISTINCT UM_ATTR_VALUE)" + "from " + dbUtilsUser.getSchemaName()
-				+ ".UM_USER_ATTRIBUTE " + "where UM_ATTR_NAME='organizationName'";
+		String sqlQuery = SqlQueryReport.getTotalCustomers(dbUtilsUser.getSchemaName(), getBillingSchema());
 		try {
 
 			Integer result = namedParameterJdbcTemplate.queryForObject(sqlQuery, new MapSqlParameterSource(),
@@ -429,20 +363,14 @@ public class ReportUsageService {
 
 		return namedParameterJdbcTemplate.query(sqlQuery, parameters, (rs, rowNum) -> {
 			Map<String, Object> customers = new HashMap<>();
-//			customers.put("username", rs.getString("UM_USER_NAME"));
-//			customers.put("userId", rs.getString("UM_USER_ID"));
-//			customers.put("tenantId", rs.getString("UM_TENANT_ID"));
 			customers.put("organizationName", rs.getString("organizationName"));
 			return customers;
 		});
 	}
 
 	public List<Map<String, Object>> getMonth(String owner, int year) {
-		String query = "SELECT DISTINCT MONTH(REQUEST_TIMESTAMP) AS year FROM DATA_USAGE_API "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) AND "
-				+ " (:year IS NULL OR  YEAR(REQUEST_TIMESTAMP) = :year ) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') ";
 
+		String query = SqlQueryReport.getMonth();
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
 		parameters.addValue("year", year);
@@ -457,9 +385,7 @@ public class ReportUsageService {
 	}
 
 	public List<Map<String, Object>> getApiResourceByAPI(String owner, String apiId) {
-		String query = "SELECT DISTINCT API_RESOURCE_TEMPLATE  FROM DATA_USAGE_API WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner)"
-				+ " AND (:apiId IS NULL OR API_ID = :apiId) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') AND API_RESOURCE_TEMPLATE IS NOT NULL";
+		String query = SqlQueryReport.getApiResourceByAPI();
 		LOGGER.info(query);
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -490,9 +416,7 @@ public class ReportUsageService {
 
 	public List<OrganizationDTO> getOrganizations() throws Exception {
 		List<OrganizationDTO> result = new ArrayList<>();
-		String sql = "SELECT U.UM_USER_NAME as username ,UA.UM_ATTR_NAME, UA.UM_ATTR_VALUE as value\n"
-				+ "FROM UM_USER U\n" + "JOIN UM_USER_ATTRIBUTE UA ON U.UM_ID = UA.UM_USER_ID\n"
-				+ "WHERE  UM_ATTR_NAME ='organizationName'";
+		String sql = SqlQueryReport.getOrganizations();
 
 		try (Connection connection = dbUtilsUser.getConnection();
 				PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -514,41 +438,7 @@ public class ReportUsageService {
 	}
 
 	public Page<TableRemainingDayQuota> getSubscriptionsRemaining(String owner, Pageable pageable) {
-		String query = "SELECT " + "attr.UM_ATTR_VALUE as organizationName, uu.UM_USER_NAME, " + "subs.subs_state_id , "
-				+ "AM_SUBSCRIPTION.SUBSCRIPTION_ID, " + "AM_APPLICATION.NAME AS APPLICATION_NAME, "
-				+ "AM_API.API_NAME  AS API_NAME, " + "AM_POLICY_SUBSCRIPTION.NAME AS POLICY_NAME, "
-				+ "subs.quota AS INIT_QUOTA, " + "AM_POLICY_SUBSCRIPTION.CUSTOM_ATTRIBUTES,"
-				+ "COALESCE(DATA_USAGE.USAGE_COUNT, 0) AS API_USAGE, "
-				+ "COALESCE(subs.quota, 0) - COALESCE(DATA_USAGE.USAGE_COUNT, 0) AS REMAINING_QUOTA, "
-				+ "AM_SUBSCRIPTION.CREATED_TIME AS START_DATE, "
-				+ "DATEDIFF(DATE_ADD(AM_SUBSCRIPTION.CREATED_TIME, INTERVAL 30 DAY), CURDATE()) AS REMAINING_DAYS,"
-				+ " AM_POLICY_SUBSCRIPTION.TIME_UNIT AS TIME_UNIT, "
-				+ "AM_POLICY_SUBSCRIPTION.UNIT_TIME AS UNIT_TIME,subs.notes " + "FROM " + getDatabaseNameFromService()
-				+ ".subscription subs "
-				+ "LEFT JOIN AM_SUBSCRIPTION  ON  subs.subscription_id = AM_SUBSCRIPTION.UUID COLLATE utf8mb4_unicode_ci "
-				+ "LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID "
-				+ "LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID  = AM_SUBSCRIBER.SUBSCRIBER_ID "
-				+ "LEFT JOIN " + dbUtilsUser.getSchemaName() + ".UM_USER uu ON AM_SUBSCRIBER.USER_ID = uu.UM_USER_NAME "
-				+ "LEFT JOIN " + dbUtilsUser.getSchemaName()
-				+ ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID AND attr.UM_ATTR_NAME = 'organizationName' "
-				+ "LEFT JOIN AM_API ON AM_SUBSCRIPTION.API_ID  = AM_API.API_ID "
-				+ "LEFT JOIN AM_POLICY_SUBSCRIPTION ON AM_SUBSCRIPTION.TIER_ID = AM_POLICY_SUBSCRIPTION.NAME "
-				+ "LEFT JOIN ( " + "SELECT \n" + "		DATA_USAGE_API.SUBSCRIPTION_UUID ,\n"
-				+ "		DATA_USAGE_API.API_ID,\n" + "		DATA_USAGE_API.APPLICATION_ID,\n"
-				+ "		COUNT(*) AS USAGE_COUNT ,\n" + "		APPLICATION_OWNER\n" + "	FROM\n"
-				+ "		DATA_USAGE_API\n" + "	LEFT JOIN " + getDatabaseNameFromService() + ".subscription subs on\n"
-				+ "		subs.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n" + "	WHERE\n"
-				+ "		DATA_USAGE_API.REQUEST_TIMESTAMP BETWEEN subs.start_date AND subs.end_date AND DATA_USAGE_API.KEY_TYPE = 'PRODUCTION' \n"
-				+ "	GROUP BY\n" + "		SUBSCRIPTION_UUID,\n" + "		API_ID,\n" + "		APPLICATION_ID ,\n"
-				+ "		APPLICATION_OWNER  "
-				+ ") AS DATA_USAGE ON subs.subscription_id  = DATA_USAGE.SUBSCRIPTION_UUID " + "WHERE "
-//				+ "AM_SUBSCRIPTION.SUBS_CREATE_STATE = 'SUBSCRIBE' "
-//				+ "AND AM_SUBSCRIPTION.SUB_STATUS = 'UNBLOCKED' "
-//				+ "AND 
-				+ "AM_POLICY_SUBSCRIPTION.BILLING_PLAN != 'FREE' "
-				+ "AND (:owner IS NULL OR AM_SUBSCRIBER.USER_ID = :owner) "
-				+ "AND (:owner IS NULL OR subs.is_active = 2 ) "
-				+ "ORDER BY REMAINING_DAYS ASC, REMAINING_QUOTA DESC, API_USAGE DESC;";
+		String query = SqlQueryReport.getSubscriptionsRemaining(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -709,27 +599,8 @@ public class ReportUsageService {
 			Integer month, String apiId, Boolean showDeleted, String applicationId, String search, String organization,
 			Pageable pageable) {
 
-		// Construct the SQL query
-		String sql = "SELECT DATA_USAGE_API.API_NAME, DATA_USAGE_API.API_VERSION, APPLICATION_OWNER, DATA_USAGE_API.API_ID, APPLICATION_NAME, "
-				+ "COUNT(*) AS total_row_count, APPLICATION_ID, attr.UM_ATTR_VALUE " + "FROM DATA_USAGE_API "
-				+ "LEFT JOIN " + getDatabaseNameFromService()
-				+ ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID " + "LEFT JOIN "
-				+ dbUtilsUser.getSchemaName() + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
-				+ "LEFT JOIN " + dbUtilsUser.getSchemaName()
-				+ ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID AND attr.UM_ATTR_NAME = 'organizationName' "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) "
-				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
-				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
-				+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
-				+ "AND (:applicationId IS NULL OR DATA_USAGE_API.APPLICATION_ID = :applicationId) "
-				+ "AND (:organization IS NULL OR attr.UM_ATTR_VALUE = :organization) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-				+ "AND (:search IS NULL OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :search, '%')) "
-				+ "OR LOWER(APPLICATION_NAME) LIKE LOWER(CONCAT('%', :search, '%'))) "
-				+ "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' "
-				+ "GROUP BY DATA_USAGE_API.APPLICATION_ID, API_NAME, API_VERSION, DATA_USAGE_API.APPLICATION_OWNER, DATA_USAGE_API.API_ID, APPLICATION_NAME, attr.UM_ATTR_VALUE "
-				+ "ORDER BY API_ID, APPLICATION_NAME";
+		String sql = SqlQueryReport.getMonthlyTotalRowByGroupByWithSearchAndPageable(dbUtilsUser.getSchemaName(),
+				getBillingSchema());
 
 		// Create the parameters to be used in the query
 		MapSqlParameterSource params = new MapSqlParameterSource();
@@ -775,26 +646,8 @@ public class ReportUsageService {
 
 	public Map<String, Object> getTotalApisAndRequestsByOwnerAndFilters(String owner, Integer year, Integer month,
 			String apiId, String applicationId, String organization, Boolean showDeleted) {
-		StringBuilder sqlQuery = new StringBuilder();
-		sqlQuery.append("SELECT COUNT(DISTINCT DATA_USAGE_API.API_ID) AS total_apis, ")
-				.append("COUNT(*) AS total_request, ").append("COUNT(DISTINCT attr.UM_ATTR_VALUE) AS total_customer ")
-				.append("FROM DATA_USAGE_API ")
-				.append("LEFT JOIN " + getDatabaseNameFromService()
-						+ ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID ")
-				.append("LEFT JOIN " + dbUtilsUser.getSchemaName()
-						+ ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME ")
-				.append("LEFT JOIN " + dbUtilsUser.getSchemaName()
-						+ ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID ")
-				.append("AND attr.UM_ATTR_NAME = 'organizationName' ")
-				.append("WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) ")
-				.append("AND (:showDeleted = true OR s.is_active = true) ")
-				.append("AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) ")
-				.append("AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) ")
-				.append("AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) ")
-				.append("AND (:applicationId IS NULL OR APPLICATION_ID = :applicationId) ")
-				.append("AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') ")
-				.append("AND (:organization IS NULL OR attr.UM_ATTR_VALUE = :organization) ")
-				.append("AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX'");
+		String sqlQuery = SqlQueryReport.getTotalApisAndRequestsByOwnerAndFilters(dbUtilsUser.getSchemaName(),
+				getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
 		params.put("owner", owner);
@@ -810,21 +663,7 @@ public class ReportUsageService {
 
 	public Map<String, Object> totalMonthlyDetailLog(String owner, String applicationId, String apiId,
 			String searchFilter, Integer year, Integer month, Boolean showDeleted) {
-		String sql = "SELECT COUNT(*) as request_count, "
-				+ "COUNT(CASE WHEN PROXY_RESPONSE_CODE NOT BETWEEN 200 AND 299 THEN 1 END) AS count_not_200, "
-				+ "COUNT(CASE WHEN PROXY_RESPONSE_CODE = 200 THEN 1 END) AS count_200 " + "FROM DATA_USAGE_API "
-				+ "LEFT JOIN " + getDatabaseNameFromService()
-				+ ".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) " + "AND APPLICATION_ID = :applicationId "
-				+ "AND DATA_USAGE_API.API_ID = :apiId " + "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' "
-				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
-				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-				+ "AND (:searchFilter IS NULL "
-				+ "OR (LOWER(API_RESOURCE_TEMPLATE) LIKE LOWER(CONCAT('%', :searchFilter, '%'))  "
-				+ "OR LOWER(PROXY_RESPONSE_CODE) LIKE LOWER(CONCAT('%', :searchFilter, '%')))) "
-				+ "ORDER BY REQUEST_TIMESTAMP";
+		String sql = SqlQueryReport.totalMonthlyDetailLog(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
 		params.put("owner", owner);
@@ -838,27 +677,9 @@ public class ReportUsageService {
 		return namedParameterJdbcTemplate.queryForMap(sql, params);
 	}
 
-	public Page<MonthlySummaryDetails> getMonthlyDetailLog(Pageable pageable, String owner, String applicationId,
+	public Page<MonthlySummaryDetails> fetchMonthlyDetailLogData(Pageable pageable, String owner, String applicationId,
 			String apiId, String searchFilter, Integer year, Integer month, Boolean showDeleted) {
-		String baseSql = "SELECT DATE_FORMAT(REQUEST_TIMESTAMP, '%Y-%b-%d %H:%i:%s') AS requestTimestamp, "
-				+ "CONCAT(API_METHOD, ' ', API_RESOURCE_TEMPLATE) AS resource, "
-				+ "PROXY_RESPONSE_CODE, DATA_USAGE_API.API_ID, APPLICATION_ID, API_NAME, "
-				+ "APPLICATION_NAME, attr.UM_ATTR_VALUE as organization " + "FROM DATA_USAGE_API " + "LEFT JOIN "
-				+ getDatabaseNameFromService()
-				+ ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID " + "LEFT JOIN "
-				+ dbUtilsUser.getSchemaName() + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
-				+ "LEFT JOIN " + dbUtilsUser.getSchemaName() + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
-				+ "AND attr.UM_ATTR_NAME = 'organizationName' "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) " + "AND APPLICATION_ID = :applicationId "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
-				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
-				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
-				+ "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' " + "AND DATA_USAGE_API.API_ID = :apiId "
-				+ "AND (:searchFilter IS NULL OR "
-				+ "(LOWER(API_RESOURCE_TEMPLATE) LIKE LOWER(CONCAT('%', :searchFilter, '%')) "
-				+ "OR LOWER(PROXY_RESPONSE_CODE) LIKE LOWER(CONCAT('%', :searchFilter, '%')))) ";
-
+		String baseSql = SqlQueryReport.fetchMonthlyDetailLogData(dbUtilsUser.getSchemaName(), getBillingSchema());
 		String countSql = "SELECT COUNT(*) " + baseSql.substring(baseSql.indexOf("FROM"));
 
 		Map<String, Object> params = new HashMap<>();
@@ -887,19 +708,9 @@ public class ReportUsageService {
 		return new PageImpl<>(results, pageable, totalRowCount);
 	}
 
-	public Map<String, Object> getResourceSumTotal(String owner, Integer year, Integer month, String apiId,
+	public Map<String, Object> getResourceSumTotalData(String owner, Integer year, Integer month, String apiId,
 			String resource, Boolean showDeleted) {
-		String sql = "SELECT COUNT(DISTINCT DATA_USAGE_API.API_ID) AS total_apis, COUNT(*) AS total_request "
-				+ "FROM DATA_USAGE_API "
-				+ "LEFT JOIN "+getDatabaseNameFromService()+".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) "
-				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
-				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
-				+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
-				+ "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
-				+ "AND (:resource IS NULL OR API_RESOURCE_TEMPLATE = :resource)";
+		String sql = SqlQueryReport.getResourceSumTotalData(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
 		params.put("owner", owner);
@@ -912,34 +723,12 @@ public class ReportUsageService {
 		return namedParameterJdbcTemplate.queryForMap(sql, params);
 	}
 
-	public Page<ResourceSummary.ApiDetails> getResourceSumList(String owner, Integer year, Integer month, String apiId,
-			String resource, String search, Pageable pageable, Boolean showDeleted) {
-		String baseSql = "SELECT API_NAME, API_VERSION, API_RESOURCE_TEMPLATE, API_METHOD, "
-				+ "COUNT(*) AS request_count, DATA_USAGE_API.API_ID " + "FROM DATA_USAGE_API "
-				+ "LEFT JOIN "+getDatabaseNameFromService()+".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) "
-				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
-				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
-				+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
-				+ "AND (:resource IS NULL OR API_RESOURCE_TEMPLATE = :resource) "
-				+ "AND (:search IS NULL OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :search, '%')) "
-				+ "OR LOWER(API_RESOURCE_TEMPLATE) LIKE LOWER(CONCAT('%', :search, '%'))) ";
+	public Page<ResourceSummary.ApiDetails> getResourceSumListData(String owner, Integer year, Integer month,
+			String apiId, String resource, String search, Pageable pageable, Boolean showDeleted) {
+		String baseSql = SqlQueryReport.getResourceSumListDataBaseSql(dbUtilsUser.getSchemaName(), getBillingSchema());
 
-		String countSql = "SELECT COUNT(DISTINCT API_NAME, API_VERSION, API_RESOURCE_TEMPLATE, API_METHOD, DATA_USAGE_API.API_ID) "
-				+ "FROM DATA_USAGE_API "
-				+ "LEFT JOIN "+getDatabaseNameFromService()+".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) "
-				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
-				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
-				+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
-				+ "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
-				+ "AND (:resource IS NULL OR API_RESOURCE_TEMPLATE = :resource) "
-				+ "AND (:search IS NULL OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :search, '%')) "
-				+ "OR LOWER(API_RESOURCE_TEMPLATE) LIKE LOWER(CONCAT('%', :search, '%'))) ";
+		String countSql = SqlQueryReport.getResourceSumListDataCounteSql(dbUtilsUser.getSchemaName(),
+				getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
 		params.put("owner", owner);
@@ -980,29 +769,10 @@ public class ReportUsageService {
 
 	public Page<ResourceSummaryDetails> getDetailLogResourceSum(Pageable pageable, String owner, String resource,
 			String apiId, String searchFilter, Boolean showDeleted) {
-		String baseSql = "SELECT APPLICATION_NAME, API_NAME, COUNT(*) AS request_count, "
-				+ "COUNT(CASE WHEN PROXY_RESPONSE_CODE BETWEEN 200 AND 299 THEN 1 END) AS count_200, "
-				+ "COUNT(CASE WHEN PROXY_RESPONSE_CODE NOT BETWEEN 200 AND 299 THEN 1 END) AS count_not_200, "
-				+ "DATA_USAGE_API.API_ID, APPLICATION_ID, APPLICATION_OWNER, attr.UM_ATTR_VALUE AS organization "
-				+ "FROM DATA_USAGE_API "
-				+ "LEFT JOIN "+getDatabaseNameFromService()+".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
-				+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
-				+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID AND attr.UM_ATTR_NAME = 'organizationName' "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) " + "AND API_RESOURCE_TEMPLATE = :resource "
-				+ "AND DATA_USAGE_API.API_ID = :apiId "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
-				+ "AND (:searchFilter IS NULL OR LOWER(APPLICATION_NAME) LIKE LOWER(CONCAT('%', :searchFilter, '%')) "
-				+ "OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :searchFilter, '%'))) ";
+		String baseSql = SqlQueryReport.getDetailLogResourceSumBaseSQl(dbUtilsUser.getSchemaName(), getBillingSchema());
 
-		String countSql = "SELECT COUNT(DISTINCT APPLICATION_ID) " + "FROM DATA_USAGE_API "
-				+ "LEFT JOIN "+getDatabaseNameFromService()+".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) " + "AND API_RESOURCE_TEMPLATE = :resource "
-				+ "AND DATA_USAGE_API.API_ID = :apiId "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
-				+ "AND (:searchFilter IS NULL OR LOWER(APPLICATION_NAME) LIKE LOWER(CONCAT('%', :searchFilter, '%')) "
-				+ "OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :searchFilter, '%'))) ";
+		String countSql = SqlQueryReport.getDetailLogResourceSumCountSql(dbUtilsUser.getSchemaName(),
+				getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
 		params.put("owner", owner);

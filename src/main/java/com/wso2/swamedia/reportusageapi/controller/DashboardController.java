@@ -67,16 +67,15 @@ public class DashboardController {
 	}
 
 	@GetMapping("/api-usage")
-	public ResponseEntity<?> getDashboardApiUsageByDate(
-			Authentication authentication, @RequestParam("filter") String filter,
-			@RequestParam(value = "top", defaultValue = "10") int top) {
+	public ResponseEntity<?> getDashboardApiUsageByDate(Authentication authentication,
+			@RequestParam("filter") String filter, @RequestParam(value = "top", defaultValue = "10") int top) {
 		LOGGER.info("Received request for get api usage");
 		try {
 			DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
 					.getPrincipal();
 			String username = Utils.isAdmin(principal.getAttributes()) ? null
 					: principal.getAttributes().get("http://wso2.org/claims/username").toString();
-			
+
 			ApiResponse<?> response = ApiResponse.success("Top 10 api usage retrieved successfully .",
 					dashboardService.getTopTenApiUsage(filter, username, top));
 
@@ -88,8 +87,7 @@ public class DashboardController {
 	}
 
 	@GetMapping("/api-fault")
-	public ResponseEntity<?> getDashboardApiFaultByDate(
-			Authentication authentication,
+	public ResponseEntity<?> getDashboardApiFaultByDate(Authentication authentication,
 			@RequestParam("filter") String filter) {
 		LOGGER.info("Received request for get api fault");
 		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
@@ -108,9 +106,9 @@ public class DashboardController {
 	}
 
 	@GetMapping("/api-fault/details")
-	public ResponseEntity<?> getDashboardApiFaultDetails(
-			Authentication authentication, @RequestParam("filter") String filter,
-			@RequestParam(required = false) String search, @RequestParam(value = "page", defaultValue = "0") int page,
+	public ResponseEntity<?> getDashboardApiFaultDetails(Authentication authentication,
+			@RequestParam("filter") String filter, @RequestParam(required = false) String search,
+			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size) {
 		LOGGER.info("Received request for get api fault details");
 		try {
@@ -129,15 +127,14 @@ public class DashboardController {
 	}
 
 	@GetMapping("/total-report")
-	public ResponseEntity<?> getDashboardTotalReport(
-			Authentication authentication) {
+	public ResponseEntity<?> getDashboardTotalReport(Authentication authentication) {
 		LOGGER.info("Received request to retrieve the dashboard total report");
 		try {
 			DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
 					.getPrincipal();
 			String username = Utils.isAdmin(principal.getAttributes()) ? null
 					: principal.getAttributes().get("http://wso2.org/claims/username").toString();
-			
+
 			ApiResponse<TotalReportDashboard> response = ApiResponse.success(
 					"The dashboard total report has been retrieved successfully",
 					dashboardService.getDashboardTotalReport(username));

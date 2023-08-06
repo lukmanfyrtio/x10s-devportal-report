@@ -37,7 +37,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 public class CustomOpaqueTokenIntrospector implements OpaqueTokenIntrospector {
-	private static final Logger logger =LoggerFactory.getLogger(CustomOpaqueTokenIntrospector.class);
+	private static final Logger logger = LoggerFactory.getLogger(CustomOpaqueTokenIntrospector.class);
 
 	private final String introspectionUrl;
 	private final String clientId;
@@ -51,13 +51,15 @@ public class CustomOpaqueTokenIntrospector implements OpaqueTokenIntrospector {
 		this.clientId = clientId;
 		this.clientSecret = clientSecret;
 	}
-	
+
 	RestTemplateBuilder restTemplateBuilder = new RestTemplateBuilder();
 
 	RestTemplate restTemplate = restTemplateBuilder.requestFactory(() -> {
-	    HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
-	    try {
-			requestFactory.setHttpClient(HttpClientBuilder.create().setSSLContext(SSLContextBuilder.create().loadTrustMaterial((chain, authType) -> true).build()).build());
+		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
+		try {
+			requestFactory.setHttpClient(HttpClientBuilder.create()
+					.setSSLContext(SSLContextBuilder.create().loadTrustMaterial((chain, authType) -> true).build())
+					.build());
 		} catch (KeyManagementException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -68,7 +70,7 @@ public class CustomOpaqueTokenIntrospector implements OpaqueTokenIntrospector {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	    return requestFactory;
+		return requestFactory;
 	}).build();
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })

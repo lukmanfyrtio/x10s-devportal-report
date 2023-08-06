@@ -16,32 +16,6 @@ import com.wso2.swamedia.reportusageapi.model.DataUsageApi;
 @Repository
 public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, String> {
 
-
-
-
-
-
-	
-	
-	
-//	@Query("SELECT new com.wso2.swamedia.reportusageapi.dto.DataUsageApiResponse(d.apiId, d.apiName, d.apiVersion, a.context, COUNT(d.apiId) AS requestCount) " +
-//	        "FROM DataUsageApi d " +
-//	        "LEFT JOIN d.amApi a " +
-//	        "WHERE (:owner IS NULL OR d.applicationOwner = :owner) " +
-//	        "AND (:year IS NULL OR YEAR(d.requestTimestamp) = :year) " +
-//	        "AND (:month IS NULL OR MONTH(d.requestTimestamp) = :month) " +
-//	        "AND (:apiId IS NULL OR d.apiId = :apiId) " +
-//	        "AND (:searchFilter IS NULL OR LOWER(a.context) LIKE LOWER(CONCAT('%', :searchFilter, '%')) " +
-//	        "OR LOWER(d.apiName) LIKE LOWER(CONCAT('%', :searchFilter, '%'))) " +
-//	        "GROUP BY d.apiId, d.apiName, d.apiVersion, a.context " +
-//	        "ORDER BY requestCount DESC")
-//	Page<DataUsageApiResponse> findByOwnerAndYearAndMonthAndApiIdAndSearchFilter(
-//	        @Param("owner") String owner,
-//	        @Param("year") Integer year,
-//	        @Param("month") Integer month,
-//	        @Param("apiId") String apiId,
-//	        @Param("searchFilter") String searchFilter,
-//	        Pageable pageable);
 	@Query("SELECT new com.wso2.swamedia.reportusageapi.dto.RequestCountDTO(d.apiResourceTemplate, d.apiMethod, COUNT(d)) " +
 	        "FROM DataUsageApi d " +
 	        "WHERE d.apiId = :apiId " +

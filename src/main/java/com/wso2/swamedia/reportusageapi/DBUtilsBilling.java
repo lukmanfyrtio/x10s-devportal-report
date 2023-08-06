@@ -26,7 +26,6 @@ public class DBUtilsBilling {
 	}
 	
 	public String getSchemaName() {
-		// Extract database name from URL
 		String[] urlParts = databaseUrl.split("/");
 		String databaseName = urlParts[urlParts.length - 1];
 		return databaseName;

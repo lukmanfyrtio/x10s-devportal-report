@@ -39,10 +39,11 @@ public class ReportUsageController {
 	public ResponseEntity<?> getMonthlySummary(@RequestParam(required = false) Integer year,
 			@RequestParam(required = false) Integer month, @RequestParam(required = false) String applicationId,
 			@RequestParam(required = false) String organization,
-			@RequestParam(required = false) String apiId, @RequestParam(required = false) String username,
 			@RequestParam(required = false) String search, @RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size,
-			@RequestParam(required = false,defaultValue = "false") Boolean showDeletedSubscription) {
+			@RequestParam(required = false) String apiId, @RequestParam(required = false) String username,
+			@RequestParam(required = false,defaultValue = "false"
+			) Boolean showDeletedSubscription) {
 
 		LOGGER.info("Received request for monthly summary");
 		try {
@@ -81,7 +82,7 @@ public class ReportUsageController {
 			result.put("requestOK",total.get("count_200"));
 			result.put("requestNOK",total.get("count_not_200"));
 			result.put("details",
-					reportUsageService.getMonthlyDetailLog(username, applicationId, apiId, search, pageable,year,month,showDeletedSubscription));
+					reportUsageService.getMonthlyDetailLogReport(username, applicationId, apiId, search, pageable,year,month,showDeletedSubscription));
 
 			ApiResponse<?> response = ApiResponse.success("Monthly detail log retrieval successful.", result);
 

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -31,7 +32,7 @@ public class PlanController {
 
 	@GetMapping
 	public ResponseEntity<?> getPlanByPaidType(@RequestParam(value = "subsTypeId", required = true) Integer subsTypeId,
-			@RequestParam(value = "apiId", required = true) String apiId) {
+			@RequestParam(value = "apiId", required = true) String apiId, Authentication authentication) {
 		LOGGER.info("Received request for get plan by payment type");
 		try {
 			validateSubsTypeId(subsTypeId);
@@ -51,8 +52,9 @@ public class PlanController {
 	}
 
 	private void validateSubsTypeId(int subsTypeId) {
-		if (subsTypeId != POST_PAID_SUBS_TYPE && subsTypeId != PRE_PAID_SUBS_TYPE&& subsTypeId != FREE_SUBS_TYPE) {
-			throw new IllegalArgumentException("Invalid subsTypeId. Allowed values: 1 (pre-paid), 2 (post-paid) or 3 (free)");
+		if (subsTypeId != POST_PAID_SUBS_TYPE && subsTypeId != PRE_PAID_SUBS_TYPE && subsTypeId != FREE_SUBS_TYPE) {
+			throw new IllegalArgumentException(
+					"Invalid subsTypeId. Allowed values: 1 (pre-paid), 2 (post-paid) or 3 (free)");
 		}
 	}
 }
