@@ -27,7 +27,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		http.authorizeRequests().antMatchers("/v1/**", "/dashboard/**", "/report/subscriptions/remaining")
+		http.authorizeRequests().antMatchers("/**")
 				.authenticated().anyRequest().permitAll().and().exceptionHandling()
 				.authenticationEntryPoint(customAuthenticationEntryPoint).and().oauth2ResourceServer().opaqueToken()
 				.introspector(introspector());
