@@ -16,7 +16,7 @@ public class SqlQueryReport {
 				+ " AM_POLICY_SUBSCRIPTION.TIME_UNIT AS TIME_UNIT, "
 				+ "AM_POLICY_SUBSCRIPTION.UNIT_TIME AS UNIT_TIME,subs.notes " + "FROM " + dbBillingSchema
 				+ ".subscription subs "
-				+ "LEFT JOIN AM_SUBSCRIPTION  ON  subs.subscription_id = AM_SUBSCRIPTION.UUID COLLATE utf8mb4_unicode_ci "
+				+ "LEFT JOIN AM_SUBSCRIPTION  ON  subs.subscription_id = AM_SUBSCRIPTION.UUID "
 				+ "LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID "
 				+ "LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID  = AM_SUBSCRIBER.SUBSCRIBER_ID "
 				+ "LEFT JOIN " + dbUserSchema + ".UM_USER uu ON AM_SUBSCRIBER.USER_ID = uu.UM_USER_NAME " + "LEFT JOIN "
@@ -35,7 +35,7 @@ public class SqlQueryReport {
 				+ ") AS DATA_USAGE ON subs.subscription_id  = DATA_USAGE.SUBSCRIPTION_UUID " + "WHERE "
 				+ "AM_POLICY_SUBSCRIPTION.BILLING_PLAN != 'FREE' "
 				+ "AND (:owner IS NULL OR AM_SUBSCRIBER.USER_ID = :owner) "
-				+ "AND (:owner IS NULL OR subs.is_active = 2 ) "
+				+ "AND (:owner IS NULL OR subs.is_active = 1 ) "
 				+ "ORDER BY REMAINING_DAYS ASC, REMAINING_QUOTA DESC, API_USAGE DESC;";
 
 		return query;
