@@ -29,7 +29,7 @@ public class SqlQueryReport {
 				+ "		COUNT(*) AS USAGE_COUNT ,\n" + "		APPLICATION_OWNER\n" + "	FROM\n"
 				+ "		DATA_USAGE_API\n" + "	LEFT JOIN " + dbBillingSchema + ".subscription subs on\n"
 				+ "		subs.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n" + "	WHERE\n"
-				+ "		DATA_USAGE_API.REQUEST_TIMESTAMP BETWEEN subs.start_date AND subs.end_date AND DATA_USAGE_API.KEY_TYPE = 'PRODUCTION' \n"
+				+ "		DATA_USAGE_API.REQUEST_TIMESTAMP BETWEEN subs.start_date AND subs.end_date AND DATA_USAGE_API.KEY_TYPE = 'PRODUCTION' AND DATA_USAGE_API.PROXY_RESPONSE_CODE BETWEEN 200 AND 299 \n"
 				+ "	GROUP BY\n" + "		SUBSCRIPTION_UUID,\n" + "		API_ID,\n" + "		APPLICATION_ID ,\n"
 				+ "		APPLICATION_OWNER  "
 				+ ") AS DATA_USAGE ON subs.subscription_id  = DATA_USAGE.SUBSCRIPTION_UUID " + "WHERE "
