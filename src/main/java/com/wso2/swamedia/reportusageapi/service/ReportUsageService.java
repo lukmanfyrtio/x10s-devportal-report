@@ -22,7 +22,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -30,12 +29,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wso2.swamedia.reportusageapi.DBUtilsBilling;
 import com.wso2.swamedia.reportusageapi.DBUtilsUser;
 import com.wso2.swamedia.reportusageapi.dto.DashboardPercentageDTO;
 import com.wso2.swamedia.reportusageapi.dto.DataUsageApiResponse;
@@ -58,16 +59,6 @@ public class ReportUsageService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ReportUsageService.class);
 
-	@Value("${spring.billing-datasource.url}")
-	private String databaseUrl;
-
-	public String getBillingSchema() {
-		// Extract database name from URL
-		String[] urlParts = databaseUrl.split("/");
-		String databaseName = urlParts[urlParts.length - 1];
-		return databaseName;
-	}
-
 	@Autowired
 	private DataUsageApiRepository dataUsageApiRepository;
 
@@ -76,6 +67,9 @@ public class ReportUsageService {
 
 	@Autowired
 	private DBUtilsUser dbUtilsUser;
+	
+	@Autowired
+	private DBUtilsBilling dbUtilsBilling;
 
 	@Autowired
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
@@ -279,7 +273,7 @@ public class ReportUsageService {
 	}
 
 	public List<Map<String, Object>> getApiNameAndId(String owner, String organization) {
-		String query = SqlQueryReport.getApiNameAndId(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String query = SqlQueryReport.getApiNameAndId(dbUtilsUser.getSchemaName(), dbUtilsBilling.getSchemaName());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -295,7 +289,7 @@ public class ReportUsageService {
 	}
 
 	public List<Map<String, Object>> getApis(String owner, String organization) {
-		String query = SqlQueryReport.getApis(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String query = SqlQueryReport.getApis(dbUtilsUser.getSchemaName(), dbUtilsBilling.getSchemaName());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -325,7 +319,7 @@ public class ReportUsageService {
 	}
 
 	public List<Map<String, Object>> getCustomers(String owner) {
-		String sqlQuery = SqlQueryReport.getCustomers(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String sqlQuery = SqlQueryReport.getCustomers(dbUtilsUser.getSchemaName(), dbUtilsBilling.getSchemaName());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 //		parameters.addValue("owner", owner);
@@ -341,7 +335,7 @@ public class ReportUsageService {
 	}
 
 	public int getTotalCustomers(String username) {
-		String sqlQuery = SqlQueryReport.getTotalCustomers(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String sqlQuery = SqlQueryReport.getTotalCustomers(dbUtilsUser.getSchemaName(), dbUtilsBilling.getSchemaName());
 		try {
 
 			Integer result = namedParameterJdbcTemplate.queryForObject(sqlQuery, new MapSqlParameterSource(),
@@ -400,7 +394,7 @@ public class ReportUsageService {
 
 	public List<Map<String, Object>> getVersions(String apiName) {
 		String query = "SELECT API_VERSION,API_NAME ,API_UUID  FROM AM_API WHERE "
-				+ " (:apiName IS NULL OR API_NAME = :apiName)";
+				+ " (:apiName::text IS NULL OR API_NAME = :apiName)";
 		LOGGER.info(query);
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("apiName", apiName);
@@ -438,7 +432,7 @@ public class ReportUsageService {
 	}
 
 	public Page<TableRemainingDayQuota> getSubscriptionsRemaining(String owner, Pageable pageable) {
-		String query = SqlQueryReport.getSubscriptionsRemaining(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String query = SqlQueryReport.getSubscriptionsRemaining(dbUtilsUser.getSchemaName(), dbUtilsBilling.getSchemaName());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -600,7 +594,7 @@ public class ReportUsageService {
 			Pageable pageable) {
 
 		String sql = SqlQueryReport.getMonthlyTotalRowByGroupByWithSearchAndPageable(dbUtilsUser.getSchemaName(),
-				getBillingSchema());
+				dbUtilsBilling.getSchemaName());
 
 		// Create the parameters to be used in the query
 		MapSqlParameterSource params = new MapSqlParameterSource();
@@ -647,23 +641,23 @@ public class ReportUsageService {
 	public Map<String, Object> getTotalApisAndRequestsByOwnerAndFilters(String owner, Integer year, Integer month,
 			String apiId, String applicationId, String organization, Boolean showDeleted) {
 		String sqlQuery = SqlQueryReport.getTotalApisAndRequestsByOwnerAndFilters(dbUtilsUser.getSchemaName(),
-				getBillingSchema());
+				dbUtilsBilling.getSchemaName());
 
-		Map<String, Object> params = new HashMap<>();
-		params.put("owner", owner);
-		params.put("showDeleted", showDeleted);
-		params.put("year", year);
-		params.put("month", month);
-		params.put("apiId", apiId);
-		params.put("applicationId", applicationId);
-		params.put("organization", organization);
-
-		return namedParameterJdbcTemplate.queryForMap(sqlQuery.toString(), params);
+		SqlParameterSource sqlParam = new MapSqlParameterSource()
+				.addValue("owner", owner)
+			    .addValue("showDeleted", showDeleted)
+			    .addValue("year", year)
+			    .addValue("month", month)
+			    .addValue("apiId", apiId)
+			    .addValue("applicationId", applicationId)
+			    .addValue("organization", organization);
+		
+		return namedParameterJdbcTemplate.queryForMap(sqlQuery.toString(), sqlParam);
 	}
 
 	public Map<String, Object> totalMonthlyDetailLog(String owner, String applicationId, String apiId,
 			String searchFilter, Integer year, Integer month, Boolean showDeleted) {
-		String sql = SqlQueryReport.totalMonthlyDetailLog(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String sql = SqlQueryReport.totalMonthlyDetailLog(dbUtilsUser.getSchemaName(), dbUtilsBilling.getSchemaName());
 
 		Map<String, Object> params = new HashMap<>();
 		params.put("owner", owner);
@@ -679,7 +673,7 @@ public class ReportUsageService {
 
 	public Page<MonthlySummaryDetails> fetchMonthlyDetailLogData(Pageable pageable, String owner, String applicationId,
 			String apiId, String searchFilter, Integer year, Integer month, Boolean showDeleted) {
-		String baseSql = SqlQueryReport.fetchMonthlyDetailLogData(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String baseSql = SqlQueryReport.fetchMonthlyDetailLogData(dbUtilsUser.getSchemaName(), dbUtilsBilling.getSchemaName());
 		String countSql = "SELECT COUNT(*) " + baseSql.substring(baseSql.indexOf("FROM"));
 
 		Map<String, Object> params = new HashMap<>();
@@ -710,7 +704,7 @@ public class ReportUsageService {
 
 	public Map<String, Object> getResourceSumTotalData(String owner, Integer year, Integer month, String apiId,
 			String resource, Boolean showDeleted) {
-		String sql = SqlQueryReport.getResourceSumTotalData(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String sql = SqlQueryReport.getResourceSumTotalData(dbUtilsUser.getSchemaName(), dbUtilsBilling.getSchemaName());
 
 		Map<String, Object> params = new HashMap<>();
 		params.put("owner", owner);
@@ -725,10 +719,10 @@ public class ReportUsageService {
 
 	public Page<ResourceSummary.ApiDetails> getResourceSumListData(String owner, Integer year, Integer month,
 			String apiId, String resource, String search, Pageable pageable, Boolean showDeleted) {
-		String baseSql = SqlQueryReport.getResourceSumListDataBaseSql(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String baseSql = SqlQueryReport.getResourceSumListDataBaseSql(dbUtilsUser.getSchemaName(), dbUtilsBilling.getSchemaName());
 
 		String countSql = SqlQueryReport.getResourceSumListDataCounteSql(dbUtilsUser.getSchemaName(),
-				getBillingSchema());
+				dbUtilsBilling.getSchemaName());
 
 		Map<String, Object> params = new HashMap<>();
 		params.put("owner", owner);
@@ -769,10 +763,10 @@ public class ReportUsageService {
 
 	public Page<ResourceSummaryDetails> getDetailLogResourceSum(Pageable pageable, String owner, String resource,
 			String apiId, String searchFilter, Boolean showDeleted) {
-		String baseSql = SqlQueryReport.getDetailLogResourceSumBaseSQl(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String baseSql = SqlQueryReport.getDetailLogResourceSumBaseSQl(dbUtilsUser.getSchemaName(), dbUtilsBilling.getSchemaName());
 
 		String countSql = SqlQueryReport.getDetailLogResourceSumCountSql(dbUtilsUser.getSchemaName(),
-				getBillingSchema());
+				dbUtilsBilling.getSchemaName());
 
 		Map<String, Object> params = new HashMap<>();
 		params.put("owner", owner);

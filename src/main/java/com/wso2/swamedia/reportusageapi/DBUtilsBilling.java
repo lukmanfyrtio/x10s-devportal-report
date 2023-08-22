@@ -9,25 +9,23 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class DBUtilsBilling {
-	@Value("${spring.billing-datasource.url}")
+	@Value("${spring.datasource.url}")
 	private String databaseUrl;
 
-	@Value("${spring.billing-datasource.username}")
+	@Value("${spring.datasource.username}")
 	private String databaseUsername;
 
-	@Value("${spring.billing-datasource.password}")
+	@Value("${spring.datasource.password}")
 	private String databasePassword;
 
-	@Value("${spring.billing-datasource.driver-class-name}")
-	private String databaseDriverClassName;;
+	@Value("${spring.billing-datasource.shcema}")
+	private String schemaName;
 
 	public Connection getConnection() throws SQLException {
 		return DriverManager.getConnection(databaseUrl, databaseUsername, databasePassword);
 	}
-	
+
 	public String getSchemaName() {
-		String[] urlParts = databaseUrl.split("/");
-		String databaseName = urlParts[urlParts.length - 1];
-		return databaseName;
+		return schemaName;
 	}
 }

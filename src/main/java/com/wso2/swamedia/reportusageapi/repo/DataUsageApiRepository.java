@@ -39,10 +39,10 @@ public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, Stri
             "COUNT(*) AS totalCount) " +
             "FROM DataUsageApi d " +
             "WHERE (:apiId IS NULL OR d.apiId = :apiId) " +
-            "AND (:version IS NULL OR d.apiVersion = :version) " 
-			+ "AND (:search IS NULL "
-			+ "OR LOWER(d.apiResourceTemplate) LIKE LOWER(CONCAT('%', :search, '%'))  "
-			+ "OR LOWER(d.apiMethod) LIKE LOWER(CONCAT('%', :search, '%'))  ) "+
+            "AND (:version IS NULL OR d.apiVersion = :version) " +
+            "AND (:search IS NULL " +
+            "OR LOWER(CAST(d.apiId AS text)) LIKE LOWER(CAST(CONCAT('%', :search, '%') AS text)) " +
+            "OR LOWER(CAST(d.apiName AS text)) LIKE LOWER(CAST(CONCAT('%', :search, '%') AS text)) ) " +
             "GROUP BY d.apiResourceTemplate, d.apiMethod,d.apiId,d.apiName")
 	Page<ErrorSummary> getAPIUsageByFilters(@Param("apiId") String apiId, @Param("version") String version,
 			@Param("search") String search, Pageable pageable);
