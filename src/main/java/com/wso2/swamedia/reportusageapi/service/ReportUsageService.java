@@ -1,6 +1,7 @@
 package com.wso2.swamedia.reportusageapi.service;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -214,7 +215,7 @@ public class ReportUsageService {
 			policyInfo.put("rateLimitCount", rs.getInt("RATE_LIMIT_COUNT"));
 			policyInfo.put("rateLimitTimeUnit", rs.getString("RATE_LIMIT_TIME_UNIT"));
 			policyInfo.put("isDeployed", rs.getBoolean("IS_DEPLOYED"));
-			policyInfo.put("customAttributes", rs.getString("CUSTOM_ATTRIBUTES"));
+			policyInfo.put("customAttributes", new String(rs.getBytes("CUSTOM_ATTRIBUTES"), StandardCharsets.UTF_8));
 			policyInfo.put("stopOnQuotaReach", rs.getBoolean("STOP_ON_QUOTA_REACH"));
 			policyInfo.put("billingPlan", rs.getString("BILLING_PLAN"));
 			policyInfo.put("uuid", rs.getString("UUID"));
@@ -449,7 +450,7 @@ public class ReportUsageService {
 			dto.setOrganization(resultSet.getString("organizationName"));
 			dto.setApplicationOwner(resultSet.getString("UM_USER_NAME"));
 			// Retrieve the blob as a string
-			String jsonString = resultSet.getString("CUSTOM_ATTRIBUTES");
+			String jsonString = new String(resultSet.getBytes("CUSTOM_ATTRIBUTES"), StandardCharsets.UTF_8);
 
 			try {
 				ObjectMapper objectMapper = new ObjectMapper();

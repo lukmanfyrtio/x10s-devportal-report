@@ -680,7 +680,7 @@ public class DashboardService {
 		         .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
 		         .append("    AND (:owner::text IS NULL OR s.is_active = true)\n")
 		         .append("GROUP BY\n")
-		         .append("    API_ID,\n")
+		         .append("    DATA_USAGE_API.API_ID,\n")
 		         .append("    API_NAME\n")
 		         .append("ORDER BY\n")
 		         .append("    row_count DESC\n")
@@ -871,7 +871,7 @@ public class DashboardService {
 				+ "WHERE DATA_USAGE_API.PROXY_RESPONSE_CODE BETWEEN 200 AND 299  "
 				+ "AND (:username::text IS NULL OR DATA_USAGE_API.APPLICATION_OWNER = :username) "
 				+ "AND (:username::text IS NULL OR s.is_active = true) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') AND s.is_active = 1";
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') AND s.is_active = true";
 
 		try {
 			// Create parameters for the named query
@@ -887,7 +887,7 @@ public class DashboardService {
 	}
 
 	public int getTotalUnpaidInvoicesByUsername(String username) {
-		String query = "SELECT COUNT(i.id) as total FROM invoice i WHERE i.status = 1 AND (?::text IS NULL OR i.customer_id = ?)";
+		String query = "SELECT COUNT(i.id) as total FROM "+dbUtilsBilling.getSchemaName()+".invoice i WHERE i.status = 1 AND (?::text IS NULL OR i.customer_id = ?)";
 
 		try (Connection connection = dbUtilsBilling.getConnection();
 				PreparedStatement preparedStatement = connection.prepareStatement(query)) {
