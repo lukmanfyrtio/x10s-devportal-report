@@ -61,7 +61,7 @@ public class SqlQueryReport {
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 				+ "AND (:search::text IS NULL OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :search::text, '%')) "
 				+ "OR LOWER(APPLICATION_NAME) LIKE LOWER(CONCAT('%', :search::text, '%'))) "
-				+ "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' "
+				+ "AND DATA_USAGE_API.KEY_TYPE = :keyType "
 				+ "GROUP BY DATA_USAGE_API.APPLICATION_ID, API_NAME, API_VERSION, DATA_USAGE_API.APPLICATION_OWNER, DATA_USAGE_API.API_ID, APPLICATION_NAME, attr.UM_ATTR_VALUE "
 				+ "ORDER BY API_ID, APPLICATION_NAME";
 
@@ -87,7 +87,8 @@ public class SqlQueryReport {
 				.append("AND (:applicationId::text IS NULL OR APPLICATION_ID = :applicationId) ")
 				.append("AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') ")
 				.append("AND (:organization::text IS NULL OR attr.UM_ATTR_VALUE = :organization) ")
-				.append("AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX'");
+				.append("AND DATA_USAGE_API.KEY_TYPE = :keyType ");
+
 
 		return sqlQuery.toString();
 	}
@@ -146,7 +147,8 @@ public class SqlQueryReport {
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
 				+ "AND (:year::int IS NULL OR EXTRACT(YEAR FROM REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month::int IS NULL OR EXTRACT(MONTH FROM REQUEST_TIMESTAMP) = :month) "
-				+ "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' " + "AND DATA_USAGE_API.API_ID = :apiId "
+				+ "AND DATA_USAGE_API.KEY_TYPE = :keyType "
+        + "AND DATA_USAGE_API.API_ID = :apiId "
 				+ "AND (:searchFilter::text IS NULL OR "
 				+ "(LOWER(API_RESOURCE_TEMPLATE) LIKE LOWER(CONCAT('%', :searchFilter::text , '%')) "
 				+ "OR PROXY_RESPONSE_CODE::text LIKE LOWER(CONCAT('%', :searchFilter::text , '%')))) ";
@@ -163,7 +165,7 @@ public class SqlQueryReport {
 				+ "AND (:year::int IS NULL OR EXTRACT(YEAR FROM REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month::int IS NULL OR EXTRACT(MONTH FROM REQUEST_TIMESTAMP) = :month) "
 				+ "AND (:apiId::text IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
-				+ "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' "
+				+ "AND DATA_USAGE_API.KEY_TYPE = :keyType "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
 				+ "AND (:resource::text IS NULL OR API_RESOURCE_TEMPLATE = :resource)";
 		return sql;
@@ -211,13 +213,14 @@ public class SqlQueryReport {
 				+ ".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
 				+ "WHERE (:owner::text IS NULL OR APPLICATION_OWNER = :owner) "
 				+ "AND (:showDeleted = true OR s.is_active = true) " + "AND APPLICATION_ID = :applicationId "
-				+ "AND DATA_USAGE_API.API_ID = :apiId " + "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' "
+				+ "AND DATA_USAGE_API.API_ID = :apiId " 
+        + "AND DATA_USAGE_API.KEY_TYPE = :keyType "
 				+ "AND (:year::int IS NULL OR EXTRACT(YEAR FROM REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month::int IS NULL OR EXTRACT(MONTH FROM REQUEST_TIMESTAMP) = :month) "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 				+ "AND (:searchFilter::text IS NULL "
 				+ "OR (LOWER(API_RESOURCE_TEMPLATE) LIKE LOWER(CONCAT('%', :searchFilter::text, '%'))  "
-				+ "OR PROXY_RESPONSE_CODE::text LIKE LOWER(CONCAT('%', :searchFilter::text , '%')))) ";
+				+ "OR PROXY_RESPONSE_CODE::text LIKE LOWER(CONCAT('%', :searchFilter::text , '%')))) ORDER BY REQUEST_TIMESTAMP";
 		return sql;
 	}
 
@@ -231,7 +234,9 @@ public class SqlQueryReport {
 				+ "AND (:month::int IS NULL OR EXTRACT(MONTH FROM REQUEST_TIMESTAMP) = :month) "
 				+ "AND (:apiId::text IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
+
 				+ "AND (:resource::text IS NULL OR API_RESOURCE_TEMPLATE = :resource) "
+        + "AND DATA_USAGE_API.KEY_TYPE = :keyType "
 				+ "AND (:search::text IS NULL OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :search::text, '%')) "
 				+ "OR LOWER(API_RESOURCE_TEMPLATE) LIKE LOWER(CONCAT('%', :search::text, '%'))) ";
 		return baseSql;
@@ -246,7 +251,7 @@ public class SqlQueryReport {
 				+ "AND (:year::int IS NULL OR EXTRACT(YEAR FROM REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month::int IS NULL OR EXTRACT(MONTH FROM REQUEST_TIMESTAMP) = :month) "
 				+ "AND (:apiId::text IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
-				+ "AND DATA_USAGE_API.KEY_TYPE != 'SANDBOX' "
+				+ "AND DATA_USAGE_API.KEY_TYPE = :keyType "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
 				+ "AND (:resource::text IS NULL OR API_RESOURCE_TEMPLATE = :resource) "
 				+ "AND (:search::text IS NULL OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :search::text, '%')) "
@@ -268,6 +273,7 @@ public class SqlQueryReport {
 				+ "AND (:showDeleted = true OR s.is_active = true) " + "AND API_RESOURCE_TEMPLATE = :resource::text "
 				+ "AND DATA_USAGE_API.API_ID = :apiId "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
+      	+ "AND DATA_USAGE_API.KEY_TYPE = :keyType "
 				+ "AND (:searchFilter::text IS NULL OR LOWER(APPLICATION_NAME) LIKE LOWER(CONCAT('%', :searchFilter::text, '%')) "
 				+ "OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :searchFilter::text, '%'))) ";
 		return baseSql;
@@ -281,6 +287,7 @@ public class SqlQueryReport {
 				+ "AND API_RESOURCE_TEMPLATE = :resource::text "
 				+ "AND DATA_USAGE_API.API_ID = :apiId::text "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
+      	+ "AND DATA_USAGE_API.KEY_TYPE = :keyType "
 				+ "AND (:searchFilter::text IS NULL OR LOWER(APPLICATION_NAME) LIKE LOWER(CONCAT('%', :searchFilter::text, '%')) "
 				+ "OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :searchFilter::text, '%'))) ";
 		return countSql;

@@ -21,11 +21,12 @@ public interface AmApiRepository extends JpaRepository<AmApi, String> {
 			+ "AND (:year IS NULL OR YEAR(d.requestTimestamp) = :year) "
 			+ "AND (:month IS NULL OR MONTH(d.requestTimestamp) = :month) "
 			+ "AND (:apiId IS NULL OR d.apiId = :apiId) "
+			+ "AND  d.keyType = :keyType "
 			+ "AND (:searchFilter IS NULL OR LOWER(a.context) LIKE LOWER(CONCAT('%', :searchFilter, '%')) "
 			+ "OR LOWER(a.apiName) LIKE LOWER(CONCAT('%', :searchFilter, '%'))) "
 			+ "GROUP BY a.apiId, a.apiName, a.apiVersion, a.context ,d.applicationOwner,d.applicationId " + "ORDER BY requestCount DESC")
 	Page<DataUsageApiResponse> findByOwnerAndYearAndMonthAndApiIdAndSearchFilter(@Param("owner") String owner,
 			@Param("year") Integer year, @Param("month") Integer month, @Param("apiId") String apiId,
-			@Param("searchFilter") String searchFilter, Pageable pageable);
+			@Param("searchFilter") String searchFilter,@Param("keyType") String keyType ,Pageable pageable);
 
 }
