@@ -53,7 +53,7 @@ public class DashboardService {
 	@Autowired
 	private DBUtilsUser dbUtilsUser;
 
-	public List<?> getTopTenApiUsage(String filter, String owner, int top) throws Exception {
+	public List<?> getTopTenApiUsage(String filter, String owner, int top, String keyType) throws Exception {
 		String query = "";
 		List<LinkedHashMap<String, Object>> finalResult = new ArrayList<>();
 		switch (filter) {
@@ -72,6 +72,7 @@ public class DashboardService {
 					+ "(:owner IS NULL OR s.is_active = true) AND "
 					+ "DATE(du.REQUEST_TIMESTAMP) = CURDATE() " 
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+					+ " AND du.KEY_TYPE = :keyType "
 					+ "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
 			break;
@@ -91,6 +92,7 @@ public class DashboardService {
 					+ "(:owner IS NULL OR s.is_active = true) AND "
 					+ "YEARWEEK(du.REQUEST_TIMESTAMP) = YEARWEEK(CURDATE()) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
+					+ " AND du.KEY_TYPE = :keyType "
 					+ "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
 		case "month":
@@ -108,6 +110,7 @@ public class DashboardService {
 					+ "YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
 					+ "AND MONTH(du.REQUEST_TIMESTAMP) = MONTH(CURDATE()) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
+					+ " AND du.KEY_TYPE = :keyType "
 					+ "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
 			break;
@@ -128,6 +131,7 @@ public class DashboardService {
 					+ "(:owner IS NULL OR s.is_active = true) AND "
 					+ "YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
+					+ " AND du.KEY_TYPE = :keyType "
 					+ "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
 			break;
@@ -139,6 +143,7 @@ public class DashboardService {
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
 		parameters.addValue("top", top);
+		parameters.addValue("keyType", keyType);
 		LOGGER.info(query);
 
 		List<ChartDTO> queryResult = namedParameterJdbcTemplate.query(query, parameters, (rs, rowNum) -> {
@@ -657,7 +662,7 @@ public class DashboardService {
 	
 	
 
-	public List<DashboardPercentageDTO> getApiUsageByApi(String username,Integer top) {
+	public List<DashboardPercentageDTO> getApiUsageByApi(String username,Integer top,String keyType) {
 		    StringBuilder query = new StringBuilder();
 		    query.append("SELECT\n")
 		         .append("    DATA_USAGE_API.API_ID,\n")
@@ -679,6 +684,7 @@ public class DashboardService {
 		         .append("    AND (:owner IS NULL OR APPLICATION_OWNER = :owner)\n")
 		         .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
 		         .append("    AND (:owner IS NULL OR s.is_active = true)\n")
+		         .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
 		         .append("GROUP BY\n")
 		         .append("    API_ID,\n")
 		         .append("    API_NAME\n")
@@ -691,11 +697,12 @@ public class DashboardService {
 		Map<String, Object> params = new HashMap<>();
 		params.put("owner", username);
 		params.put("top", top);
+		params.put("keyType", keyType);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
 		return namedParameterJdbcTemplate.query(query.toString(), parameters, new DashboardApiPercentageMapper());
 	}
 
-	public List<DashboardPercentageDTO> getApiUsageByApplication(String username,Integer top) {
+	public List<DashboardPercentageDTO> getApiUsageByApplication(String username,Integer top,String keyType) {
 		StringBuilder query = new StringBuilder();
 	    query.append("SELECT\n")
 	         .append("    APPLICATION_ID,\n")
@@ -717,6 +724,7 @@ public class DashboardService {
 	         .append("WHERE 1=1\n")
 	         .append("    AND (:owner IS NULL OR APPLICATION_OWNER = :owner)\n")
 	         .append("    AND (:owner IS NULL OR s.is_active  = true)\n")
+	         .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
 	         .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
 	         .append("GROUP BY\n")
 	         .append("    APPLICATION_ID,\n")
@@ -728,11 +736,12 @@ public class DashboardService {
 		Map<String, Object> params = new HashMap<>();
 		params.put("owner", username);
 		params.put("top", top);
+		params.put("keyType", keyType);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
 		return namedParameterJdbcTemplate.query(query.toString(), parameters, new DashboardAppPercentageMapper());
 	}
 
-	public List<DashboardPercentageDTO> getApiUsageByResponseCode(String username,Integer top) {
+	public List<DashboardPercentageDTO> getApiUsageByResponseCode(String username,Integer top,String keyType) {
 	    StringBuilder query = new StringBuilder();
 	    query.append("SELECT\n")
 	         .append("    response_category,\n")
@@ -757,6 +766,7 @@ public class DashboardService {
 	         .append("            (:owner IS NULL OR DATA_USAGE_API.APPLICATION_OWNER = :owner)\n")
 	         .append("            AND DATA_USAGE_API.APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
 	         .append("            AND (:owner IS NULL OR s.is_active = true)\n")
+	         .append("    		  AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
 	         .append("        GROUP BY\n")
 	         .append("            response_category\n")
 	         .append("        ORDER BY\n")
@@ -769,6 +779,7 @@ public class DashboardService {
 		Map<String, Object> params = new HashMap<>();
 		params.put("owner", username);
 		params.put("top", top);
+		params.put("keyType", keyType);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
 		LOGGER.info(query.toString());
 		return namedParameterJdbcTemplate.query(query.toString(), parameters, new DashboardResCodePercentageMapper());
@@ -940,12 +951,15 @@ public class DashboardService {
 //		return namedParams;
 //	}
 
-	public LinkedHashMap<String, Object> getUsagePercentage(String username,Integer top,
-			Boolean byApplication,Boolean byResponseCode,Boolean byApi) {
+	public LinkedHashMap<String, Object> getUsagePercentage(String username, Integer top, Boolean byApplication,
+			Boolean byResponseCode, Boolean byApi, String keyType) {
 		LinkedHashMap<String, Object> result = new LinkedHashMap<>();
-		if(byApplication)result.put("byApplication", getApiUsageByApplication(username,top));
-		if(byApi)result.put("byApi", getApiUsageByApi(username,top));
-		if(byResponseCode)result.put("byResponseCode", getApiUsageByResponseCode(username,top));
+		if (byApplication)
+			result.put("byApplication", getApiUsageByApplication(username, top, keyType));
+		if (byApi)
+			result.put("byApi", getApiUsageByApi(username, top, keyType));
+		if (byResponseCode)
+			result.put("byResponseCode", getApiUsageByResponseCode(username, top, keyType));
 		return result;
 	}
 }

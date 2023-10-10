@@ -43,6 +43,7 @@ public class ReportUsageController {
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size, @RequestParam(required = false) String apiId,
 			@RequestParam(required = false, defaultValue = "false") Boolean showDeletedSubscription,
+			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
 			Authentication authentication) {
 
 		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
@@ -55,7 +56,7 @@ public class ReportUsageController {
 
 			ApiResponse<?> response = ApiResponse.success("Monthly summary retrieval successful.",
 					reportUsageService.getMonthlyReport(year, month, applicationId, apiId, username, page, size, search,
-							organization, showDeletedSubscription));
+							organization, showDeletedSubscription,keyType));
 			LOGGER.info("Monthly summary retrieval completed");
 
 			return ResponseEntity.ok(response);
@@ -74,6 +75,7 @@ public class ReportUsageController {
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size,
 			@RequestParam(required = false, defaultValue = "false") Boolean showDeletedSubscription,
+			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
 			Authentication authentication) {
 
 		LOGGER.info("Received request for API Monthly detail log");
@@ -85,14 +87,14 @@ public class ReportUsageController {
 					: principal.getAttributes().get("http://wso2.org/claims/username").toString();
 
 			Map<String, Object> total = reportUsageService.totalMonthlyDetailLog(username, applicationId, apiId, search,
-					year, month, showDeletedSubscription);
+					year, month, showDeletedSubscription, keyType);
 			Pageable pageable = PageRequest.of(page, size);
 			LinkedHashMap<String, Object> result = new LinkedHashMap<>();
 			result.put("requestCount", total.get("request_count"));
 			result.put("requestOK", total.get("count_200"));
 			result.put("requestNOK", total.get("count_not_200"));
 			result.put("details", reportUsageService.getMonthlyDetailLogReport(username, applicationId, apiId, search,
-					pageable, year, month, showDeletedSubscription));
+					pageable, year, month, showDeletedSubscription, keyType));
 
 			ApiResponse<?> response = ApiResponse.success("Monthly detail log retrieval successful.", result);
 
@@ -112,6 +114,7 @@ public class ReportUsageController {
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size,
 			@RequestParam(required = false, defaultValue = "false") Boolean showDeletedSubscription,
+			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
 			Authentication authentication) {
 		
 		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
@@ -123,7 +126,7 @@ public class ReportUsageController {
 		try {
 			ApiResponse<?> response = ApiResponse.success("Resource summary retrieval successful.",
 					reportUsageService.getResourceReport(year, month, resource, apiId, username, page, size, search,
-							showDeletedSubscription));
+							showDeletedSubscription,keyType));
 
 			LOGGER.info("Resource summary retrieval completed");
 
@@ -141,6 +144,7 @@ public class ReportUsageController {
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size,
 			@RequestParam(required = false, defaultValue = "false") Boolean showDeletedSubscription,
+			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
 			Authentication authentication) {
 
 		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
@@ -153,7 +157,7 @@ public class ReportUsageController {
 			Pageable pageable = PageRequest.of(page, size);
 			ApiResponse<?> response = ApiResponse.success("Resource detail log retrieval successful.",
 					reportUsageService.getDetailLogResourceSum(username, resource, apiId, search, pageable,
-							showDeletedSubscription));
+							showDeletedSubscription,keyType));
 
 			LOGGER.info("Resource detail log retrieval completed");
 
@@ -168,7 +172,9 @@ public class ReportUsageController {
 	public ResponseEntity<?> getBackendAPIUsage(@RequestParam(required = false) Integer year,
 			@RequestParam(required = false) Integer month, @RequestParam(required = false) String apiId,
 			@RequestParam(required = false) String search, @RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size, Authentication authentication) {
+			@RequestParam(value = "size", defaultValue = "10") int size, 
+			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
+			Authentication authentication) {
 
 		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
 				.getPrincipal();
@@ -184,7 +190,7 @@ public class ReportUsageController {
 		try {
 			Pageable pageable = PageRequest.of(page, size);
 			ApiResponse<?> response = ApiResponse.success("Backend api usage summary retrieval successful.",
-					reportUsageService.getBackendAPIUsage(username, year, month, apiId, search, pageable));
+					reportUsageService.getBackendAPIUsage(username, year, month, apiId, search, pageable, keyType));
 
 			LOGGER.info("Backend api usage summary retrieval completed");
 
@@ -200,7 +206,9 @@ public class ReportUsageController {
 			@RequestParam(required = false) String version, @RequestParam(required = false) String search,
 			@RequestParam(required = false, defaultValue = "false") boolean asPercent,
 			@RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size, Authentication authentication) {
+			@RequestParam(value = "size", defaultValue = "10") int size, 
+			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
+			Authentication authentication) {
 
 		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
 				.getPrincipal();
@@ -213,7 +221,7 @@ public class ReportUsageController {
 		try {
 			Pageable pageable = PageRequest.of(page, size);
 			ApiResponse<?> response = ApiResponse.success("Error summary retrieval successful.",
-					reportUsageService.getErrorSummary(apiId, version, asPercent, search, pageable));
+					reportUsageService.getErrorSummary(apiId, version, asPercent, search, pageable,keyType));
 
 			LOGGER.info("Error summary retrieval completed");
 
@@ -227,7 +235,9 @@ public class ReportUsageController {
 	@GetMapping("/backend-api/details")
 	public ResponseEntity<?> getBackendAPIUsageDetails(@RequestParam(required = false) String apiId,
 			@RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size, Authentication authentication) {
+			@RequestParam(value = "size", defaultValue = "10") int size, 
+			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
+			Authentication authentication) {
 
 		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
 				.getPrincipal();
@@ -244,7 +254,7 @@ public class ReportUsageController {
 			}
 			Pageable pageable = PageRequest.of(page, size);
 			ApiResponse<?> response = ApiResponse.success("Backend api usage summary details retrieval successful.",
-					reportUsageService.getBackendAPIUsageDetails(apiId, pageable));
+					reportUsageService.getBackendAPIUsageDetails(apiId, pageable, keyType));
 
 			LOGGER.info("Backend api usage summary details retrieval completed");
 

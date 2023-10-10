@@ -19,16 +19,18 @@ public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, Stri
 	@Query("SELECT new com.wso2.swamedia.reportusageapi.dto.RequestCountDTO(d.apiResourceTemplate, d.apiMethod, COUNT(d)) " +
 	        "FROM DataUsageApi d " +
 	        "WHERE d.apiId = :apiId " +
+	        "AND d.keyType = :keyType "+
 	        "AND applicationOwner NOT IN ('anonymous','internal-key-app','UNKNOWN') "+
 	        "GROUP BY d.apiResourceTemplate, d.apiMethod")
-	List<RequestCountDTO> countRequestByResource(@Param("apiId") String apiId);
+	List<RequestCountDTO> countRequestByResource(@Param("apiId") String apiId, @Param("keyType") String keyType);
 	
 	@Query("SELECT new com.wso2.swamedia.reportusageapi.dto.RequestCountDTO(d.apiResourceTemplate, d.apiMethod, COUNT(d)) " +
 	        "FROM DataUsageApi d " +
 	        "WHERE d.apiId = :apiId " +
 	        "AND applicationOwner NOT IN ('anonymous','internal-key-app','UNKNOWN') "+
+	        "AND d.keyType = :keyType "+
 	        "GROUP BY d.apiResourceTemplate, d.apiMethod")
-	Page<RequestCountDTO> countRequestByResource(@Param("apiId") String apiId,Pageable pageable);
+	Page<RequestCountDTO> countRequestByResource(@Param("apiId") String apiId,Pageable pageable,@Param("keyType") String keyType);
 	
 	@Query("SELECT new com.wso2.swamedia.reportusageapi.dto.ErrorSummary(d.apiId,d.apiName,d.apiResourceTemplate, d.apiMethod, " +
             "SUM(CASE WHEN d.proxyResponseCode BETWEEN 100 AND 199 THEN 1 ELSE 0 END) AS count1xx, " +
@@ -39,12 +41,13 @@ public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, Stri
             "COUNT(*) AS totalCount) " +
             "FROM DataUsageApi d " +
             "WHERE (:apiId IS NULL OR d.apiId = :apiId) " +
-            "AND (:version IS NULL OR d.apiVersion = :version) " 
+            "AND (:version IS NULL OR d.apiVersion = :version) " +
+	        "AND d.keyType = :keyType "
 			+ "AND (:search IS NULL "
 			+ "OR LOWER(d.apiResourceTemplate) LIKE LOWER(CONCAT('%', :search, '%'))  "
 			+ "OR LOWER(d.apiMethod) LIKE LOWER(CONCAT('%', :search, '%'))  ) "+
             "GROUP BY d.apiResourceTemplate, d.apiMethod,d.apiId,d.apiName")
 	Page<ErrorSummary> getAPIUsageByFilters(@Param("apiId") String apiId, @Param("version") String version,
-			@Param("search") String search, Pageable pageable);
+			@Param("search") String search, @Param("keyType") String keyType, Pageable pageable);
 
 }

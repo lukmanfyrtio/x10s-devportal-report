@@ -35,7 +35,8 @@ public class DashboardController {
 			@RequestParam(value = "top", required = false, defaultValue = "10") Integer top,
 			@RequestParam(value = "byApplication", required = false, defaultValue = "false") Boolean byApplication,
 			@RequestParam(value = "byApi", required = false, defaultValue = "false") Boolean byApi,
-			@RequestParam(value = "byResponseCode", required = false, defaultValue = "false") Boolean byResponseCode
+			@RequestParam(value = "byResponseCode", required = false, defaultValue = "false") Boolean byResponseCode,
+			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType
 
 	) {
 		LOGGER.info("Received request for get percentage usage");
@@ -46,7 +47,7 @@ public class DashboardController {
 				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
 		try {
 			ApiResponse<?> response = ApiResponse.success("Percentage usage  retrieved successfully .",
-					dashboardService.getUsagePercentage(username, top, byApplication, byResponseCode, byApi));
+					dashboardService.getUsagePercentage(username, top, byApplication, byResponseCode, byApi,keyType));
 
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
@@ -55,20 +56,12 @@ public class DashboardController {
 		}
 	}
 
-	@GetMapping("/quota-report")
-	public ResponseEntity<?> getQuotaReport() {
-		LOGGER.info("Received request for get quota report");
-		try {
-			return ResponseEntity.ok(null);
-		} catch (Exception e) {
-			ApiResponse<?> responseError = ApiResponse.error(e.getMessage());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseError);
-		}
-	}
+
 
 	@GetMapping("/api-usage")
 	public ResponseEntity<?> getDashboardApiUsageByDate(Authentication authentication,
-			@RequestParam("filter") String filter, @RequestParam(value = "top", defaultValue = "10") int top) {
+			@RequestParam("filter") String filter, @RequestParam(value = "top", defaultValue = "10") int top,
+			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType) {
 		LOGGER.info("Received request for get api usage");
 		try {
 			DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
@@ -77,7 +70,7 @@ public class DashboardController {
 					: principal.getAttributes().get("http://wso2.org/claims/username").toString();
 
 			ApiResponse<?> response = ApiResponse.success("Top 10 api usage retrieved successfully .",
-					dashboardService.getTopTenApiUsage(filter, username, top));
+					dashboardService.getTopTenApiUsage(filter, username, top, keyType));
 
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
