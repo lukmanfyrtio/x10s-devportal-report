@@ -49,7 +49,7 @@ public class DashboardService {
 
 	@Autowired
 	private DBUtilsBilling dbUtilsBilling;
-	
+
 	@Autowired
 	private DBUtilsUser dbUtilsUser;
 
@@ -60,79 +60,68 @@ public class DashboardService {
 		case "today":
 			query = "SELECT 'today' as type, TO_CHAR(du.REQUEST_TIMESTAMP, 'YYYY-MM') AS intervalData, "
 					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
-					+ "INNER JOIN (SELECT API_NAME, COUNT(*) AS Usage_Count " 
-					+ "            FROM DATA_USAGE_API "
-					+ "            WHERE DATE(REQUEST_TIMESTAMP) = CURRENT_DATE " 
-					+ "            GROUP BY API_NAME "
+					+ "INNER JOIN (SELECT API_NAME, COUNT(*) AS Usage_Count " + "            FROM DATA_USAGE_API "
+					+ "            WHERE DATE(REQUEST_TIMESTAMP) = CURRENT_DATE " + "            GROUP BY API_NAME "
 					+ "            ORDER BY Usage_Count DESC "
-					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME "
-					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
+					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME " + "LEFT JOIN "
+					+ dbUtilsBilling.getSchemaName() + ".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 					+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) AND "
-					+ "(:owner::text IS NULL OR s.is_active = true) AND "
-					+ "DATE(du.REQUEST_TIMESTAMP) = CURRENT_DATE " 
+					+ "(:owner::text IS NULL OR s.is_active = true) AND " + "DATE(du.REQUEST_TIMESTAMP) = CURRENT_DATE "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-					+ " AND du.KEY_TYPE = :keyType "
-					+ "GROUP BY intervalData, du.API_NAME "
+					+ " AND du.KEY_TYPE = :keyType " + "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
 			break;
 
 		case "week":
 			query = "SELECT 'week' as type,TO_CHAR(du.REQUEST_TIMESTAMP, 'YYYY-MM-DD') AS intervalData, "
 					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
-					+ "INNER JOIN (SELECT API_NAME, COUNT(*) AS Usage_Count " 
-					+ "            FROM DATA_USAGE_API WHERE"
+					+ "INNER JOIN (SELECT API_NAME, COUNT(*) AS Usage_Count " + "            FROM DATA_USAGE_API WHERE"
 					+ "			   YEARWEEK(REQUEST_TIMESTAMP) = YEARWEEK(CURRENT_DATE) "
-					+ "            GROUP BY API_NAME " 
-					+ "            ORDER BY Usage_Count DESC "
-					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME "
-					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
+					+ "            GROUP BY API_NAME " + "            ORDER BY Usage_Count DESC "
+					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME " + "LEFT JOIN "
+					+ dbUtilsBilling.getSchemaName() + ".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 					+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) AND "
 					+ "(:owner::text IS NULL OR s.is_active = true) AND "
 					+ "EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) * 100 + EXTRACT(WEEK FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) * 100 + EXTRACT(WEEK FROM CURRENT_DATE) "
-					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
-					+ " AND du.KEY_TYPE = :keyType "
-					+ "GROUP BY intervalData, du.API_NAME "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+					+ " AND du.KEY_TYPE = :keyType " + "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
 		case "month":
 			query = "SELECT 'month' as type,TO_CHAR(du.REQUEST_TIMESTAMP, 'YYYY-MM-DD') AS intervalData, "
 					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
 					+ "INNER JOIN (SELECT API_NAME, COUNT(*) AS Usage_Count " + "            FROM DATA_USAGE_API WHERE "
 					+ "			   EXTRACT(YEAR FROM REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) "
-					+ "			   AND EXTRACT(MONTH FROM REQUEST_TIMESTAMP) = EXTRACT(MONTH FROM CURRENT_DATE) " + "            GROUP BY API_NAME "
-					+ "            ORDER BY Usage_Count DESC "
-					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME "
-					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
+					+ "			   AND EXTRACT(MONTH FROM REQUEST_TIMESTAMP) = EXTRACT(MONTH FROM CURRENT_DATE) "
+					+ "            GROUP BY API_NAME " + "            ORDER BY Usage_Count DESC "
+					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME " + "LEFT JOIN "
+					+ dbUtilsBilling.getSchemaName() + ".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 					+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) AND "
 					+ "(:owner::text IS NULL OR s.is_active = true) AND "
 					+ "EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) "
 					+ "AND EXTRACT(MONTH FROM du.REQUEST_TIMESTAMP) = EXTRACT(MONTH FROM CURRENT_DATE)"
-					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
-					+ " AND du.KEY_TYPE = :keyType "
-					+ "GROUP BY intervalData, du.API_NAME "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+					+ " AND du.KEY_TYPE = :keyType " + "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
 			break;
 
 		case "year":
 			query = "SELECT 'year' as type,TO_CHAR(du.REQUEST_TIMESTAMP, 'YYYY-MM') AS intervalData,"
 					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
-					+ "INNER JOIN (SELECT API_NAME, COUNT(*) AS Usage_Count " 
-					+ "            FROM DATA_USAGE_API "
-					+ "            WHERE " 
+					+ "INNER JOIN (SELECT API_NAME, COUNT(*) AS Usage_Count " + "            FROM DATA_USAGE_API "
+					+ "            WHERE "
 					+ "			   EXTRACT(YEAR FROM REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) "
-					+ "            GROUP BY API_NAME " 
-					+ "            ORDER BY Usage_Count DESC "
-					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME "
-					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
+					+ "            GROUP BY API_NAME " + "            ORDER BY Usage_Count DESC "
+					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME " + "LEFT JOIN "
+					+ dbUtilsBilling.getSchemaName() + ".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 					+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) AND "
 					+ "(:owner::text IS NULL OR s.is_active = true) AND "
 					+ "EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) "
-					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
-					+ " AND du.KEY_TYPE = :keyType "
-					+ "GROUP BY intervalData, du.API_NAME "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+					+ " AND du.KEY_TYPE = :keyType " + "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
 			break;
 
@@ -280,184 +269,180 @@ public class DashboardService {
 		return finalResult;
 
 	}
-	
 
-	public Page<LinkedHashMap<String, Object>> getFaultOvertimeDetails(String filter, String owner, int page, int pageSize, String searchQuery) throws Exception {
-	    String countQuery = "";
-	    String query = "";
-	    
-	    switch (filter) {
-	        case "today":
-	            countQuery = "SELECT COUNT(DISTINCT CONCAT(API_NAME, '|', APPLICATION_NAME, '|', du.APPLICATION_OWNER)) FROM DATA_USAGE_API du "
-	        			+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME "
-	        			+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
-	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
-						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
-						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner::text IS NULL OR s.is_active = true) "
-	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
-	                    + "AND DATE(du.REQUEST_TIMESTAMP) = CURRENT_DATE ";
-	            query = "SELECT attr.UM_ATTR_VALUE ,du.APPLICATION_OWNER,'today' as type, TO_CHAR(du.REQUEST_TIMESTAMP, 'YYYY-MM-DD HH24') AS intervalData, "
-	                    + "du.API_NAME, du.APPLICATION_NAME, COUNT(*) AS total_usage "
-	                    + "FROM DATA_USAGE_API du "
-	                    + "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME "
-	        			+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
-	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
-						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
-						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner::text IS NULL OR s.is_active = true) "
-	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
-	                    + "AND DATE(du.REQUEST_TIMESTAMP) = CURRENT_DATE ";
-	            break;
-	        case "week":
-	            countQuery = "SELECT COUNT(DISTINCT CONCAT(API_NAME, '|', APPLICATION_NAME, '|', du.APPLICATION_OWNER)) FROM DATA_USAGE_API du "
-	        			+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME "
-	        			+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
-	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
-						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
-						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner::text IS NULL OR s.is_active = true) "
-	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
-	                    + "AND EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) * 100 + EXTRACT(WEEK FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) * 100 + EXTRACT(WEEK FROM CURRENT_DATE) ";
-	            query = "SELECT attr.UM_ATTR_VALUE ,du.APPLICATION_OWNER,'week' as type, TO_CHAR(du.REQUEST_TIMESTAMP, 'YYYY-MM-DD') AS intervalData, "
-	                    + "du.API_NAME, du.APPLICATION_NAME, COUNT(*) AS total_usage "
-	                    + "FROM DATA_USAGE_API du "
-	        			+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME "
-	        			+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
-	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
-						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
-						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner::text IS NULL OR s.is_active = true) "
-	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
-	                    + "AND EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) * 100 + EXTRACT(WEEK FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) * 100 + EXTRACT(WEEK FROM CURRENT_DATE) ";
-	            break;
-	        case "month":
-	            countQuery = "SELECT COUNT(DISTINCT CONCAT(API_NAME, '|', APPLICATION_NAME, '|', du.APPLICATION_OWNER)) FROM DATA_USAGE_API du "
-	        			+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME "
-	        			+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
-	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
-						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
-						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner::text IS NULL OR s.is_active = true) "
-	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
-	                    + "AND EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) "
-	                    + "AND EXTRACT(MONTH FROM du.REQUEST_TIMESTAMP) = EXTRACT(MONTH FROM CURRENT_DATE)";
-	            query = "SELECT attr.UM_ATTR_VALUE ,du.APPLICATION_OWNER,'month' as type, TO_CHAR(du.REQUEST_TIMESTAMP, 'YYYY-MM-DD') AS intervalData, "
-	                    + "du.API_NAME, du.APPLICATION_NAME, COUNT(*) AS total_usage "
-	                    + "FROM DATA_USAGE_API du "
-	        			+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME "
-	        			+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
-	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
-						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
-						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner::text IS NULL OR s.is_active = true) "
-	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
-	                    + "AND EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) "
-	                    + "AND EXTRACT(MONTH FROM du.REQUEST_TIMESTAMP) = EXTRACT(MONTH FROM CURRENT_DATE)";
-	            break;
-	        case "year":
-	            countQuery = "SELECT COUNT(DISTINCT CONCAT(API_NAME, '|', APPLICATION_NAME, '|', du.APPLICATION_OWNER)) FROM DATA_USAGE_API du "
-	        			+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME "
-	        			+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
-	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
-						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
-						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner::text IS NULL OR s.is_active = true) "
-	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
-	                    + "AND EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) ";
-	            query = "SELECT attr.UM_ATTR_VALUE ,du.APPLICATION_OWNER, 'year' as type, TO_CHAR(du.REQUEST_TIMESTAMP, 'YYYY-MM') AS intervalData, "
-	                    + "du.API_NAME, du.APPLICATION_NAME, COUNT(*) AS total_usage "
-	                    + "FROM DATA_USAGE_API du "
-	        			+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME "
-	        			+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
-	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
-						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
-						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner::text IS NULL OR s.is_active = true) "
-	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
-	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
-	                    + "AND EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) ";
-	            break;
-	        default:
-	            throw new Exception("Invalid filter provided. Valid filters: today, week, month, year");
-	    }
+	public Page<LinkedHashMap<String, Object>> getFaultOvertimeDetails(String filter, String owner, int page,
+			int pageSize, String searchQuery) throws Exception {
+		String countQuery = "";
+		String query = "";
 
-	    // Add search condition if provided
-	    if (searchQuery != null && !searchQuery.isEmpty()) {
-	        countQuery += "AND (du.API_NAME LIKE CONCAT('%', :searchQuery, '%') OR du.APPLICATION_NAME LIKE CONCAT('%', :searchQuery, '%')) ";
-	        query += "AND (du.API_NAME LIKE CONCAT('%', :searchQuery, '%') OR du.APPLICATION_NAME LIKE CONCAT('%', :searchQuery, '%')) ";
-	    }
-	    query += "GROUP BY intervalData, du.API_NAME, du.APPLICATION_NAME,attr.UM_ATTR_VALUE ,du.APPLICATION_OWNER "
-	            + "ORDER BY intervalData DESC, total_usage DESC ";
+		switch (filter) {
+		case "today":
+			countQuery = "SELECT COUNT(DISTINCT CONCAT(API_NAME, '|', APPLICATION_NAME, '|', du.APPLICATION_OWNER)) FROM DATA_USAGE_API du "
+					+ "LEFT JOIN " + dbUtilsUser.getSchemaName()
+					+ ".UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME " + "LEFT JOIN "
+					+ dbUtilsUser.getSchemaName() + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+					+ "AND attr.UM_ATTR_NAME = 'organizationName' " + "LEFT JOIN " + dbUtilsBilling.getSchemaName()
+					+ ".subscription s on " + "s.subscription_id = du.SUBSCRIPTION_UUID "
+					+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
+					+ "AND (:owner::text IS NULL OR s.is_active = true) "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
+					+ "AND DATE(du.REQUEST_TIMESTAMP) = CURRENT_DATE ";
+			query = "SELECT attr.UM_ATTR_VALUE ,du.APPLICATION_OWNER,'today' as type, TO_CHAR(du.REQUEST_TIMESTAMP, 'YYYY-MM-DD HH24') AS intervalData, "
+					+ "du.API_NAME, du.APPLICATION_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
+					+ "LEFT JOIN " + dbUtilsUser.getSchemaName()
+					+ ".UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME " + "LEFT JOIN "
+					+ dbUtilsUser.getSchemaName() + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+					+ "AND attr.UM_ATTR_NAME = 'organizationName' " + "LEFT JOIN " + dbUtilsBilling.getSchemaName()
+					+ ".subscription s on " + "s.subscription_id = du.SUBSCRIPTION_UUID "
+					+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
+					+ "AND (:owner::text IS NULL OR s.is_active = true) "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
+					+ "AND DATE(du.REQUEST_TIMESTAMP) = CURRENT_DATE ";
+			break;
+		case "week":
+			countQuery = "SELECT COUNT(DISTINCT CONCAT(API_NAME, '|', APPLICATION_NAME, '|', du.APPLICATION_OWNER)) FROM DATA_USAGE_API du "
+					+ "LEFT JOIN " + dbUtilsUser.getSchemaName()
+					+ ".UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME " + "LEFT JOIN "
+					+ dbUtilsUser.getSchemaName() + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+					+ "AND attr.UM_ATTR_NAME = 'organizationName' " + "LEFT JOIN " + dbUtilsBilling.getSchemaName()
+					+ ".subscription s on " + "s.subscription_id = du.SUBSCRIPTION_UUID "
+					+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
+					+ "AND (:owner::text IS NULL OR s.is_active = true) "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
+					+ "AND EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) * 100 + EXTRACT(WEEK FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) * 100 + EXTRACT(WEEK FROM CURRENT_DATE) ";
+			query = "SELECT attr.UM_ATTR_VALUE ,du.APPLICATION_OWNER,'week' as type, TO_CHAR(du.REQUEST_TIMESTAMP, 'YYYY-MM-DD') AS intervalData, "
+					+ "du.API_NAME, du.APPLICATION_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
+					+ "LEFT JOIN " + dbUtilsUser.getSchemaName()
+					+ ".UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME " + "LEFT JOIN "
+					+ dbUtilsUser.getSchemaName() + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+					+ "AND attr.UM_ATTR_NAME = 'organizationName' " + "LEFT JOIN " + dbUtilsBilling.getSchemaName()
+					+ ".subscription s on " + "s.subscription_id = du.SUBSCRIPTION_UUID "
+					+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
+					+ "AND (:owner::text IS NULL OR s.is_active = true) "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
+					+ "AND EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) * 100 + EXTRACT(WEEK FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) * 100 + EXTRACT(WEEK FROM CURRENT_DATE) ";
+			break;
+		case "month":
+			countQuery = "SELECT COUNT(DISTINCT CONCAT(API_NAME, '|', APPLICATION_NAME, '|', du.APPLICATION_OWNER)) FROM DATA_USAGE_API du "
+					+ "LEFT JOIN " + dbUtilsUser.getSchemaName()
+					+ ".UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME " + "LEFT JOIN "
+					+ dbUtilsUser.getSchemaName() + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+					+ "AND attr.UM_ATTR_NAME = 'organizationName' " + "LEFT JOIN " + dbUtilsBilling.getSchemaName()
+					+ ".subscription s on " + "s.subscription_id = du.SUBSCRIPTION_UUID "
+					+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
+					+ "AND (:owner::text IS NULL OR s.is_active = true) "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
+					+ "AND EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) "
+					+ "AND EXTRACT(MONTH FROM du.REQUEST_TIMESTAMP) = EXTRACT(MONTH FROM CURRENT_DATE)";
+			query = "SELECT attr.UM_ATTR_VALUE ,du.APPLICATION_OWNER,'month' as type, TO_CHAR(du.REQUEST_TIMESTAMP, 'YYYY-MM-DD') AS intervalData, "
+					+ "du.API_NAME, du.APPLICATION_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
+					+ "LEFT JOIN " + dbUtilsUser.getSchemaName()
+					+ ".UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME " + "LEFT JOIN "
+					+ dbUtilsUser.getSchemaName() + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+					+ "AND attr.UM_ATTR_NAME = 'organizationName' " + "LEFT JOIN " + dbUtilsBilling.getSchemaName()
+					+ ".subscription s on " + "s.subscription_id = du.SUBSCRIPTION_UUID "
+					+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
+					+ "AND (:owner::text IS NULL OR s.is_active = true) "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
+					+ "AND EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) "
+					+ "AND EXTRACT(MONTH FROM du.REQUEST_TIMESTAMP) = EXTRACT(MONTH FROM CURRENT_DATE)";
+			break;
+		case "year":
+			countQuery = "SELECT COUNT(DISTINCT CONCAT(API_NAME, '|', APPLICATION_NAME, '|', du.APPLICATION_OWNER)) FROM DATA_USAGE_API du "
+					+ "LEFT JOIN " + dbUtilsUser.getSchemaName()
+					+ ".UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME " + "LEFT JOIN "
+					+ dbUtilsUser.getSchemaName() + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+					+ "AND attr.UM_ATTR_NAME = 'organizationName' " + "LEFT JOIN " + dbUtilsBilling.getSchemaName()
+					+ ".subscription s on " + "s.subscription_id = du.SUBSCRIPTION_UUID "
+					+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
+					+ "AND (:owner::text IS NULL OR s.is_active = true) "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
+					+ "AND EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) ";
+			query = "SELECT attr.UM_ATTR_VALUE ,du.APPLICATION_OWNER, 'year' as type, TO_CHAR(du.REQUEST_TIMESTAMP, 'YYYY-MM') AS intervalData, "
+					+ "du.API_NAME, du.APPLICATION_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
+					+ "LEFT JOIN " + dbUtilsUser.getSchemaName()
+					+ ".UM_USER uu ON du.APPLICATION_OWNER = uu.UM_USER_NAME " + "LEFT JOIN "
+					+ dbUtilsUser.getSchemaName() + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+					+ "AND attr.UM_ATTR_NAME = 'organizationName' " + "LEFT JOIN " + dbUtilsBilling.getSchemaName()
+					+ ".subscription s on " + "s.subscription_id = du.SUBSCRIPTION_UUID "
+					+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
+					+ "AND (:owner::text IS NULL OR s.is_active = true) "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
+					+ "AND EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) ";
+			break;
+		default:
+			throw new Exception("Invalid filter provided. Valid filters: today, week, month, year");
+		}
 
-	    // Count total records per filter
-	    MapSqlParameterSource countParams = new MapSqlParameterSource();
-	    countParams.addValue("owner", owner);
-	    countParams.addValue("searchQuery", searchQuery);
-	    int totalRecords = namedParameterJdbcTemplate.queryForObject(countQuery, countParams, Integer.class);
+		// Add search condition if provided
+		if (searchQuery != null && !searchQuery.isEmpty()) {
+			countQuery += "AND (du.API_NAME LIKE CONCAT('%', :searchQuery, '%') OR du.APPLICATION_NAME LIKE CONCAT('%', :searchQuery, '%')) ";
+			query += "AND (du.API_NAME LIKE CONCAT('%', :searchQuery, '%') OR du.APPLICATION_NAME LIKE CONCAT('%', :searchQuery, '%')) ";
+		}
+		query += "GROUP BY intervalData, du.API_NAME, du.APPLICATION_NAME,attr.UM_ATTR_VALUE ,du.APPLICATION_OWNER "
+				+ "ORDER BY intervalData DESC, total_usage DESC ";
 
-	    // Fetch paginated data
-	    Pageable pageable = PageRequest.of(page, pageSize);
-	    query += "LIMIT :pageSize OFFSET :offset";
-	    MapSqlParameterSource queryParams = new MapSqlParameterSource();
-	    queryParams.addValue("owner", owner);
-	    queryParams.addValue("searchQuery", searchQuery);
-	    queryParams.addValue("pageSize", pageable.getPageSize());
-	    queryParams.addValue("offset", pageable.getOffset());
+		// Count total records per filter
+		MapSqlParameterSource countParams = new MapSqlParameterSource();
+		countParams.addValue("owner", owner);
+		countParams.addValue("searchQuery", searchQuery);
+		int totalRecords = namedParameterJdbcTemplate.queryForObject(countQuery, countParams, Integer.class);
 
-	    List<LinkedHashMap<String, Object>> queryResult = namedParameterJdbcTemplate.query(query, queryParams, (rs, rowNum) -> {
-			LinkedHashMap<String, Object> data = new LinkedHashMap<String, Object>();
-			LocalDate dateTime = null;
-			if (rs.getString("type").equalsIgnoreCase("today")) {
-				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH");
-				LocalDateTime dateTime1 = LocalDateTime.parse(rs.getString("intervalData"), formatter);
-				DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("HH:mm");
-				data.put("time", dateTime1.format(formatter2));
-			} else if (rs.getString("type").equalsIgnoreCase("week")) {
-				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-				dateTime = LocalDate.parse(rs.getString("intervalData"), formatter);
-				data.put("time", dateTime);
-			} else if (rs.getString("type").equalsIgnoreCase("month")) {
-				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-				dateTime = LocalDate.parse(rs.getString("intervalData"), formatter);
-				data.put("time", dateTime);
-			} else {
-				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
-				YearMonth yearMonth = YearMonth.parse(rs.getString("intervalData"), formatter);
-				dateTime = yearMonth.atDay(1);
-				data.put("time",yearMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault()));
-			}
-			String apiName = rs.getString("API_NAME");
-			int totalUsage = rs.getInt("total_usage");
-			data.put("apiName", apiName);
-			data.put("applicationName", rs.getString("APPLICATION_NAME"));
-			data.put("applicationOwner", rs.getString("APPLICATION_OWNER"));
-			data.put("organization", rs.getString("UM_ATTR_VALUE"));
-			data.put("totalUsage", totalUsage);
+		// Fetch paginated data
+		Pageable pageable = PageRequest.of(page, pageSize);
+		query += "LIMIT :pageSize OFFSET :offset";
+		MapSqlParameterSource queryParams = new MapSqlParameterSource();
+		queryParams.addValue("owner", owner);
+		queryParams.addValue("searchQuery", searchQuery);
+		queryParams.addValue("pageSize", pageable.getPageSize());
+		queryParams.addValue("offset", pageable.getOffset());
 
-			return data;
-		});
-	    
-	    Page<LinkedHashMap<String, Object>> pageResult = new PageImpl<>(queryResult, pageable, totalRecords);
+		List<LinkedHashMap<String, Object>> queryResult = namedParameterJdbcTemplate.query(query, queryParams,
+				(rs, rowNum) -> {
+					LinkedHashMap<String, Object> data = new LinkedHashMap<String, Object>();
+					LocalDate dateTime = null;
+					if (rs.getString("type").equalsIgnoreCase("today")) {
+						DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH");
+						LocalDateTime dateTime1 = LocalDateTime.parse(rs.getString("intervalData"), formatter);
+						DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("HH:mm");
+						data.put("time", dateTime1.format(formatter2));
+					} else if (rs.getString("type").equalsIgnoreCase("week")) {
+						DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+						dateTime = LocalDate.parse(rs.getString("intervalData"), formatter);
+						data.put("time", dateTime);
+					} else if (rs.getString("type").equalsIgnoreCase("month")) {
+						DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+						dateTime = LocalDate.parse(rs.getString("intervalData"), formatter);
+						data.put("time", dateTime);
+					} else {
+						DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
+						YearMonth yearMonth = YearMonth.parse(rs.getString("intervalData"), formatter);
+						dateTime = yearMonth.atDay(1);
+						data.put("time", yearMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault()));
+					}
+					String apiName = rs.getString("API_NAME");
+					int totalUsage = rs.getInt("total_usage");
+					data.put("apiName", apiName);
+					data.put("applicationName", rs.getString("APPLICATION_NAME"));
+					data.put("applicationOwner", rs.getString("APPLICATION_OWNER"));
+					data.put("organization", rs.getString("UM_ATTR_VALUE"));
+					data.put("totalUsage", totalUsage);
 
-	    return pageResult;
+					return data;
+				});
+
+		Page<LinkedHashMap<String, Object>> pageResult = new PageImpl<>(queryResult, pageable, totalRecords);
+
+		return pageResult;
 	}
-
 
 	public List<LinkedHashMap<String, Object>> getFaultOvertime(String filter, String owner) throws Exception {
 		String query = "";
@@ -465,57 +450,53 @@ public class DashboardService {
 		switch (filter) {
 		case "today":
 			query = "SELECT 'today' as type,TO_CHAR(du.REQUEST_TIMESTAMP, 'YYYY-MM-DD HH24') AS intervalData, "
-					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
-					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
+					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du " + "LEFT JOIN "
+					+ dbUtilsBilling.getSchemaName() + ".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 					+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
 					+ "AND (:owner::text IS NULL OR s.is_active = true) "
-					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
-					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
-					+ "AND " + "DATE(du.REQUEST_TIMESTAMP) = CURRENT_DATE " 
-					+ "GROUP BY intervalData, du.API_NAME "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) " + "AND "
+					+ "DATE(du.REQUEST_TIMESTAMP) = CURRENT_DATE " + "GROUP BY intervalData, du.API_NAME "
 					+ "ORDER BY intervalData DESC, total_usage DESC ";
 			break;
 
 		case "week":
 			query = "SELECT 'week' as type,TO_CHAR(du.REQUEST_TIMESTAMP, 'YYYY-MM-DD') AS intervalData, "
-					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
-					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
+					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du " + "LEFT JOIN "
+					+ dbUtilsBilling.getSchemaName() + ".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 					+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
 					+ "AND (:owner::text IS NULL OR s.is_active = true) "
-					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
-					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
-					+ "AND " + "EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) * 100 + EXTRACT(WEEK FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) * 100 + EXTRACT(WEEK FROM CURRENT_DATE) "
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) " + "AND "
+					+ "EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) * 100 + EXTRACT(WEEK FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) * 100 + EXTRACT(WEEK FROM CURRENT_DATE) "
 					+ "GROUP BY intervalData, du.API_NAME " + "ORDER BY intervalData DESC, total_usage DESC ";
 		case "month":
 			query = "SELECT 'month' as type,TO_CHAR(du.REQUEST_TIMESTAMP, 'YYYY-MM-DD') AS intervalData, "
-					+ "du.API_NAME, COUNT(*) AS total_usage " 
-					+ "FROM DATA_USAGE_API du "
-					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
+					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du " + "LEFT JOIN "
+					+ dbUtilsBilling.getSchemaName() + ".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 					+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
 					+ "AND (:owner::text IS NULL OR s.is_active = true) "
-					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
-					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
-					+ "AND " + "EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) "
-					+ "AND EXTRACT(MONTH FROM du.REQUEST_TIMESTAMP) = EXTRACT(MONTH FROM CURRENT_DATE)" + "GROUP BY intervalData, du.API_NAME "
-					+ "ORDER BY intervalData DESC, total_usage DESC ";
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) " + "AND "
+					+ "EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) "
+					+ "AND EXTRACT(MONTH FROM du.REQUEST_TIMESTAMP) = EXTRACT(MONTH FROM CURRENT_DATE)"
+					+ "GROUP BY intervalData, du.API_NAME " + "ORDER BY intervalData DESC, total_usage DESC ";
 			break;
 
 		case "year":
 			query = "SELECT 'year' as type,TO_CHAR(du.REQUEST_TIMESTAMP, 'YYYY-MM') AS intervalData,"
-					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
-					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
+					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du " + "LEFT JOIN "
+					+ dbUtilsBilling.getSchemaName() + ".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 					+ "WHERE (:owner::text IS NULL OR du.APPLICATION_OWNER = :owner) "
 					+ "AND (:owner::text IS NULL OR s.is_active = true) "
-					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
-					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
-					+ "AND " 
-					+ "EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) " 
-					+ "GROUP BY intervalData, du.API_NAME "
-					+ "ORDER BY intervalData DESC, total_usage DESC ";
+					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) " + "AND "
+					+ "EXTRACT(YEAR FROM du.REQUEST_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE) "
+					+ "GROUP BY intervalData, du.API_NAME " + "ORDER BY intervalData DESC, total_usage DESC ";
 			break;
 
 		default:
@@ -659,127 +640,118 @@ public class DashboardService {
 
 		return finalResult;
 	}
-	
-	
 
-	public List<DashboardPercentageDTO> getApiUsageByApi(String username,Integer top,String keyType) {
-		    StringBuilder query = new StringBuilder();
-		    query.append("SELECT\n")
-		         .append("    DATA_USAGE_API.API_ID,\n")
-		         .append("    API_NAME,\n")
-		         .append("    COUNT(*) AS row_count,\n")
-		         .append("    (COUNT(*) / (\n")
-		         .append("        SELECT COUNT(*)\n")
-		         .append("        FROM DATA_USAGE_API\n")
-		         .append("        LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
-		         .append("        WHERE 1 = 1\n")
-		         .append("            AND (:owner::text IS NULL OR APPLICATION_OWNER = :owner)\n")
-		         .append("            AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
-		         .append("            AND (:owner::text IS NULL OR s.is_active = true)\n")
-		         .append("    ) * 100) AS percentage\n")
-		         .append("FROM\n")
-		         .append("    DATA_USAGE_API\n")
-		         .append("    LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
-		         .append("WHERE 1 = 1\n")
-		         .append("    AND (:owner::text IS NULL OR APPLICATION_OWNER = :owner)\n")
-		         .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
-		         .append("    AND (:owner::text IS NULL OR s.is_active = true)\n")
-		         .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
-		         .append("GROUP BY\n")
-		         .append("    DATA_USAGE_API.API_ID,\n")
-		         .append("    API_NAME\n")
-		         .append("ORDER BY\n")
-		         .append("    row_count DESC\n")
-		         .append("LIMIT :top");
-		    
-
-
-		Map<String, Object> params = new HashMap<>();
-		params.put("owner", username);
-		params.put("top", top);
-		params.put("keyType", keyType);
+	public List<DashboardPercentageDTO> getApiUsageByApi(String username, Integer top, String keyType) {
+	    StringBuilder query = new StringBuilder();
+	    query.append("SELECT\n")
+	      .append("    DATA_USAGE_API.API_ID,\n")
+	      .append("    API_NAME,\n")
+	      .append("    COUNT(*) AS row_count,\n")
+	      .append("    (COUNT(*) / (\n")
+	      .append("        SELECT COUNT(*)\n")
+	      .append("        FROM DATA_USAGE_API\n")
+	      .append("        LEFT JOIN " + this.dbUtilsBilling.getSchemaName() + ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
+	      .append("        WHERE 1 = 1\n")
+	      .append("            AND (:owner::text IS NULL OR APPLICATION_OWNER = :owner)\n")
+	      .append("            AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
+	      .append("            AND (:owner::text IS NULL OR s.is_active = true)\n")
+	      .append("    ) * 100) AS percentage\n")
+	      .append("FROM\n")
+	      .append("    DATA_USAGE_API\n")
+	      .append("    LEFT JOIN " + this.dbUtilsBilling.getSchemaName() + ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
+	      .append("WHERE 1 = 1\n")
+	      .append("    AND (:owner::text IS NULL OR APPLICATION_OWNER = :owner)\n")
+	      .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
+	      .append("    AND (:owner::text IS NULL OR s.is_active = true)\n")
+	      .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
+	      .append("GROUP BY\n")
+	      .append("    DATA_USAGE_API.API_ID,\n")
+	      .append("    API_NAME\n")
+	      .append("ORDER BY\n")
+	      .append("    row_count DESC\n")
+	      .append("LIMIT :top");
+	    Map<String, Object> params = new HashMap<>();
+	    params.put("owner", username);
+	    params.put("top", top);
+	    params.put("keyType", keyType);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
 		return namedParameterJdbcTemplate.query(query.toString(), parameters, new DashboardApiPercentageMapper());
 	}
 
-	public List<DashboardPercentageDTO> getApiUsageByApplication(String username,Integer top,String keyType) {
-		StringBuilder query = new StringBuilder();
+	public List<DashboardPercentageDTO> getApiUsageByApplication(String username, Integer top, String keyType) {
+	    StringBuilder query = new StringBuilder();
 	    query.append("SELECT\n")
-	         .append("    APPLICATION_ID,\n")
-	         .append("    APPLICATION_NAME,\n")
-	         .append("    COUNT(*) AS row_count,\n")
-	         .append("    (COUNT(*) / (\n")
-	         .append("            SELECT COUNT(*)\n")
-	         .append("            FROM DATA_USAGE_API\n")
-	         .append("            LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
-	         .append("            WHERE 1=1\n")
-	         .append("              AND (:owner::text IS NULL OR APPLICATION_OWNER = :owner)\n")
-	         .append("              AND (:owner::text IS NULL OR s.is_active  = true)\n")
-	         .append("              AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
-	         .append("        ) * 100\n")
-	         .append("    ) AS percentage\n")
-	         .append("FROM\n")
-	         .append("    DATA_USAGE_API\n")
-	         .append("    LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
-	         .append("WHERE 1=1\n")
-	         .append("    AND (:owner::text IS NULL OR APPLICATION_OWNER = :owner)\n")
-	         .append("    AND (:owner::text IS NULL OR s.is_active  = true)\n")
-	         .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
-	         .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
-	         .append("GROUP BY\n")
-	         .append("    APPLICATION_ID,\n")
-	         .append("    APPLICATION_NAME\n")
-	         .append("ORDER BY\n")
-	         .append("    row_count DESC\n")
-	         .append("LIMIT :top");
-
-		Map<String, Object> params = new HashMap<>();
-		params.put("owner", username);
-		params.put("top", top);
-		params.put("keyType", keyType);
+	      .append("    APPLICATION_ID,\n")
+	      .append("    APPLICATION_NAME,\n")
+	      .append("    COUNT(*) AS row_count,\n")
+	      .append("    (COUNT(*) / (\n")
+	      .append("            SELECT COUNT(*)\n")
+	      .append("            FROM DATA_USAGE_API\n")
+	      .append("            LEFT JOIN " + this.dbUtilsBilling.getSchemaName() + ".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
+	      .append("            WHERE 1=1\n")
+	      .append("              AND (:owner::text IS NULL OR APPLICATION_OWNER = :owner)\n")
+	      .append("              AND (:owner::text IS NULL OR s.is_active  = true)\n")
+	      .append("              AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
+	      .append("        ) * 100\n")
+	      .append("    ) AS percentage\n")
+	      .append("FROM\n")
+	      .append("    DATA_USAGE_API\n")
+	      .append("    LEFT JOIN " + this.dbUtilsBilling.getSchemaName() + ".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
+	      .append("WHERE 1=1\n")
+	      .append("    AND (:owner::text IS NULL OR APPLICATION_OWNER = :owner)\n")
+	      .append("    AND (:owner::text IS NULL OR s.is_active  = true)\n")
+	      .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
+	      .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
+	      .append("GROUP BY\n")
+	      .append("    APPLICATION_ID,\n")
+	      .append("    APPLICATION_NAME\n")
+	      .append("ORDER BY\n")
+	      .append("    row_count DESC\n")
+	      .append("LIMIT :top");
+	    Map<String, Object> params = new HashMap<>();
+	    params.put("owner", username);
+	    params.put("top", top);
+	    params.put("keyType", keyType);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
 		return namedParameterJdbcTemplate.query(query.toString(), parameters, new DashboardAppPercentageMapper());
 	}
 
-	public List<DashboardPercentageDTO> getApiUsageByResponseCode(String username,Integer top,String keyType) {
+	public List<DashboardPercentageDTO> getApiUsageByResponseCode(String username, Integer top, String keyType) {
 	    StringBuilder query = new StringBuilder();
 	    query.append("SELECT\n")
-	         .append("    response_category,\n")
-	         .append("    total_count AS row_count,\n")
-	         .append("    ROUND((total_count / SUM(total_count) OVER ()) * 100, 2) AS percentage\n")
-	         .append("FROM\n")
-	         .append("    (\n")
-	         .append("        SELECT\n")
-	         .append("            CASE\n")
-	         .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 100 AND 199 THEN '1xx'\n")
-	         .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 200 AND 299 THEN '2xx'\n")
-	         .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 300 AND 399 THEN '3xx'\n")
-	         .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 400 AND 499 THEN '4xx'\n")
-	         .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 500 AND 599 THEN '5xx'\n")
-	         .append("                ELSE 'OTHERS'\n")
-	         .append("            END AS response_category,\n")
-	         .append("            COUNT(*) AS total_count\n")
-	         .append("        FROM\n")
-	         .append("            DATA_USAGE_API\n")
-	         .append("            LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
-	         .append("        WHERE\n")
-	         .append("            (:owner::text IS NULL OR DATA_USAGE_API.APPLICATION_OWNER = :owner)\n")
-	         .append("            AND DATA_USAGE_API.APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
-	         .append("            AND (:owner::text IS NULL OR s.is_active = true)\n")
-	         .append("    		  AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
-	         .append("        GROUP BY\n")
-	         .append("            response_category\n")
-	         .append("        ORDER BY\n")
-	         .append("            total_count DESC\n")
-	         .append("        LIMIT :top ")
-	         .append("    ) AS subquery;");
-
-
-
-		Map<String, Object> params = new HashMap<>();
-		params.put("owner", username);
-		params.put("top", top);
-		params.put("keyType", keyType);
+	      .append("    response_category,\n")
+	      .append("    total_count AS row_count,\n")
+	      .append("    ROUND((total_count / SUM(total_count) OVER ()) * 100, 2) AS percentage\n")
+	      .append("FROM\n")
+	      .append("    (\n")
+	      .append("        SELECT\n")
+	      .append("            CASE\n")
+	      .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 100 AND 199 THEN '1xx'\n")
+	      .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 200 AND 299 THEN '2xx'\n")
+	      .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 300 AND 399 THEN '3xx'\n")
+	      .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 400 AND 499 THEN '4xx'\n")
+	      .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 500 AND 599 THEN '5xx'\n")
+	      .append("                ELSE 'OTHERS'\n")
+	      .append("            END AS response_category,\n")
+	      .append("            COUNT(*) AS total_count\n")
+	      .append("        FROM\n")
+	      .append("            DATA_USAGE_API\n")
+	      .append("            LEFT JOIN " + this.dbUtilsBilling.getSchemaName() + ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
+	      .append("        WHERE\n")
+	      .append("            (:owner::text IS NULL OR DATA_USAGE_API.APPLICATION_OWNER = :owner)\n")
+	      .append("            AND DATA_USAGE_API.APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
+	      .append("            AND (:owner::text IS NULL OR s.is_active = true)\n")
+	      .append("    \t\t  AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
+	      .append("        GROUP BY\n")
+	      .append("            response_category\n")
+	      .append("        ORDER BY\n")
+	      .append("            total_count DESC\n")
+	      .append("        LIMIT :top ")
+	      .append("    ) AS subquery;");
+	    Map<String, Object> params = new HashMap<>();
+	    params.put("owner", username);
+	    params.put("top", top);
+	    params.put("keyType", keyType);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
 		LOGGER.info(query.toString());
 		return namedParameterJdbcTemplate.query(query.toString(), parameters, new DashboardResCodePercentageMapper());
@@ -820,10 +792,8 @@ public class DashboardService {
 	}
 
 	public int getTotalAppsByUsername(String username) {
-		String query = "SELECT COUNT(*) AS totalApps " + "FROM AM_APPLICATION " + "LEFT JOIN " + "AM_SUBSCRIBER ON "
-				+ "AM_SUBSCRIBER.SUBSCRIBER_ID =AM_APPLICATION.SUBSCRIBER_ID " + "WHERE " + "(:username::text IS NULL "
-				+ " OR AM_SUBSCRIBER.USER_ID =:username ) ";
-
+		 String query = "SELECT COUNT(*) AS totalApps FROM AM_APPLICATION LEFT JOIN AM_SUBSCRIBER ON AM_SUBSCRIBER.SUBSCRIBER_ID =AM_APPLICATION.SUBSCRIBER_ID WHERE (:username::text IS NULL  OR AM_SUBSCRIBER.USER_ID =:username ) ";
+		   
 		try {
 			// Create parameters for the named query
 			MapSqlParameterSource params = new MapSqlParameterSource();
@@ -838,8 +808,7 @@ public class DashboardService {
 	}
 
 	public int getTotalSubscriberByUsername(String username) {
-		String query = "SELECT COUNT(*) AS totalSubscriber " + "FROM AM_SUBSCRIBER " + "WHERE " + "(:username::text IS NULL "
-				+ " OR AM_SUBSCRIBER.USER_ID =:username )";
+		String query = "SELECT COUNT(*) AS totalSubscriber FROM AM_SUBSCRIBER WHERE (:username::text IS NULL  OR AM_SUBSCRIBER.USER_ID =:username )";
 
 		try {
 			// Create parameters for the named query
@@ -855,12 +824,7 @@ public class DashboardService {
 	}
 
 	public int getTotalSubscriptionAPIByUsername(String username) {
-		String query = "SELECT COUNT(*) AS totalSubscriptionAPI " 
-				+ "FROM AM_SUBSCRIPTION "
-				+ "LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID "
-				+ "LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID = AM_SUBSCRIBER.SUBSCRIBER_ID "
-				+ "LEFT JOIN AM_API ON AM_API.API_ID = AM_SUBSCRIPTION.API_ID "
-				+ "WHERE (:username::text IS NULL OR AM_SUBSCRIBER.USER_ID = :username)";
+		String query = "SELECT COUNT(*) AS totalSubscriptionAPI FROM AM_SUBSCRIPTION LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID = AM_SUBSCRIBER.SUBSCRIBER_ID LEFT JOIN AM_API ON AM_API.API_ID = AM_SUBSCRIPTION.API_ID WHERE (:username::text IS NULL OR AM_SUBSCRIBER.USER_ID = :username)";
 
 		try {
 			// Create parameters for the named query
@@ -876,13 +840,9 @@ public class DashboardService {
 	}
 
 	public int getTotalResponseFaultByUsername(String username) {
-		String query = "SELECT COUNT(*) AS totalResponseFault " 
-				+ "FROM DATA_USAGE_API "
-				+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on s.subscription_id = DATA_USAGE_API.subscription_id "
-				+ "WHERE DATA_USAGE_API.PROXY_RESPONSE_CODE BETWEEN 200 AND 299  "
-				+ "AND (:username::text IS NULL OR DATA_USAGE_API.APPLICATION_OWNER = :username) "
-				+ "AND (:username::text IS NULL OR s.is_active = true) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') AND s.is_active = true";
+		String query = "SELECT COUNT(*) AS totalResponseFault FROM DATA_USAGE_API LEFT JOIN "
+				+ this.dbUtilsBilling.getSchemaName()
+				+ ".subscription s on s.subscription_id = DATA_USAGE_API.subscription_id WHERE DATA_USAGE_API.PROXY_RESPONSE_CODE BETWEEN 200 AND 299  AND (:username::text IS NULL OR DATA_USAGE_API.APPLICATION_OWNER = :username) AND (:username::text IS NULL OR s.is_active = true) AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') AND s.is_active = true";
 
 		try {
 			// Create parameters for the named query
@@ -898,7 +858,8 @@ public class DashboardService {
 	}
 
 	public int getTotalUnpaidInvoicesByUsername(String username) {
-		String query = "SELECT COUNT(i.id) as total FROM "+dbUtilsBilling.getSchemaName()+".invoice i WHERE i.status = 1 AND (?::text IS NULL OR i.customer_id = ?)";
+		String query = "SELECT COUNT(i.id) as total FROM " + dbUtilsBilling.getSchemaName()
+				+ ".invoice i WHERE i.status = 1 AND (?::text IS NULL OR i.customer_id = ?)";
 
 		try (Connection connection = dbUtilsBilling.getConnection();
 				PreparedStatement preparedStatement = connection.prepareStatement(query)) {
@@ -907,17 +868,17 @@ public class DashboardService {
 			preparedStatement.setString(2, username);
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				
+
 				if (resultSet.next()) {
-					 int res=resultSet.getInt("total");
-					 connection.close();
-					 preparedStatement.close();
-					 resultSet.close();
+					int res = resultSet.getInt("total");
+					connection.close();
+					preparedStatement.close();
+					resultSet.close();
 					return res;
 				} else {
-					 connection.close();
-					 preparedStatement.close();
-					 resultSet.close();
+					connection.close();
+					preparedStatement.close();
+					resultSet.close();
 					return 0;
 				}
 			}
@@ -939,7 +900,6 @@ public class DashboardService {
 //		return condition.toString();
 //	}
 
-	
 //	private Map<String, Object> getOptionalDateRangeNamedParams(LocalDate startDate, LocalDate endDate) {
 //		Map<String, Object> namedParams = new HashMap<>();
 //		if (startDate != null) {

@@ -652,7 +652,7 @@ public class ReportUsageService {
 			    .addValue("month", month)
 			    .addValue("apiId", apiId)
 			    .addValue("applicationId", applicationId)
-			    .addValue("organization", organization);
+			    .addValue("organization", organization)
           .addValue("keyType", keyType);
 		
 		return namedParameterJdbcTemplate.queryForMap(sqlQuery.toString(), sqlParam);
