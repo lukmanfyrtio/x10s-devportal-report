@@ -11,7 +11,7 @@ public class DashboardResCodePercentageMapper implements RowMapper<DashboardPerc
 	@Override
 	public DashboardPercentageDTO mapRow(ResultSet rs, int rowNum) throws SQLException {
 		DashboardPercentageDTO apiUsageByApi = new DashboardPercentageDTO();
-		apiUsageByApi.setProxyResponseCode(rs.getString("PROXY_RESPONSE_CODE"));
+		apiUsageByApi.setProxyResponseCode(rs.getString("response_category"));
 		apiUsageByApi.setRowCount(rs.getInt("row_count"));
 		apiUsageByApi.setPercentage(rs.getDouble("percentage"));
 		return apiUsageByApi;

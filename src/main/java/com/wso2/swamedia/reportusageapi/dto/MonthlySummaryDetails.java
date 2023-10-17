@@ -15,5 +15,6 @@ public class MonthlySummaryDetails {
 	private String applicationId;
 	private String apiName;
 	private String applicationName;
+	private String organization;
 
 }

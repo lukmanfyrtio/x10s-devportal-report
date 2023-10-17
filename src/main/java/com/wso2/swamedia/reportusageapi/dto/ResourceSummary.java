@@ -4,6 +4,8 @@ import java.math.BigInteger;
 
 import org.springframework.data.domain.Page;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,6 +29,10 @@ public class ResourceSummary {
 		private String apiMethod;
 		private BigInteger requestCount;
 		private String apiId;
+		@JsonInclude(JsonInclude.Include.NON_NULL)
+		private String applicationId;
+		@JsonInclude(JsonInclude.Include.NON_NULL)
+		private String applicationName;
 
 	}
 

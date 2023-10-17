@@ -1,7 +1,5 @@
 package com.wso2.swamedia.reportusageapi.dto;
 
-import java.util.Date;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.AllArgsConstructor;
@@ -11,25 +9,26 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class TableRemainingDayQuota {
-
-	private String subscriptionId;
-	private String applicationName;
+public class ErrorSummary {
+	private String apiId;
 	private String apiName;
-	private String policyName;
+	private String apiResourceTemplate;
+	private String apiMethod;
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private Integer quota;
+	private Long count1xx;
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private Integer apiUsage;
+	private Long count2xx;
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private Date startDate;
+	private Long count3xx;
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private String typeSubscription;
+	private Long count4xx;
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private Integer remaining;
-	private String organization;
-	private String applicationOwner;
-	private String notes;
-	private String subsStateId;
-//    private Integer remainingDays;
+	private Long count5xx;
+	private Long totalCount;
+	
+	
+	
+	
+
+
 }
