@@ -9,16 +9,16 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class DBUtilsUser {
-	@Value("${spring.second-datasource.url}")
+	@Value("${spring.shared-datasource.url}")
 	private String databaseUrl;
 
-	@Value("${spring.second-datasource.username}")
+	@Value("${spring.shared-datasource.username}")
 	private String databaseUsername;
 
-	@Value("${spring.second-datasource.password}")
+	@Value("${spring.shared-datasource.password}")
 	private String databasePassword;
 
-	@Value("${spring.second-datasource.driver-class-name}")
+	@Value("${spring.shared-datasource.driver-class-name}")
 	private String databaseDriverClassName;;
 
 	public Connection getConnection() throws SQLException {

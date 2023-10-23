@@ -1,5 +1,6 @@
-package com.wso2.swamedia.reportusageapi.repo;
+package com.wso2.swamedia.reportusageapi.repo.mysql;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,6 +10,8 @@ import org.springframework.stereotype.Repository;
 
 import com.wso2.swamedia.reportusageapi.dto.DataUsageApiResponse;
 import com.wso2.swamedia.reportusageapi.model.AmApi;
+
+@Profile("mysql")
 @Repository
 public interface AmApiRepository extends JpaRepository<AmApi, String> {
 	
@@ -28,5 +31,5 @@ public interface AmApiRepository extends JpaRepository<AmApi, String> {
 	Page<DataUsageApiResponse> findByOwnerAndYearAndMonthAndApiIdAndSearchFilter(@Param("owner") String owner,
 			@Param("year") Integer year, @Param("month") Integer month, @Param("apiId") String apiId,
 			@Param("searchFilter") String searchFilter,@Param("keyType") String keyType ,Pageable pageable);
-
+	
 }

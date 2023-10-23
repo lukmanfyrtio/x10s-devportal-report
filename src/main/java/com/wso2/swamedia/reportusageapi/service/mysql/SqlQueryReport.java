@@ -1,4 +1,4 @@
-package com.wso2.swamedia.reportusageapi.service;
+package com.wso2.swamedia.reportusageapi.service.mysql;
 
 import java.time.LocalDate;
 

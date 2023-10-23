@@ -1,7 +1,8 @@
-package com.wso2.swamedia.reportusageapi.repo;
+package com.wso2.swamedia.reportusageapi.repo.mysql;
 
 import java.util.List;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +14,7 @@ import com.wso2.swamedia.reportusageapi.dto.ErrorSummary;
 import com.wso2.swamedia.reportusageapi.dto.RequestCountDTO;
 import com.wso2.swamedia.reportusageapi.model.DataUsageApi;
 
+@Profile("mysql")
 @Repository
 public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, String> {
 
