@@ -55,13 +55,14 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 	@Autowired
 	private DBUtilsUser dbUtilsUser;
 
-	public List<?> getTopTenApiUsage(String filter, String owner, int top, String keyType) throws Exception {
+	public List<?> getTopTenApiUsage(String filter, String organizationName, int top, String keyType) throws Exception {
 		String query = "";
 		List<LinkedHashMap<String, Object>> finalResult = new ArrayList<>();
 		switch (filter) {
 		case "today":
 			query = "SELECT 'today' as type,DATE_FORMAT(du.REQUEST_TIMESTAMP, '%Y-%m-%d %H') AS intervalData, "
-					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
+					+ "du.API_NAME, COUNT(*) AS total_usage " 
+					+ "FROM DATA_USAGE_API du "
 					+ "INNER JOIN (SELECT API_NAME, COUNT(*) AS Usage_Count " 
 					+ "            FROM DATA_USAGE_API "
 					+ "            WHERE DATE(REQUEST_TIMESTAMP) = CURDATE() " 
@@ -69,9 +70,13 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 					+ "            ORDER BY Usage_Count DESC "
 					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME "
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
-					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) AND "
-					+ "(:owner IS NULL OR s.is_active = true) AND "
+					+ " s.subscription_id = du.SUBSCRIPTION_UUID "
+					+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu on uu.UM_USER_NAME = du.APPLICATION_OWNER "
+					+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE uua on uua.UM_USER_ID = uu.UM_ID "
+					+ " AND uua.UM_ATTR_NAME = 'organizationName' "
+					+ "WHERE "
+					+ "(:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName) "
+					+ "AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true) AND "
 					+ "DATE(du.REQUEST_TIMESTAMP) = CURDATE() " 
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 					+ " AND du.KEY_TYPE = :keyType "
@@ -90,8 +95,12 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME "
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) AND "
-					+ "(:owner IS NULL OR s.is_active = true) AND "
+					+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu on uu.UM_USER_NAME = du.APPLICATION_OWNER "
+					+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE uua on uua.UM_USER_ID = uu.UM_ID "
+					+ " AND uua.UM_ATTR_NAME = 'organizationName' "
+					+ "WHERE "
+					+ "(:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName) "
+					+ "AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true) AND "
 					+ "YEARWEEK(du.REQUEST_TIMESTAMP) = YEARWEEK(CURDATE()) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
 					+ " AND du.KEY_TYPE = :keyType "
@@ -107,8 +116,12 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME "
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) AND "
-					+ "(:owner IS NULL OR s.is_active = true) AND "
+					+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu on uu.UM_USER_NAME = du.APPLICATION_OWNER "
+					+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE uua on uua.UM_USER_ID = uu.UM_ID "
+					+ " AND uua.UM_ATTR_NAME = 'organizationName' "
+					+ "WHERE "
+					+ "(:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName) "
+					+ "AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true) AND "
 					+ "YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
 					+ "AND MONTH(du.REQUEST_TIMESTAMP) = MONTH(CURDATE()) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
@@ -129,8 +142,12 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME "
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) AND "
-					+ "(:owner IS NULL OR s.is_active = true) AND "
+					+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu on uu.UM_USER_NAME = du.APPLICATION_OWNER "
+					+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE uua on uua.UM_USER_ID = uu.UM_ID "
+					+ " AND uua.UM_ATTR_NAME = 'organizationName' "
+					+ "WHERE "
+					+ "(:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName) "
+					+ "AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true) AND "
 					+ "YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
 					+ " AND du.KEY_TYPE = :keyType "
@@ -143,7 +160,7 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 		}
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-		parameters.addValue("owner", owner);
+		parameters.addValue("organizationName", organizationName);
 		parameters.addValue("top", top);
 		parameters.addValue("keyType", keyType);
 		LOGGER.info(query);
@@ -284,7 +301,7 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 	}
 	
 
-	public Page<LinkedHashMap<String, Object>> getFaultOvertimeDetails(String filter, String owner, int page, int pageSize, String searchQuery) throws Exception {
+	public Page<LinkedHashMap<String, Object>> getFaultOvertimeDetails(String filter, String organizationName, int page, int pageSize, String searchQuery) throws Exception {
 	    String countQuery = "";
 	    String query = "";
 	    
@@ -296,8 +313,9 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner IS NULL OR s.is_active = true) "
+						+ "WHERE "
+						+ "(:organizationName ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE  = :organizationName) "
+						+ "AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 	                    + "AND DATE(du.REQUEST_TIMESTAMP) = CURDATE() ";
@@ -309,8 +327,9 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner IS NULL OR s.is_active = true) "
+						+ "WHERE "
+						+ "(:organizationName ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE  = :organizationName) "
+						+ "AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 	                    + "AND DATE(du.REQUEST_TIMESTAMP) = CURDATE() ";
@@ -322,8 +341,9 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner IS NULL OR s.is_active = true) "
+						+ "WHERE "
+						+ "(:organizationName ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE  = :organizationName) "
+						+ "AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 	                    + "AND YEARWEEK(du.REQUEST_TIMESTAMP) = YEARWEEK(CURDATE()) ";
@@ -335,8 +355,9 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner IS NULL OR s.is_active = true) "
+						+ "WHERE "
+						+ "(:organizationName ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE  = :organizationName) "
+						+ "AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 	                    + "AND YEARWEEK(du.REQUEST_TIMESTAMP) = YEARWEEK(CURDATE()) ";
@@ -348,8 +369,9 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner IS NULL OR s.is_active = true) "
+						+ "WHERE "
+						+ "(:organizationName ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE  = :organizationName) "
+						+ "AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 	                    + "AND YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
@@ -362,8 +384,9 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner IS NULL OR s.is_active = true) "
+						+ "WHERE "
+						+ "(:organizationName ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE  = :organizationName) "
+						+ "AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 	                    + "AND YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
@@ -376,8 +399,9 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner IS NULL OR s.is_active = true) "
+						+ "WHERE "
+						+ "(:organizationName ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE  = :organizationName) "
+						+ "AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 	                    + "AND YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) ";
@@ -389,8 +413,9 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner IS NULL OR s.is_active = true) "
+						+ "WHERE "
+						+ "(:organizationName ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE  = :organizationName) "
+						+ "AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 	                    + "AND YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) ";
@@ -409,7 +434,7 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 
 	    // Count total records per filter
 	    MapSqlParameterSource countParams = new MapSqlParameterSource();
-	    countParams.addValue("owner", owner);
+	    countParams.addValue("organizationName", organizationName);
 	    countParams.addValue("searchQuery", searchQuery);
 	    int totalRecords = namedParameterJdbcTemplate.queryForObject(countQuery, countParams, Integer.class);
 
@@ -417,7 +442,7 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 	    Pageable pageable = PageRequest.of(page, pageSize);
 	    query += "LIMIT :pageSize OFFSET :offset";
 	    MapSqlParameterSource queryParams = new MapSqlParameterSource();
-	    queryParams.addValue("owner", owner);
+	    queryParams.addValue("organizationName", organizationName);
 	    queryParams.addValue("searchQuery", searchQuery);
 	    queryParams.addValue("pageSize", pageable.getPageSize());
 	    queryParams.addValue("offset", pageable.getOffset());
@@ -461,7 +486,7 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 	}
 
 
-	public List<LinkedHashMap<String, Object>> getFaultOvertime(String filter, String owner) throws Exception {
+	public List<LinkedHashMap<String, Object>> getFaultOvertime(String filter, String organizationName) throws Exception {
 		String query = "";
 		List<LinkedHashMap<String, Object>> finalResult = new ArrayList<>();
 		switch (filter) {
@@ -470,8 +495,12 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-					+ "AND (:owner IS NULL OR s.is_active = true) "
+					+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu on uu.UM_USER_NAME = du.APPLICATION_OWNER "
+					+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE uua on uua.UM_USER_ID = uu.UM_ID "
+					+ " AND uua.UM_ATTR_NAME = 'organizationName' "
+					+ "WHERE "
+					+ "(:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName) "
+					+ "AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
 					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 					+ "AND " + "DATE(du.REQUEST_TIMESTAMP) = CURDATE() " 
@@ -484,8 +513,12 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-					+ "AND (:owner IS NULL OR s.is_active = true) "
+					+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu on uu.UM_USER_NAME = du.APPLICATION_OWNER "
+					+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE uua on uua.UM_USER_ID = uu.UM_ID "
+					+ " AND uua.UM_ATTR_NAME = 'organizationName' "
+					+ "WHERE "
+					+ "(:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName) "
+					+ "AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
 					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 					+ "AND " + "YEARWEEK(du.REQUEST_TIMESTAMP) = YEARWEEK(CURDATE()) "
@@ -496,8 +529,12 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 					+ "FROM DATA_USAGE_API du "
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-					+ "AND (:owner IS NULL OR s.is_active = true) "
+					+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu on uu.UM_USER_NAME = du.APPLICATION_OWNER "
+					+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE uua on uua.UM_USER_ID = uu.UM_ID "
+					+ " AND uua.UM_ATTR_NAME = 'organizationName' "
+					+ "WHERE "
+					+ "(:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName) "
+					+ "AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
 					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 					+ "AND " + "YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
@@ -510,8 +547,12 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-					+ "AND (:owner IS NULL OR s.is_active = true) "
+					+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu on uu.UM_USER_NAME = du.APPLICATION_OWNER "
+					+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE uua on uua.UM_USER_ID = uu.UM_ID "
+					+ " AND uua.UM_ATTR_NAME = 'organizationName' "
+					+ "WHERE "
+					+ "(:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName) "
+					+ "AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
 					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 					+ "AND " 
@@ -525,7 +566,7 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 		}
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-		parameters.addValue("owner", owner);
+		parameters.addValue("organizationName", organizationName);
 		LOGGER.info(query);
 
 		List<ChartDTO> queryResult = namedParameterJdbcTemplate.query(query, parameters, (rs, rowNum) -> {
@@ -664,7 +705,7 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 	
 	
 
-	public List<DashboardPercentageDTO> getApiUsageByApi(String username,Integer top,String keyType) {
+	public List<DashboardPercentageDTO> getApiUsageByApi(String organizationName,Integer top,String keyType) {
 		    StringBuilder query = new StringBuilder();
 		    query.append("SELECT\n")
 		         .append("    DATA_USAGE_API.API_ID,\n")
@@ -673,20 +714,26 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 		         .append("    (COUNT(*) / (\n")
 		         .append("        SELECT COUNT(*)\n")
 		         .append("        FROM DATA_USAGE_API\n")
-		         .append("        LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
-		         .append("        WHERE 1 = 1\n")
-		         .append("            AND (:owner IS NULL OR APPLICATION_OWNER = :owner)\n")
-		         .append("            AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
-		         .append("            AND (:owner IS NULL OR s.is_active = true)\n")
+			     .append("            LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
+			     .append("            LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu on uu.UM_USER_NAME = DATA_USAGE_API.APPLICATION_OWNER\n")
+			     .append("            LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE uua on uua.UM_USER_ID = uu.UM_ID\n")
+			     .append("            AND uua.UM_ATTR_NAME = 'organizationName'\n")
+			     .append("            WHERE 1=1\n")
+			     .append("            AND (:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName)\n")
+			     .append("            AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true)\n")
+			     .append("            AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
 		         .append("    ) * 100) AS percentage\n")
 		         .append("FROM\n")
 		         .append("    DATA_USAGE_API\n")
-		         .append("    LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
-		         .append("WHERE 1 = 1\n")
-		         .append("    AND (:owner IS NULL OR APPLICATION_OWNER = :owner)\n")
-		         .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
-		         .append("    AND (:owner IS NULL OR s.is_active = true)\n")
-		         .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
+			     .append("    LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
+			     .append("    LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu on uu.UM_USER_NAME = DATA_USAGE_API.APPLICATION_OWNER\n")
+			     .append("    LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE uua on uua.UM_USER_ID = uu.UM_ID\n")
+			     .append("    AND uua.UM_ATTR_NAME = 'organizationName'\n")
+			     .append("WHERE \n")
+			     .append("    (:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName)\n")
+			     .append("    AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true)\n")
+			     .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
+			     .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
 		         .append("GROUP BY\n")
 		         .append("    API_ID,\n")
 		         .append("    API_NAME\n")
@@ -697,89 +744,100 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", username);
+		params.put("organizationName", organizationName);
 		params.put("top", top);
 		params.put("keyType", keyType);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
 		return namedParameterJdbcTemplate.query(query.toString(), parameters, new DashboardApiPercentageMapper());
 	}
 
-	public List<DashboardPercentageDTO> getApiUsageByApplication(String username,Integer top,String keyType) {
+	public List<DashboardPercentageDTO> getApiUsageByApplication(String organizationName,Integer top,String keyType) {
 		StringBuilder query = new StringBuilder();
-	    query.append("SELECT\n")
-	         .append("    APPLICATION_ID,\n")
-	         .append("    APPLICATION_NAME,\n")
-	         .append("    COUNT(*) AS row_count,\n")
-	         .append("    (COUNT(*) / (\n")
-	         .append("            SELECT COUNT(*)\n")
-	         .append("            FROM DATA_USAGE_API\n")
-	         .append("            LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
-	         .append("            WHERE 1=1\n")
-	         .append("              AND (:owner IS NULL OR APPLICATION_OWNER = :owner)\n")
-	         .append("              AND (:owner IS NULL OR s.is_active  = true)\n")
-	         .append("              AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
-	         .append("        ) * 100\n")
-	         .append("    ) AS percentage\n")
-	         .append("FROM\n")
-	         .append("    DATA_USAGE_API\n")
-	         .append("    LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
-	         .append("WHERE 1=1\n")
-	         .append("    AND (:owner IS NULL OR APPLICATION_OWNER = :owner)\n")
-	         .append("    AND (:owner IS NULL OR s.is_active  = true)\n")
-	         .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
-	         .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
-	         .append("GROUP BY\n")
-	         .append("    APPLICATION_ID,\n")
-	         .append("    APPLICATION_NAME\n")
-	         .append("ORDER BY\n")
-	         .append("    row_count DESC\n")
-	         .append("LIMIT :top");
+		query.append("SELECT\n")
+		     .append("    APPLICATION_ID,\n")
+		     .append("    APPLICATION_NAME,\n")
+		     .append("    COUNT(*) AS row_count,\n")
+		     .append("    (COUNT(*) / (\n")
+		     .append("            SELECT COUNT(*)\n")
+		     .append("            FROM DATA_USAGE_API\n")
+		     .append("            LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
+		     .append("            LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu on uu.UM_USER_NAME = DATA_USAGE_API.APPLICATION_OWNER\n")
+		     .append("            LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE uua on uua.UM_USER_ID = uu.UM_ID\n")
+		     .append("            AND uua.UM_ATTR_NAME = 'organizationName'\n")
+		     .append("            WHERE 1=1\n")
+		     .append("            AND (:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName)\n")
+		     .append("            AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true)\n")
+		     .append("            AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
+		     .append("        ) * 100\n")
+		     .append("    ) AS percentage\n")
+		     .append("FROM\n")
+		     .append("    DATA_USAGE_API\n")
+		     .append("    LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
+		     .append("    LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu on uu.UM_USER_NAME = DATA_USAGE_API.APPLICATION_OWNER\n")
+		     .append("    LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE uua on uua.UM_USER_ID = uu.UM_ID\n")
+		     .append("    AND uua.UM_ATTR_NAME = 'organizationName'\n")
+		     .append("WHERE \n")
+		     .append("    (:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName)\n")
+		     .append("    AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true)\n")
+		     .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
+		     .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
+		     .append("GROUP BY\n")
+		     .append("    APPLICATION_ID,\n")
+		     .append("    APPLICATION_NAME\n")
+		     .append("ORDER BY\n")
+		     .append("    row_count DESC\n")
+		     .append("LIMIT :top;");
+
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", username);
+		params.put("organizationName", organizationName);
 		params.put("top", top);
 		params.put("keyType", keyType);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
 		return namedParameterJdbcTemplate.query(query.toString(), parameters, new DashboardAppPercentageMapper());
 	}
 
-	public List<DashboardPercentageDTO> getApiUsageByResponseCode(String username,Integer top,String keyType) {
+	@Override
+	public List<DashboardPercentageDTO> getApiUsageByResponseCode(String organizationName,Integer top,String keyType) {
 	    StringBuilder query = new StringBuilder();
 	    query.append("SELECT\n")
-	         .append("    response_category,\n")
-	         .append("    total_count AS row_count,\n")
-	         .append("    ROUND((total_count / SUM(total_count) OVER ()) * 100, 2) AS percentage\n")
-	         .append("FROM\n")
-	         .append("    (\n")
-	         .append("        SELECT\n")
-	         .append("            CASE\n")
-	         .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 100 AND 199 THEN '1xx'\n")
-	         .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 200 AND 299 THEN '2xx'\n")
-	         .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 300 AND 399 THEN '3xx'\n")
-	         .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 400 AND 499 THEN '4xx'\n")
-	         .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 500 AND 599 THEN '5xx'\n")
-	         .append("                ELSE 'OTHERS'\n")
-	         .append("            END AS response_category,\n")
-	         .append("            COUNT(*) AS total_count\n")
-	         .append("        FROM\n")
-	         .append("            DATA_USAGE_API\n")
-	         .append("            LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
-	         .append("        WHERE\n")
-	         .append("            (:owner IS NULL OR DATA_USAGE_API.APPLICATION_OWNER = :owner)\n")
-	         .append("            AND DATA_USAGE_API.APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
-	         .append("            AND (:owner IS NULL OR s.is_active = true)\n")
-	         .append("    		  AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
-	         .append("        GROUP BY\n")
-	         .append("            response_category\n")
-	         .append("        ORDER BY\n")
-	         .append("            total_count DESC\n")
-	         .append("        LIMIT :top ")
-	         .append("    ) AS subquery;");
+	     .append("    response_category,\n")
+	     .append("    total_count AS row_count,\n")
+	     .append("    ROUND((total_count / SUM(total_count) OVER ()) * 100, 2) AS percentage\n")
+	     .append("FROM\n")
+	     .append("    (\n")
+	     .append("        SELECT\n")
+	     .append("            CASE\n")
+	     .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 100 AND 199 THEN '1xx'\n")
+	     .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 200 AND 299 THEN '2xx'\n")
+	     .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 300 AND 399 THEN '3xx'\n")
+	     .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 400 AND 499 THEN '4xx'\n")
+	     .append("                WHEN PROXY_RESPONSE_CODE BETWEEN 500 AND 599 THEN '5xx'\n")
+	     .append("                ELSE 'OTHERS'\n")
+	     .append("            END AS response_category,\n")
+	     .append("            COUNT(*) AS total_count\n")
+	     .append("        FROM\n")
+	     .append("            DATA_USAGE_API\n")
+	     .append("            LEFT JOIN ").append(dbUtilsBilling.getSchemaName()).append(".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
+	     .append("            LEFT JOIN ").append(dbUtilsUser.getSchemaName()).append(".UM_USER uu on uu.UM_USER_NAME = DATA_USAGE_API.APPLICATION_OWNER\n")
+	     .append("            LEFT JOIN ").append(dbUtilsUser.getSchemaName()).append(".UM_USER_ATTRIBUTE uua on uua.UM_USER_ID = uu.UM_ID\n")
+	     .append("            AND uua.UM_ATTR_NAME = 'organizationName'\n")
+	     .append("        WHERE \n")
+	     .append("            (:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName)\n")
+	     .append("            AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true)\n")
+	     .append("            AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
+	     .append("            AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
+	     .append("        GROUP BY\n")
+	     .append("            response_category\n")
+	     .append("        ORDER BY\n")
+	     .append("            total_count DESC\n")
+	     .append("        LIMIT :top\n")
+	     .append("    ) AS subquery;");
 
 
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", username);
+		params.put("organizationName", organizationName);
 		params.put("top", top);
 		params.put("keyType", keyType);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
@@ -787,26 +845,34 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 		return namedParameterJdbcTemplate.query(query.toString(), parameters, new DashboardResCodePercentageMapper());
 	}
 
-	public TotalReportDashboard getDashboardTotalReport(String username) {
+	@Override
+	public TotalReportDashboard getDashboardTotalReport(String organizationName) {
 		TotalReportDashboard totalReportDashboard = new TotalReportDashboard();
-		if (username != null) {
-			totalReportDashboard.setTotalUnpaid(getTotalUnpaidInvoicesByUsername(username));
-			totalReportDashboard.setTotalResponseFault(getTotalResponseFaultByUsername(username));
-			totalReportDashboard.setTotalApplication(getTotalAppsByUsername(username));
-			totalReportDashboard.setTotalSubscriptionAPI(getTotalSubscriptionAPIByUsername(username));
+		if (organizationName != null) {
+			totalReportDashboard.setTotalUnpaid(getTotalUnpaidInvoicesByOrganizationName(organizationName));
+			totalReportDashboard.setTotalResponseFault(getTotalResponseFaultByOrganizationName(organizationName));
+			totalReportDashboard.setTotalApplication(getTotalAppsByOrganizationName(organizationName));
+			totalReportDashboard.setTotalSubscriptionAPI(getTotalSubscriptionAPIByOrganizationName(organizationName));
 		} else {
-			totalReportDashboard.setTotalUnpaid(getTotalUnpaidInvoicesByUsername(username));
-			totalReportDashboard.setTotalApi(getTotalAPIsByUsername(username));
-			totalReportDashboard.setTotalApplication(getTotalAppsByUsername(username));
-			totalReportDashboard.setTotalSubscriber(getTotalSubscriberByUsername(username));
+			totalReportDashboard.setTotalUnpaid(getTotalUnpaidInvoicesByOrganizationName(organizationName));
+			totalReportDashboard.setTotalApi(getTotalAPIsByOrganizationName(organizationName));
+			totalReportDashboard.setTotalApplication(getTotalAppsByOrganizationName(organizationName));
+			totalReportDashboard.setTotalSubscriber(getTotalSubscriberByOrganizationName(organizationName));
 		}
 
 		return totalReportDashboard;
 	}
 
-	public int getTotalAPIsByUsername(String username) {
+	@Override
+	public int getTotalAPIsByOrganizationName(String username) {
 		String query = "SELECT COUNT(*) AS totalAPI " + "FROM AM_API WHERE "
-				+ "(:username IS NULL OR AM_API.API_PROVIDER = :username) ";
+				+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu on "
+				+ "	uu.UM_USER_NAME = AM_API.API_PROVIDER "
+				+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE uua on "
+				+ "	uua.UM_USER_ID = uu.UM_ID "
+				+ "	and uua.UM_ATTR_NAME = 'organizationName'" 
+				+ "WHERE " 
+				+ "(:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName)";
 
 		try {
 			// Create parameters for the named query
@@ -820,16 +886,26 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 			return 0;
 		}
 	}
-
-	public int getTotalAppsByUsername(String username) {
-		String query = "SELECT COUNT(*) AS totalApps " + "FROM AM_APPLICATION " + "LEFT JOIN " + "AM_SUBSCRIBER ON "
-				+ "AM_SUBSCRIBER.SUBSCRIBER_ID =AM_APPLICATION.SUBSCRIBER_ID " + "WHERE " + "(:username IS NULL "
-				+ " OR AM_SUBSCRIBER.USER_ID =:username ) ";
+	
+	@Override
+	public int getTotalAppsByOrganizationName(String organizationName) {
+		String query = "SELECT COUNT(*) AS totalApps " 
+				+ "FROM AM_APPLICATION " 
+				+ "LEFT JOIN " 
+				+ "AM_SUBSCRIBER ON "
+				+ "AM_SUBSCRIBER.SUBSCRIBER_ID =AM_APPLICATION.SUBSCRIBER_ID "
+				+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu on "
+				+ "	uu.UM_USER_NAME = AM_SUBSCRIBER.USER_ID "
+				+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE uua on "
+				+ "	uua.UM_USER_ID = uu.UM_ID "
+				+ "	and uua.UM_ATTR_NAME = 'organizationName'" 
+				+ "WHERE " 
+				+ "(:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName)";
 
 		try {
 			// Create parameters for the named query
 			MapSqlParameterSource params = new MapSqlParameterSource();
-			params.addValue("username", username);
+			params.addValue("organizationName", organizationName);
 
 			// Execute the query and retrieve the result
 			return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
@@ -839,14 +915,22 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 		}
 	}
 
-	public int getTotalSubscriberByUsername(String username) {
-		String query = "SELECT COUNT(*) AS totalSubscriber " + "FROM AM_SUBSCRIBER " + "WHERE " + "(:username IS NULL "
-				+ " OR AM_SUBSCRIBER.USER_ID =:username )";
+	@Override
+	public int getTotalSubscriberByOrganizationName(String organizationName) {
+		String query = "SELECT COUNT(*) AS totalSubscriber " 
+				+ "FROM AM_SUBSCRIBER " 
+				+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu on "
+				+ "	uu.UM_USER_NAME = AM_SUBSCRIBER.USER_ID "
+				+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE uua on "
+				+ "	uua.UM_USER_ID = uu.UM_ID "
+				+ "	and uua.UM_ATTR_NAME = 'organizationName'" 
+				+ "WHERE " 
+				+ "(:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName)";
 
 		try {
 			// Create parameters for the named query
 			MapSqlParameterSource params = new MapSqlParameterSource();
-			params.addValue("username", username);
+			params.addValue("organizationName", organizationName);
 
 			// Execute the query and retrieve the result
 			return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
@@ -855,19 +939,26 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 			return 0;
 		}
 	}
-
-	public int getTotalSubscriptionAPIByUsername(String username) {
+	
+	@Override
+	public int getTotalSubscriptionAPIByOrganizationName(String organizationName) {
 		String query = "SELECT COUNT(*) AS totalSubscriptionAPI " 
 				+ "FROM AM_SUBSCRIPTION "
 				+ "LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID "
 				+ "LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID = AM_SUBSCRIBER.SUBSCRIBER_ID "
 				+ "LEFT JOIN AM_API ON AM_API.API_ID = AM_SUBSCRIPTION.API_ID "
-				+ "WHERE (:username IS NULL OR AM_SUBSCRIBER.USER_ID = :username)";
+				+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu on "
+				+ "	uu.UM_USER_NAME = AM_SUBSCRIBER.USER_ID "
+				+ "LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE uua on "
+				+ "	uua.UM_USER_ID = uu.UM_ID "
+				+ "	and uua.UM_ATTR_NAME = 'organizationName'" 
+				+ "WHERE " 
+				+ "(:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName)";	
 
 		try {
 			// Create parameters for the named query
 			MapSqlParameterSource params = new MapSqlParameterSource();
-			params.addValue("username", username);
+			params.addValue("organizationName", organizationName);
 
 			// Execute the query and retrieve the result
 			return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
@@ -876,20 +967,25 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 			return 0;
 		}
 	}
-
-	public int getTotalResponseFaultByUsername(String username) {
+	
+	@Override
+	public int getTotalResponseFaultByOrganizationName(String organizationName) {
 		String query = "SELECT COUNT(*) AS totalResponseFault " 
 				+ "FROM DATA_USAGE_API "
 				+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on s.subscription_id = DATA_USAGE_API.subscription_id "
-				+ "WHERE DATA_USAGE_API.PROXY_RESPONSE_CODE BETWEEN 200 AND 299  "
-				+ "AND (:username IS NULL OR DATA_USAGE_API.APPLICATION_OWNER = :username) "
-				+ "AND (:username IS NULL OR s.is_active = true) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') AND s.is_active = 1";
+				+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER uu on uu.UM_USER_NAME = DATA_USAGE_API.APPLICATION_OWNER "
+				+ " LEFT JOIN "+dbUtilsUser.getSchemaName()+".UM_USER_ATTRIBUTE uua on uua.UM_USER_ID = uu.UM_ID "
+				+ " AND uua.UM_ATTR_NAME = 'organizationName' "
+				+ "WHERE "
+				+ "(:organizationName ='PT Swamedia Informatika' OR uua.UM_ATTR_VALUE  = :organizationName) "
+				+ "AND (:organizationName ='PT Swamedia Informatika' OR s.is_active  = true) AND "
+				+ "DATA_USAGE_API.PROXY_RESPONSE_CODE BETWEEN 200 AND 299  "
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') ";
 
 		try {
 			// Create parameters for the named query
 			MapSqlParameterSource params = new MapSqlParameterSource();
-			params.addValue("username", username);
+			params.addValue("organizationName", organizationName);
 
 			// Execute the query and retrieve the result
 			return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
@@ -899,14 +995,25 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 		}
 	}
 
-	public int getTotalUnpaidInvoicesByUsername(String username) {
-		String query = "SELECT COUNT(i.id) as total FROM invoice i WHERE i.status = 1 AND (? IS NULL OR i.customer_id = ?)";
+	@Override
+	public int getTotalUnpaidInvoicesByOrganizationName(String organizationName) {
 
+	        StringBuilder queryBuilder = new StringBuilder();
+	        queryBuilder.append("SELECT COUNT(i.id) as total ");
+	        queryBuilder.append("FROM invoice i ");
+	        queryBuilder.append("LEFT JOIN ").append(dbUtilsUser.getSchemaName()).append(".UM_USER uu on uu.UM_USER_NAME = i.customer_id ");
+	        queryBuilder.append("LEFT JOIN ").append(dbUtilsUser.getSchemaName()).append(".UM_USER_ATTRIBUTE uua on uua.UM_USER_ID = uu.UM_ID ");
+	        queryBuilder.append("and uua.UM_ATTR_NAME = 'organizationName'");
+	        queryBuilder.append("WHERE i.status = 1 ");
+	        queryBuilder.append("AND (? = '").append("PT Swamedia Informatika").append("' OR uua.UM_ATTR_NAME = ?)");
+
+	        String query = queryBuilder.toString();
+	        
 		try (Connection connection = dbUtilsBilling.getConnection();
 				PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
-			preparedStatement.setString(1, username);
-			preparedStatement.setString(2, username);
+			preparedStatement.setString(1, organizationName);
+			preparedStatement.setString(2, organizationName);
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				
@@ -929,15 +1036,20 @@ public class MYSQLDashboardServiceImpl implements DashboardService{
 		}
 	}
 
-	public LinkedHashMap<String, Object> getUsagePercentage(String username, Integer top, Boolean byApplication,
+	@Override
+	public LinkedHashMap<String, Object> getUsagePercentage(String organizationName, Integer top, Boolean byApplication,
 			Boolean byResponseCode, Boolean byApi, String keyType) {
 		LinkedHashMap<String, Object> result = new LinkedHashMap<>();
 		if (byApplication)
-			result.put("byApplication", getApiUsageByApplication(username, top, keyType));
+			result.put("byApplication", getApiUsageByApplication(organizationName, top, keyType));
 		if (byApi)
-			result.put("byApi", getApiUsageByApi(username, top, keyType));
+			result.put("byApi", getApiUsageByApi(organizationName, top, keyType));
 		if (byResponseCode)
-			result.put("byResponseCode", getApiUsageByResponseCode(username, top, keyType));
+			result.put("byResponseCode", getApiUsageByResponseCode(organizationName, top, keyType));
 		return result;
 	}
+
+
+
+
 }

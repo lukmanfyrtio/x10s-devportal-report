@@ -356,7 +356,8 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 	}
 
 	public List<Map<String, Object>> getCustomersv2(String owner) {
-		String sqlQuery = "select DISTINCT UM_ATTR_VALUE as organizationName " + "from " + dbUtilsUser.getSchemaName()
+		String sqlQuery = "select DISTINCT UM_ATTR_VALUE as organizationName " 
+				+ "from " + dbUtilsUser.getSchemaName()
 				+ ".UM_USER_ATTRIBUTE " + "where UM_ATTR_NAME='organizationName'";
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();

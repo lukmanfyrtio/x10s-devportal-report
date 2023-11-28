@@ -64,6 +64,15 @@ public class Utils {
 			return false;
 		}
 	}
+	
+	public static String getOrganization(Map<String, Object> map) {
+		// Cek apakah roles mengandung "Internal/admin"
+
+		String org = map.get("http://wso2.org/claims/organization") != null
+				? map.get("http://wso2.org/claims/organization").toString()
+				: null;
+		return org;
+	}
 
 	public SubscriptionPolicies getSubscriptionThrottlingPolicies(String apiId) {
 		String url = baseWso2Url+"/api/am/devportal/v2/apis/" + apiId + "/subscription-policies";

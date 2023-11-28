@@ -879,4 +879,40 @@ public class PSQLDashboardServiceImpl implements DashboardService {
 			result.put("byResponseCode", getApiUsageByResponseCode(username, top, keyType));
 		return result;
 	}
+
+	@Override
+	public int getTotalAPIsByOrganizationName(String organizationName) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getTotalAppsByOrganizationName(String organizationName) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getTotalSubscriberByOrganizationName(String organizationName) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getTotalSubscriptionAPIByOrganizationName(String organizationName) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getTotalResponseFaultByOrganizationName(String organizationName) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getTotalUnpaidInvoicesByOrganizationName(String organizationName) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

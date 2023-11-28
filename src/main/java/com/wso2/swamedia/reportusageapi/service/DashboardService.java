@@ -10,33 +10,33 @@ import com.wso2.swamedia.reportusageapi.dto.TotalReportDashboard;
 
 public interface DashboardService {
 
-	public List<?> getTopTenApiUsage(String filter, String owner, int top, String keyType) throws Exception;
+	public List<?> getTopTenApiUsage(String filter, String organizationName, int top, String keyType) throws Exception;
 
-	public Page<LinkedHashMap<String, Object>> getFaultOvertimeDetails(String filter, String owner, int page,
+	public Page<LinkedHashMap<String, Object>> getFaultOvertimeDetails(String filter, String organizationName, int page,
 			int pageSize, String searchQuery) throws Exception;
 
-	public List<LinkedHashMap<String, Object>> getFaultOvertime(String filter, String owner) throws Exception;
+	public List<LinkedHashMap<String, Object>> getFaultOvertime(String filter, String organizationName) throws Exception;
 
-	public List<DashboardPercentageDTO> getApiUsageByApi(String username, Integer top, String keyType);
+	public List<DashboardPercentageDTO> getApiUsageByApi(String organizationName, Integer top, String keyType);
 
-	public List<DashboardPercentageDTO> getApiUsageByApplication(String username, Integer top, String keyType);
+	public List<DashboardPercentageDTO> getApiUsageByApplication(String organizationName, Integer top, String keyType);
 
-	public List<DashboardPercentageDTO> getApiUsageByResponseCode(String username, Integer top, String keyType);
+	public List<DashboardPercentageDTO> getApiUsageByResponseCode(String organizationName, Integer top, String keyType);
 
-	public TotalReportDashboard getDashboardTotalReport(String username);
+	public TotalReportDashboard getDashboardTotalReport(String organizationName);
 
-	public int getTotalAPIsByUsername(String username);
+	public int getTotalAPIsByOrganizationName(String organizationName);
 
-	public int getTotalAppsByUsername(String username);
+	public int getTotalAppsByOrganizationName(String organizationName);
 
-	public int getTotalSubscriberByUsername(String username);
+	public int getTotalSubscriberByOrganizationName(String organizationName);
 
-	public int getTotalSubscriptionAPIByUsername(String username);
+	public int getTotalSubscriptionAPIByOrganizationName(String organizationName);
 
-	public int getTotalResponseFaultByUsername(String username);
+	public int getTotalResponseFaultByOrganizationName(String organizationName);
 
-	public int getTotalUnpaidInvoicesByUsername(String username);
+	public int getTotalUnpaidInvoicesByOrganizationName(String organizationName);
 
-	public LinkedHashMap<String, Object> getUsagePercentage(String username, Integer top, Boolean byApplication,
-			Boolean byResponseCode, Boolean byApi, String keyType);
+	public LinkedHashMap<String, Object> getUsagePercentage(String getUsagePercentage, Integer top,
+			Boolean byApplication, Boolean byResponseCode, Boolean byApi, String keyType);
 }

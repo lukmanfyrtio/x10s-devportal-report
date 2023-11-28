@@ -43,11 +43,10 @@ public class DashboardController {
 
 		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
 				.getPrincipal();
-		String username = Utils.isAdmin(principal.getAttributes()) ? null
-				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
+		String organization = Utils.getOrganization(principal.getAttributes());
 		try {
-			ApiResponse<?> response = ApiResponse.success("Percentage usage  retrieved successfully .",
-					dashboardService.getUsagePercentage(username, top, byApplication, byResponseCode, byApi,keyType));
+			ApiResponse<?> response = ApiResponse.success("Percentage usage  retrieved successfully .", dashboardService
+					.getUsagePercentage(organization, top, byApplication, byResponseCode, byApi, keyType));
 
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
@@ -55,8 +54,6 @@ public class DashboardController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseError);
 		}
 	}
-
-
 
 	@GetMapping("/api-usage")
 	public ResponseEntity<?> getDashboardApiUsageByDate(Authentication authentication,
@@ -66,11 +63,10 @@ public class DashboardController {
 		try {
 			DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
 					.getPrincipal();
-			String username = Utils.isAdmin(principal.getAttributes()) ? null
-					: principal.getAttributes().get("http://wso2.org/claims/username").toString();
+			String organization = Utils.getOrganization(principal.getAttributes());
 
 			ApiResponse<?> response = ApiResponse.success("Top 10 api usage retrieved successfully .",
-					dashboardService.getTopTenApiUsage(filter, username, top, keyType));
+					dashboardService.getTopTenApiUsage(filter, organization, top, keyType));
 
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
@@ -85,11 +81,10 @@ public class DashboardController {
 		LOGGER.info("Received request for get api fault");
 		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
 				.getPrincipal();
-		String username = Utils.isAdmin(principal.getAttributes()) ? null
-				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
+		String organization = Utils.getOrganization(principal.getAttributes());
 		try {
 			ApiResponse<?> response = ApiResponse.success("Api fault overtime retrieved successfully .",
-					dashboardService.getFaultOvertime(filter, username));
+					dashboardService.getFaultOvertime(filter, organization));
 
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
@@ -107,10 +102,9 @@ public class DashboardController {
 		try {
 			DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
 					.getPrincipal();
-			String username = Utils.isAdmin(principal.getAttributes()) ? null
-					: principal.getAttributes().get("http://wso2.org/claims/username").toString();
+			String organization = Utils.getOrganization(principal.getAttributes());
 			ApiResponse<?> response = ApiResponse.success("Api fault overtime details retrieved successfully .",
-					dashboardService.getFaultOvertimeDetails(filter, username, page, size, search));
+					dashboardService.getFaultOvertimeDetails(filter, organization, page, size, search));
 
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
@@ -125,12 +119,11 @@ public class DashboardController {
 		try {
 			DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
 					.getPrincipal();
-			String username = Utils.isAdmin(principal.getAttributes()) ? null
-					: principal.getAttributes().get("http://wso2.org/claims/username").toString();
+			String organization = Utils.getOrganization(principal.getAttributes());
 
 			ApiResponse<TotalReportDashboard> response = ApiResponse.success(
 					"The dashboard total report has been retrieved successfully",
-					dashboardService.getDashboardTotalReport(username));
+					dashboardService.getDashboardTotalReport(organization));
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			ApiResponse<?> responseError = ApiResponse
