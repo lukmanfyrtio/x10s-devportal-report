@@ -51,25 +51,25 @@ public interface ReportUsageService {
 
 	public List<Map<String, Object>> getApiNameAndId(String owner, String organization);
 
-	public List<Map<String, Object>> getApis(String owner, String organization);
+	public List<Map<String, Object>> getApis(String organizationToken, String organization);
 
-	public List<Map<String, Object>> getYears(String owner);
+	public List<Map<String, Object>> getYears(String organization);
 
-	public List<Map<String, Object>> getCustomers(String owner);
+	public List<Map<String, Object>> getCustomers(String organization);
 
-	public int getTotalCustomers(String username);
+	public int getTotalCustomers(String organization);
 
-	public List<Map<String, Object>> getCustomersv2(String owner);
+	public List<Map<String, Object>> getCustomersv2(String organization);
 
-	public List<Map<String, Object>> getMonth(String owner, int year);
+	public List<Map<String, Object>> getMonth(String organization, int year);
 
-	public List<Map<String, Object>> getApiResourceByAPI(String owner, String apiId);
+	public List<Map<String, Object>> getApiResourceByAPI(String organizationToken, String apiId);
 
 	public List<Map<String, Object>> getVersions(String apiName);
 
 	public List<OrganizationDTO> getOrganizations() throws Exception;
 
-	public Page<TableRemainingDayQuota> getSubscriptionsRemaining(String owner, Pageable pageable);
+	public Page<TableRemainingDayQuota> getSubscriptionsRemaining(String organization, Pageable pageable);
 
 	public OrganizationDTO findOrganizationByUsername(List<OrganizationDTO> organizationDTOs, String username);
 

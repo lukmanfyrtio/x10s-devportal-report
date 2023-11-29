@@ -302,12 +302,12 @@ public class MySQLReportUsageServiceImpl implements ReportUsageService {
 		});
 	}
 
-	public List<Map<String, Object>> getApis(String owner, String organization) {
+	public List<Map<String, Object>> getApis(String organizationToken, String organizationFilter) {
 		String query = MySQLQueryReport.getApis(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-		parameters.addValue("owner", owner);
-		parameters.addValue("organizationName", organization);
+		parameters.addValue("organizationToken", organizationToken);
+		parameters.addValue("organization", organizationFilter);
 
 		return namedParameterJdbcTemplate.query(query, parameters, (rs, rowNum) -> {
 			Map<String, Object> apiInfo = new HashMap<>();
@@ -318,11 +318,11 @@ public class MySQLReportUsageServiceImpl implements ReportUsageService {
 		});
 	}
 
-	public List<Map<String, Object>> getYears(String owner) {
-		String query = MySQLQueryReport.getYears();
+	public List<Map<String, Object>> getYears(String organization) {
+		String query = MySQLQueryReport.getYears(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-		parameters.addValue("owner", owner);
+		parameters.addValue("organization", organization);
 
 		return namedParameterJdbcTemplate.query(query, parameters, (rs, rowNum) -> {
 			Map<String, Object> apiInfo = new HashMap<>();
@@ -332,11 +332,11 @@ public class MySQLReportUsageServiceImpl implements ReportUsageService {
 		});
 	}
 
-	public List<Map<String, Object>> getCustomers(String owner) {
+	public List<Map<String, Object>> getCustomers(String organization) {
 		String sqlQuery = MySQLQueryReport.getCustomers(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-//		parameters.addValue("owner", owner);
+		parameters.addValue("organization", organization);
 
 		return namedParameterJdbcTemplate.query(sqlQuery, parameters, (rs, rowNum) -> {
 			Map<String, Object> customers = new HashMap<>();
@@ -348,11 +348,13 @@ public class MySQLReportUsageServiceImpl implements ReportUsageService {
 		});
 	}
 
-	public int getTotalCustomers(String username) {
+	public int getTotalCustomers(String organization) {
 		String sqlQuery = MySQLQueryReport.getTotalCustomers(dbUtilsUser.getSchemaName(), getBillingSchema());
+		MapSqlParameterSource parameters = new MapSqlParameterSource();
+		parameters.addValue("organization", organization);
 		try {
 
-			Integer result = namedParameterJdbcTemplate.queryForObject(sqlQuery, new MapSqlParameterSource(),
+			Integer result = namedParameterJdbcTemplate.queryForObject(sqlQuery,parameters,
 					Integer.class);
 			return (result != null ? result : 0);
 
@@ -362,12 +364,13 @@ public class MySQLReportUsageServiceImpl implements ReportUsageService {
 		}
 	}
 
-	public List<Map<String, Object>> getCustomersv2(String owner) {
+	public List<Map<String, Object>> getCustomersv2(String organization) {
 		String sqlQuery = "select DISTINCT UM_ATTR_VALUE as organizationName " + "from " + dbUtilsUser.getSchemaName()
-				+ ".UM_USER_ATTRIBUTE " + "where UM_ATTR_NAME='organizationName'";
+				+ ".UM_USER_ATTRIBUTE " + "where UM_ATTR_NAME='organizationName' "
+				+ " AND (:organization IS NULL OR :organization ='PT Swamedia Informatika' OR UM_ATTR_VALUE = :organization)";
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-//		parameters.addValue("owner", owner);
+		parameters.addValue("organization", organization);
 
 		return namedParameterJdbcTemplate.query(sqlQuery, parameters, (rs, rowNum) -> {
 			Map<String, Object> customers = new HashMap<>();
@@ -376,11 +379,11 @@ public class MySQLReportUsageServiceImpl implements ReportUsageService {
 		});
 	}
 
-	public List<Map<String, Object>> getMonth(String owner, int year) {
+	public List<Map<String, Object>> getMonth(String organization, int year) {
 
-		String query = MySQLQueryReport.getMonth();
+		String query = MySQLQueryReport.getMonth(dbUtilsUser.getSchemaName(),getBillingSchema());
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-		parameters.addValue("owner", owner);
+		parameters.addValue("organization", organization);
 		parameters.addValue("year", year);
 
 		return namedParameterJdbcTemplate.query(query, parameters, (rs, rowNum) -> {
@@ -392,11 +395,11 @@ public class MySQLReportUsageServiceImpl implements ReportUsageService {
 		});
 	}
 
-	public List<Map<String, Object>> getApiResourceByAPI(String owner, String apiId) {
-		String query = MySQLQueryReport.getApiResourceByAPI();
+	public List<Map<String, Object>> getApiResourceByAPI(String organization, String apiId) {
+		String query = MySQLQueryReport.getApiResourceByAPI(dbUtilsUser.getSchemaName(),getBillingSchema());
 		LOGGER.info(query);
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-		parameters.addValue("owner", owner);
+		parameters.addValue("organization", organization);
 		parameters.addValue("apiId", apiId);
 
 		return namedParameterJdbcTemplate.query(query, parameters, (rs, rowNum) -> {
@@ -445,11 +448,11 @@ public class MySQLReportUsageServiceImpl implements ReportUsageService {
 		return result;
 	}
 
-	public Page<TableRemainingDayQuota> getSubscriptionsRemaining(String owner, Pageable pageable) {
+	public Page<TableRemainingDayQuota> getSubscriptionsRemaining(String organization, Pageable pageable) {
 		String query = MySQLQueryReport.getSubscriptionsRemaining(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-		parameters.addValue("owner", owner);
+		parameters.addValue("organization", organization);
 		List<TableRemainingDayQuota> dtos = namedParameterJdbcTemplate.query(query, parameters, (resultSet, rowNum) -> {
 			TableRemainingDayQuota dto = new TableRemainingDayQuota();
 			String subsStateId = resultSet.getString("subs_state_id");

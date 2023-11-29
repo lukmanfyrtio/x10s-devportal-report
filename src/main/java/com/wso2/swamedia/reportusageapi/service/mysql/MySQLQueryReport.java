@@ -34,8 +34,8 @@ public class MySQLQueryReport {
 				+ "		APPLICATION_OWNER  "
 				+ ") AS DATA_USAGE ON subs.subscription_id  = DATA_USAGE.SUBSCRIPTION_UUID " + "WHERE "
 				+ "AM_POLICY_SUBSCRIPTION.BILLING_PLAN != 'FREE' "
-				+ "AND (:owner IS NULL OR AM_SUBSCRIBER.USER_ID = :owner) "
-				+ "AND (:owner IS NULL OR subs.is_active = 1 ) "
+				+ "AND (:organization ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE = :organization ) "
+				+ "AND (:organization ='PT Swamedia Informatika' OR subs.is_active = 1 ) "
 				+ "ORDER BY REMAINING_DAYS ASC, REMAINING_QUOTA DESC, API_USAGE DESC;";
 
 		return query;
@@ -194,18 +194,29 @@ public class MySQLQueryReport {
 		return condition.toString();
 	}
 
-	public static String getMonth() {
+	public static String getMonth(String dbUserSchema, String dbBillingSchema) {
 		String query = "SELECT DISTINCT MONTH(REQUEST_TIMESTAMP) AS year FROM DATA_USAGE_API "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) AND "
-				+ " (:year IS NULL OR  YEAR(REQUEST_TIMESTAMP) = :year ) "
+				+ "LEFT JOIN " + dbUserSchema + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
+				+ "LEFT JOIN " + dbUserSchema + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+				+ "AND attr.UM_ATTR_NAME = 'organizationName' "
+				+ "WHERE "
+				+" (:organization ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE = :organization) "
+				+ "AND (:year IS NULL OR  YEAR(REQUEST_TIMESTAMP) = :year ) "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') ";
 		return query;
 	}
 
-	public static String getApiResourceByAPI() {
-		String query = "SELECT DISTINCT API_RESOURCE_TEMPLATE  FROM DATA_USAGE_API WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner)"
-				+ " AND (:apiId IS NULL OR API_ID = :apiId) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') AND API_RESOURCE_TEMPLATE IS NOT NULL";
+	public static String getApiResourceByAPI(String dbUserSchema, String dbBillingSchema) {
+		String query = "SELECT DISTINCT API_RESOURCE_TEMPLATE  "
+				+ "FROM DATA_USAGE_API "
+				+ "LEFT JOIN " + dbUserSchema + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
+				+ "LEFT JOIN " + dbUserSchema + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+				+ "AND attr.UM_ATTR_NAME = 'organizationName' "
+				+ "WHERE "
+				+" (:organization ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE = :organization) "
+				+ "AND (:apiId IS NULL OR API_ID = :apiId) "
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
+				+ "AND API_RESOURCE_TEMPLATE IS NOT NULL";
 		return query;
 	}
 
@@ -327,33 +338,45 @@ public class MySQLQueryReport {
 		String sqlQuery = "SELECT uu.*, attr.UM_ATTR_VALUE AS organizationName " + "FROM AM_SUBSCRIBER as2 " + "JOIN "
 				+ dbUserSchema + ".UM_USER uu ON as2.USER_ID = uu.UM_USER_NAME " + "LEFT JOIN "
 				+ dbUserSchema + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
-				+ "AND attr.UM_ATTR_NAME = 'organizationName'";
+				+ "AND attr.UM_ATTR_NAME = 'organizationName'"
+				+ "WHERE "
+				+ "(:organization IS NULL OR :organization ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE = :organization)";
 		return sqlQuery;
 	}
 	
 	public static String getTotalCustomers(String dbUserSchema, String dbBillingSchema) {
 		String sqlQuery = "select COUNT(DISTINCT UM_ATTR_VALUE)" + "from " + dbUserSchema
-		+ ".UM_USER_ATTRIBUTE " + "where UM_ATTR_NAME='organizationName'";
+		+ ".UM_USER_ATTRIBUTE " + "where UM_ATTR_NAME='organizationName'"
+		+ " AND (:organization IS NULL OR :organization ='PT Swamedia Informatika' OR UM_ATTR_VALUE = :organization)";
 		return sqlQuery;
 	}
 	
-	public static String getYears() {
-		String query = "SELECT DISTINCT YEAR(REQUEST_TIMESTAMP) AS year FROM DATA_USAGE_API WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
+	public static String getYears(String dbUserSchema, String dbBillingSchema) {
+		String query = "SELECT DISTINCT YEAR(REQUEST_TIMESTAMP) AS year FROM DATA_USAGE_API "
+				+ "LEFT JOIN " + dbUserSchema + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
+				+ "LEFT JOIN " + dbUserSchema + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+				+ "AND attr.UM_ATTR_NAME = 'organizationName' "
+				+ "WHERE "
+				+" (:organization ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE = :organization) "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') ";
 		return query;
 	}
 	
 	
 	public static String getApis(String dbUserSchema, String dbBillingSchema) {
-		String query = "SELECT DISTINCT AM_API.API_ID, AM_API.API_NAME,AM_API.API_UUID " + "FROM AM_SUBSCRIPTION "
+		String query = "SELECT DISTINCT AM_API.API_ID, AM_API.API_NAME,AM_API.API_UUID " 
+				+ "FROM AM_SUBSCRIPTION "
 				+ "LEFT JOIN AM_API ON AM_SUBSCRIPTION.API_ID = AM_API.API_ID "
 				+ "LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID "
 				+ "LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID = AM_SUBSCRIBER.SUBSCRIBER_ID "
 				+ "LEFT JOIN " + dbUserSchema + ".UM_USER uu ON AM_SUBSCRIBER.USER_ID = uu.UM_USER_NAME "
 				+ "LEFT JOIN " + dbUserSchema + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
 				+ "AND attr.UM_ATTR_NAME = 'organizationName' "
-				+ "WHERE (:owner IS NULL OR AM_SUBSCRIBER.USER_ID  = :owner) "
-				+ "AND (:organizationName IS NULL OR attr.UM_ATTR_VALUE = :organizationName)";
+				+ "WHERE "
+				+" (CASE "
+				+" WHEN :organizationToken ='PT Swamedia Informatika' THEN (:organization IS NULL OR attr.UM_ATTR_VALUE = :organization) "
+				+" ELSE attr.UM_ATTR_VALUE = :organizationToken "
+				+" END) ";
 		return query;
 	}
 	

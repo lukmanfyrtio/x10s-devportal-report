@@ -252,10 +252,9 @@ public class ReportUsageController {
 	public ResponseEntity<?> getListAPIName(@RequestParam(value = "username", required = false) String username,
 			@RequestParam(value = "organization", required = false) String organization) {
 		LOGGER.info("Received request to get the list of API names");
-		
-		
+
 		try {
-			List<Map<String, Object>> apiNames = reportUsageService.getApis(username, organization);
+			List<Map<String, Object>> apiNames = reportUsageService.getApis(Utils.getOrganization(), organization);
 			ApiResponse<List<Map<String, Object>>> response = ApiResponse.success("API names retrieved successfully",
 					apiNames);
 			return ResponseEntity.ok(response);
@@ -269,14 +268,10 @@ public class ReportUsageController {
 	public ResponseEntity<?> getListAPIResource(@RequestParam(value = "apiId") String apiId,
 			Authentication authentication) {
 		
-		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
-				.getPrincipal();
-		String username = Utils.isAdmin(principal.getAttributes()) ? null
-				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
-		
+
 		LOGGER.info("Received request to get the list of resources for API with ID: {}", apiId);
 		try {
-			List<Map<String, Object>> apiResources = reportUsageService.getApiResourceByAPI(username, apiId);
+			List<Map<String, Object>> apiResources = reportUsageService.getApiResourceByAPI(Utils.getOrganization(), apiId);
 			ApiResponse<List<Map<String, Object>>> response = ApiResponse
 					.success("API resources retrieved successfully", apiResources);
 			return ResponseEntity.ok(response);
@@ -302,14 +297,10 @@ public class ReportUsageController {
 
 	@GetMapping("/years")
 	public ResponseEntity<?> getListYear(Authentication authentication) {
-		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
-				.getPrincipal();
-		String username = Utils.isAdmin(principal.getAttributes()) ? null
-				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
 		LOGGER.info("Received request to get the list of years");
 		try {
 			ApiResponse<?> response = ApiResponse.success("Years retrieved successfully",
-					reportUsageService.getYears(username));
+					reportUsageService.getYears(Utils.getOrganization()));
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			ApiResponse<?> responseError = ApiResponse.error("Failed to retrieve years: " + e.getMessage());
@@ -320,15 +311,11 @@ public class ReportUsageController {
 	@GetMapping("/months")
 	public ResponseEntity<?> getListMonth(@RequestParam(value = "year") int year,Authentication authentication) {
 		
-		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
-				.getPrincipal();
-		String username = Utils.isAdmin(principal.getAttributes()) ? null
-				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
-		
+
 		LOGGER.info("Received request to get the list of months for year: {}", year);
 		try {
 			ApiResponse<?> response = ApiResponse.success("Months retrieved successfully",
-					reportUsageService.getMonth(username, year));
+					reportUsageService.getMonth(Utils.getOrganization(), year));
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			ApiResponse<?> responseError = ApiResponse.error("Failed to retrieve months: " + e.getMessage());
@@ -337,11 +324,11 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/customers")
-	public ResponseEntity<?> getListCustomers(@RequestParam(value = "username", required = false) String username) {
+	public ResponseEntity<?> getListCustomers() {
 		LOGGER.info("Received request to get the list of customers");
 		try {
 			ApiResponse<?> response = ApiResponse.success("List of customers retrieved successfully",
-					reportUsageService.getCustomers(username));
+					reportUsageService.getCustomers(Utils.getOrganization()));
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			ApiResponse<?> responseError = ApiResponse.error("Failed to retrieve customers: " + e.getMessage());
@@ -350,12 +337,12 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/v2/customers")
-	public ResponseEntity<?> getListCustomersv2(@RequestParam(value = "username", required = false) String username) {
+	public ResponseEntity<?> getListCustomersv2() {
 		LOGGER.info("Received request to get the list of customers");
 		try {
 			Map<String, Object> result = new HashMap<>();
-			result.put("content", reportUsageService.getCustomersv2(username));
-			result.put("total", reportUsageService.getTotalCustomers(username));
+			result.put("content", reportUsageService.getCustomersv2(Utils.getOrganization()));
+			result.put("total", reportUsageService.getTotalCustomers(Utils.getOrganization()));
 			ApiResponse<?> response = ApiResponse.success("List of customers retrieved successfully", result);
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
@@ -381,13 +368,9 @@ public class ReportUsageController {
 
 		LOGGER.info("Received request for remaining subscriptions.");
 		try {
-			DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
-					.getPrincipal();
-			String username = Utils.isAdmin(principal.getAttributes()) ? null
-					: principal.getAttributes().get("http://wso2.org/claims/username").toString();
 			Pageable pageable = PageRequest.of(page, size);
 			ApiResponse<?> response = ApiResponse.success("Successful retrieval of remaining subscriptions.",
-					reportUsageService.getSubscriptionsRemaining(username, pageable));
+					reportUsageService.getSubscriptionsRemaining(Utils.getOrganization(), pageable));
 			LOGGER.info("Completed retrieval of remaining subscriptions.");
 
 			return ResponseEntity.ok(response);
