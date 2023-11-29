@@ -2,7 +2,7 @@ package com.wso2.swamedia.reportusageapi.service.mysql;
 
 import java.time.LocalDate;
 
-public class SqlQueryReport {
+public class MySQLQueryReport {
 
 	public static String getSubscriptionsRemaining(String dbUserSchema, String dbBillingSchema) {
 		String query = "SELECT " + "attr.UM_ATTR_VALUE as organizationName, uu.UM_USER_NAME, " + "subs.subs_state_id , "
@@ -51,13 +51,16 @@ public class SqlQueryReport {
 				+ dbUserSchema + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME " + "LEFT JOIN "
 				+ dbUserSchema
 				+ ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID AND attr.UM_ATTR_NAME = 'organizationName' "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) "
+				+ "WHERE  "
+				+ "(:showDeleted = true OR s.is_active = true) "
+				+" AND (CASE "
+				+" WHEN :organizationToken ='PT Swamedia Informatika' THEN (:organization IS NULL OR attr.UM_ATTR_VALUE = :organization) "
+				+" ELSE attr.UM_ATTR_VALUE = :organizationToken "
+				+" END) "
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
 				+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
 				+ "AND (:applicationId IS NULL OR DATA_USAGE_API.APPLICATION_ID = :applicationId) "
-				+ "AND (:organization IS NULL OR attr.UM_ATTR_VALUE = :organization) "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 				+ "AND (:search IS NULL OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :search, '%')) "
 				+ "OR LOWER(APPLICATION_NAME) LIKE LOWER(CONCAT('%', :search, '%'))) "
@@ -79,14 +82,17 @@ public class SqlQueryReport {
 						+ ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME ")
 				.append("LEFT JOIN " + dbUserSchema + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID ")
 				.append("AND attr.UM_ATTR_NAME = 'organizationName' ")
-				.append("WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) ")
-				.append("AND (:showDeleted = true OR s.is_active = true) ")
+				.append("WHERE ")
+				.append(" (:showDeleted = true OR s.is_active = true) ")
+				.append(" AND (CASE ")
+				.append(" WHEN :organizationToken ='PT Swamedia Informatika' THEN (:organization IS NULL OR attr.UM_ATTR_VALUE = :organization) ")
+				.append(" ELSE attr.UM_ATTR_VALUE = :organizationToken ")
+				.append(" END) ")
 				.append("AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) ")
 				.append("AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) ")
 				.append("AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) ")
 				.append("AND (:applicationId IS NULL OR APPLICATION_ID = :applicationId) ")
 				.append("AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') ")
-				.append("AND (:organization IS NULL OR attr.UM_ATTR_VALUE = :organization) ")
 				.append("AND DATA_USAGE_API.KEY_TYPE = :keyType ");
 
 		return sqlQuery.toString();
@@ -141,7 +147,8 @@ public class SqlQueryReport {
 				+ "LEFT JOIN " + dbUserSchema + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
 				+ "LEFT JOIN " + dbUserSchema + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
 				+ "AND attr.UM_ATTR_NAME = 'organizationName' "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
+				+ "WHERE "
+				+ "(:organization IS NULL OR :organization ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE = :organization) "
 				+ "AND (:showDeleted = true OR s.is_active = true) " + "AND APPLICATION_ID = :applicationId "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
@@ -207,11 +214,17 @@ public class SqlQueryReport {
 	public static String totalMonthlyDetailLog(String dbUserSchema, String dbBillingSchema) {
 		String sql = "SELECT COUNT(*) as request_count, "
 				+ "COUNT(CASE WHEN PROXY_RESPONSE_CODE NOT BETWEEN 200 AND 299 THEN 1 END) AS count_not_200, "
-				+ "COUNT(CASE WHEN PROXY_RESPONSE_CODE = 200 THEN 1 END) AS count_200 " + "FROM DATA_USAGE_API "
+				+ "COUNT(CASE WHEN PROXY_RESPONSE_CODE = 200 THEN 1 END) AS count_200 " 
+				+ "FROM DATA_USAGE_API "
 				+ "LEFT JOIN " + dbBillingSchema
 				+ ".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) " + "AND APPLICATION_ID = :applicationId "
+				+ "LEFT JOIN " + dbUserSchema + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
+				+ "LEFT JOIN " + dbUserSchema + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+				+ "AND attr.UM_ATTR_NAME = 'organizationName' "
+				+ "WHERE "
+				+ "(:organization IS NULL OR :organization ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE = :organization) "
+				+ "AND (:showDeleted = true OR s.is_active = true) " 
+				+ "AND APPLICATION_ID = :applicationId "
 				+ "AND DATA_USAGE_API.API_ID = :apiId " 
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
@@ -228,7 +241,10 @@ public class SqlQueryReport {
 		String baseSql = "SELECT API_NAME, API_VERSION, API_RESOURCE_TEMPLATE, API_METHOD, "
 				+ "COUNT(*) AS request_count, DATA_USAGE_API.API_ID " + "FROM DATA_USAGE_API " + "LEFT JOIN "
 				+ dbBillingSchema + ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
+				+ "LEFT JOIN " + dbUserSchema + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
+				+ "LEFT JOIN " + dbUserSchema + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+				+ "WHERE "
+				+ "(:organization IS NULL OR attr.UM_ATTR_NAME = :organization) "
 				+ "AND (:showDeleted = true OR s.is_active = true) "
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "

@@ -16,7 +16,7 @@ import com.wso2.swamedia.reportusageapi.model.DataUsageApi;
 
 @Profile("mysql")
 @Repository
-public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, String> {
+public interface DataUsageApiRepositoryMySQL extends JpaRepository<DataUsageApi, String> {
 
 	@Query("SELECT new com.wso2.swamedia.reportusageapi.dto.RequestCountDTO(d.apiResourceTemplate, d.apiMethod, COUNT(d)) " +
 	        "FROM DataUsageApi d " +

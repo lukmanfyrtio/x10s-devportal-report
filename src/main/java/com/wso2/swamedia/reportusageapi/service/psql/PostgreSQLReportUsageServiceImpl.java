@@ -37,7 +37,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wso2.swamedia.reportusageapi.DBUtilsUser;
 import com.wso2.swamedia.reportusageapi.dto.DashboardPercentageDTO;
 import com.wso2.swamedia.reportusageapi.dto.DataUsageApiResponse;
 import com.wso2.swamedia.reportusageapi.dto.ErrorSummary;
@@ -51,13 +50,14 @@ import com.wso2.swamedia.reportusageapi.dto.TableRemainingDayQuota;
 import com.wso2.swamedia.reportusageapi.mapper.DashboardApiPercentageMapper;
 import com.wso2.swamedia.reportusageapi.mapper.DashboardAppPercentageMapper;
 import com.wso2.swamedia.reportusageapi.mapper.DashboardResCodePercentageMapper;
-import com.wso2.swamedia.reportusageapi.repo.psql.AmApiRepositoryPSQL;
-import com.wso2.swamedia.reportusageapi.repo.psql.DataUsageApiRepositoryPSQL;
+import com.wso2.swamedia.reportusageapi.repo.psql.AmApiRepositoryPostgreSQL;
+import com.wso2.swamedia.reportusageapi.repo.psql.DataUsageApiRepositoryPostgreSQL;
 import com.wso2.swamedia.reportusageapi.service.ReportUsageService;
+import com.wso2.swamedia.reportusageapi.utils.DatabaseUtilsUser;
 
 @Service
 @Profile("postgres")
-public class PSQLReportUsageServiceImpl implements ReportUsageService {
+public class PostgreSQLReportUsageServiceImpl implements ReportUsageService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ReportUsageService.class);
 
 	@Value("${spring.billing-datasource.url}")
@@ -71,13 +71,13 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 	}
 
 	@Autowired
-	private DataUsageApiRepositoryPSQL dataUsageApiRepository;
+	private DataUsageApiRepositoryPostgreSQL dataUsageApiRepository;
 
 	@Autowired
-	private AmApiRepositoryPSQL amApiRepository;
+	private AmApiRepositoryPostgreSQL amApiRepository;
 
 	@Autowired
-	private DBUtilsUser dbUtilsUser;
+	private DatabaseUtilsUser dbUtilsUser;
 
 	@Autowired
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
@@ -187,7 +187,7 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 	}
 
 	public List<DashboardPercentageDTO> getApiUsageByApi(LocalDate startDate, LocalDate endDate, String username) {
-		String query = PSQLQueryReport.getApiUsageByApi(startDate, endDate);
+		String query = PostgreSQLQueryReport.getApiUsageByApi(startDate, endDate);
 
 		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
 		params.put("owner", username);
@@ -244,7 +244,7 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 	public List<DashboardPercentageDTO> getApiUsageByApplication(LocalDate startDate, LocalDate endDate,
 			String username) {
 
-		String query = PSQLQueryReport.getApiUsageByApplication(startDate, endDate);
+		String query = PostgreSQLQueryReport.getApiUsageByApplication(startDate, endDate);
 		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
 		params.put("owner", username);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
@@ -254,7 +254,7 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 
 	public List<DashboardPercentageDTO> getApiUsageByResponseCode(LocalDate startDate, LocalDate endDate,
 			String username) {
-		String query = PSQLQueryReport.getApiUsageByResponseCode(startDate, endDate);
+		String query = PostgreSQLQueryReport.getApiUsageByResponseCode(startDate, endDate);
 
 		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
 		params.put("owner", username);
@@ -283,7 +283,7 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 	}
 
 	public List<Map<String, Object>> getApiNameAndId(String owner, String organization) {
-		String query = PSQLQueryReport.getApiNameAndId(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String query = PostgreSQLQueryReport.getApiNameAndId(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -299,7 +299,7 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 	}
 
 	public List<Map<String, Object>> getApis(String owner, String organization) {
-		String query = PSQLQueryReport.getApis(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String query = PostgreSQLQueryReport.getApis(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -315,7 +315,7 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 	}
 
 	public List<Map<String, Object>> getYears(String owner) {
-		String query = PSQLQueryReport.getYears();
+		String query = PostgreSQLQueryReport.getYears();
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -329,7 +329,7 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 	}
 
 	public List<Map<String, Object>> getCustomers(String owner) {
-		String sqlQuery = PSQLQueryReport.getCustomers(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String sqlQuery = PostgreSQLQueryReport.getCustomers(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 //		parameters.addValue("owner", owner);
@@ -345,7 +345,7 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 	}
 
 	public int getTotalCustomers(String username) {
-		String sqlQuery = PSQLQueryReport.getTotalCustomers(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String sqlQuery = PostgreSQLQueryReport.getTotalCustomers(dbUtilsUser.getSchemaName(), getBillingSchema());
 		try {
 
 			Integer result = namedParameterJdbcTemplate.queryForObject(sqlQuery, new MapSqlParameterSource(),
@@ -374,7 +374,7 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 
 	public List<Map<String, Object>> getMonth(String owner, int year) {
 
-		String query = PSQLQueryReport.getMonth();
+		String query = PostgreSQLQueryReport.getMonth();
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
 		parameters.addValue("year", year);
@@ -389,7 +389,7 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 	}
 
 	public List<Map<String, Object>> getApiResourceByAPI(String owner, String apiId) {
-		String query = PSQLQueryReport.getApiResourceByAPI();
+		String query = PostgreSQLQueryReport.getApiResourceByAPI();
 		LOGGER.info(query);
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -420,7 +420,7 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 
 	public List<OrganizationDTO> getOrganizations() throws Exception {
 		List<OrganizationDTO> result = new ArrayList<>();
-		String sql = PSQLQueryReport.getOrganizations();
+		String sql = PostgreSQLQueryReport.getOrganizations();
 
 		try (Connection connection = dbUtilsUser.getConnection();
 				PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -442,7 +442,7 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 	}
 
 	public Page<TableRemainingDayQuota> getSubscriptionsRemaining(String owner, Pageable pageable) {
-		String query = PSQLQueryReport.getSubscriptionsRemaining(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String query = PostgreSQLQueryReport.getSubscriptionsRemaining(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -607,7 +607,7 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 			Integer month, String apiId, Boolean showDeleted, String applicationId, String search, String organization,
 			Pageable pageable, String keyType) {
 
-		String sql = PSQLQueryReport.getMonthlyTotalRowByGroupByWithSearchAndPageable(dbUtilsUser.getSchemaName(),
+		String sql = PostgreSQLQueryReport.getMonthlyTotalRowByGroupByWithSearchAndPageable(dbUtilsUser.getSchemaName(),
 				getBillingSchema());
 
 		// Create the parameters to be used in the query
@@ -655,7 +655,7 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 
 	public Map<String, Object> getTotalApisAndRequestsByOwnerAndFilters(String owner, Integer year, Integer month,
 			String apiId, String applicationId, String organization, Boolean showDeleted, String keyType) {
-		String sqlQuery = PSQLQueryReport.getTotalApisAndRequestsByOwnerAndFilters(dbUtilsUser.getSchemaName(),
+		String sqlQuery = PostgreSQLQueryReport.getTotalApisAndRequestsByOwnerAndFilters(dbUtilsUser.getSchemaName(),
 				getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
@@ -673,7 +673,7 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 
 	public Map<String, Object> totalMonthlyDetailLog(String owner, String applicationId, String apiId,
 			String searchFilter, Integer year, Integer month, Boolean showDeleted, String keyType) {
-		String sql = PSQLQueryReport.totalMonthlyDetailLog(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String sql = PostgreSQLQueryReport.totalMonthlyDetailLog(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
 		params.put("owner", owner);
@@ -690,7 +690,7 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 
 	public Page<MonthlySummaryDetails> fetchMonthlyDetailLogData(Pageable pageable, String owner, String applicationId,
 			String apiId, String searchFilter, Integer year, Integer month, Boolean showDeleted, String keyType) {
-		String baseSql = PSQLQueryReport.fetchMonthlyDetailLogData(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String baseSql = PostgreSQLQueryReport.fetchMonthlyDetailLogData(dbUtilsUser.getSchemaName(), getBillingSchema());
 		String countSql = "SELECT COUNT(*) " + baseSql.substring(baseSql.indexOf("FROM"));
 
 		Map<String, Object> params = new HashMap<>();
@@ -722,7 +722,7 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 
 	public Map<String, Object> getResourceSumTotalData(String owner, Integer year, Integer month, String apiId,
 			String resource, Boolean showDeleted, String keyType) {
-		String sql = PSQLQueryReport.getResourceSumTotalData(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String sql = PostgreSQLQueryReport.getResourceSumTotalData(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
 		params.put("owner", owner);
@@ -738,9 +738,9 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 
 	public Page<ResourceSummary.ApiDetails> getResourceSumListData(String owner, Integer year, Integer month,
 			String apiId, String resource, String search, Pageable pageable, Boolean showDeleted, String keyType) {
-		String baseSql = PSQLQueryReport.getResourceSumListDataBaseSql(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String baseSql = PostgreSQLQueryReport.getResourceSumListDataBaseSql(dbUtilsUser.getSchemaName(), getBillingSchema());
 
-		String countSql = PSQLQueryReport.getResourceSumListDataCounteSql(dbUtilsUser.getSchemaName(),
+		String countSql = PostgreSQLQueryReport.getResourceSumListDataCounteSql(dbUtilsUser.getSchemaName(),
 				getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
@@ -783,10 +783,10 @@ public class PSQLReportUsageServiceImpl implements ReportUsageService {
 
 	public Page<ResourceSummaryDetails> getDetailLogResourceSum(Pageable pageable, String owner, String resource,
 			String apiId, String searchFilter, Boolean showDeleted, String keyType) {
-		String baseSql = PSQLQueryReport.getDetailLogResourceSumBaseSQl(dbUtilsUser.getSchemaName(),
+		String baseSql = PostgreSQLQueryReport.getDetailLogResourceSumBaseSQl(dbUtilsUser.getSchemaName(),
 				getBillingSchema());
 
-		String countSql = PSQLQueryReport.getDetailLogResourceSumCountSql(dbUtilsUser.getSchemaName(),
+		String countSql = PostgreSQLQueryReport.getDetailLogResourceSumCountSql(dbUtilsUser.getSchemaName(),
 				getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();

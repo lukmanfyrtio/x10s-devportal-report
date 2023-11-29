@@ -23,9 +23,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.wso2.swamedia.reportusageapi.Utils;
 import com.wso2.swamedia.reportusageapi.dto.ApiResponse;
 import com.wso2.swamedia.reportusageapi.service.ReportUsageService;
+import com.wso2.swamedia.reportusageapi.utils.Utils;
 
 @RestController
 @RequestMapping("/report")
@@ -48,14 +48,13 @@ public class ReportUsageController {
 
 		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
 				.getPrincipal();
-		String username = Utils.isAdmin(principal.getAttributes()) ? null
-				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
+		 String organizationToken = Utils.getOrganization(principal.getAttributes());
 
 		LOGGER.info("Received request for monthly summary");
 		try {
 
 			ApiResponse<?> response = ApiResponse.success("Monthly summary retrieval successful.",
-					reportUsageService.getMonthlyReport(year, month, applicationId, apiId, username, page, size, search,
+					reportUsageService.getMonthlyReport(year, month, applicationId, apiId, organizationToken, page, size, search,
 							organization, showDeletedSubscription,keyType));
 			LOGGER.info("Monthly summary retrieval completed");
 
@@ -81,19 +80,15 @@ public class ReportUsageController {
 		LOGGER.info("Received request for API Monthly detail log");
 		try {
 
-			DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
-					.getPrincipal();
-			String username = Utils.isAdmin(principal.getAttributes()) ? null
-					: principal.getAttributes().get("http://wso2.org/claims/username").toString();
 
-			Map<String, Object> total = reportUsageService.totalMonthlyDetailLog(username, applicationId, apiId, search,
+			Map<String, Object> total = reportUsageService.totalMonthlyDetailLog(Utils.getOrganization(), applicationId, apiId, search,
 					year, month, showDeletedSubscription, keyType);
 			Pageable pageable = PageRequest.of(page, size);
 			LinkedHashMap<String, Object> result = new LinkedHashMap<>();
 			result.put("requestCount", total.get("request_count"));
 			result.put("requestOK", total.get("count_200"));
 			result.put("requestNOK", total.get("count_not_200"));
-			result.put("details", reportUsageService.getMonthlyDetailLogReport(username, applicationId, apiId, search,
+			result.put("details", reportUsageService.getMonthlyDetailLogReport(Utils.getOrganization(), applicationId, apiId, search,
 					pageable, year, month, showDeletedSubscription, keyType));
 
 			ApiResponse<?> response = ApiResponse.success("Monthly detail log retrieval successful.", result);

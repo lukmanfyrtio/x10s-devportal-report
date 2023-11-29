@@ -1,4 +1,4 @@
-package com.wso2.swamedia.reportusageapi;
+package com.wso2.swamedia.reportusageapi.utils;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DBUtilsBilling {
+public class DatabaseUtilsBilling {
 	@Value("${spring.billing-datasource.url}")
 	private String databaseUrl;
 

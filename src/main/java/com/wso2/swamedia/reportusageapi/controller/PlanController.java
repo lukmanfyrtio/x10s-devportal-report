@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.wso2.swamedia.reportusageapi.Utils;
 import com.wso2.swamedia.reportusageapi.dto.ApiResponse;
 import com.wso2.swamedia.reportusageapi.dto.SubPoliciesResponse;
+import com.wso2.swamedia.reportusageapi.utils.Utils;
 
 @RestController
 @RequestMapping("/plan")

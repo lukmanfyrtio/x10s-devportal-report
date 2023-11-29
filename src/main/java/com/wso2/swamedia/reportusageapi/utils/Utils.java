@@ -1,4 +1,4 @@
-package com.wso2.swamedia.reportusageapi;
+package com.wso2.swamedia.reportusageapi.utils;
 
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
@@ -19,6 +19,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.DefaultOAuth2AuthenticatedPrincipal;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -63,6 +66,17 @@ public class Utils {
 		} else {
 			return false;
 		}
+	}
+	
+	public static String getOrganization() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
+				.getPrincipal();
+		Map<String, Object> map = principal.getAttributes();
+		String org = map.get("http://wso2.org/claims/organization") != null
+				? map.get("http://wso2.org/claims/organization").toString()
+				: null;
+		return org;
 	}
 	
 	public static String getOrganization(Map<String, Object> map) {

@@ -16,7 +16,7 @@ import com.wso2.swamedia.reportusageapi.model.DataUsageApi;
 
 @Repository
 @Profile("postgres")
-public interface DataUsageApiRepositoryPSQL extends JpaRepository<DataUsageApi, String> {
+public interface DataUsageApiRepositoryPostgreSQL extends JpaRepository<DataUsageApi, String> {
 
 	@Query("SELECT new com.wso2.swamedia.reportusageapi.dto.RequestCountDTO(d.apiResourceTemplate, d.apiMethod, COUNT(d)) " +
 		       "FROM DataUsageApi d " +

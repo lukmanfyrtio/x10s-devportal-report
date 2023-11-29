@@ -25,7 +25,7 @@ public interface ReportUsageService {
 			String username, int page, int size, String search, String organization, Boolean showDeleted,
 			String keyType) throws Exception;
 
-	public Page<MonthlySummaryDetails> getMonthlyDetailLogReport(String owner, String applicationId, String apiId,
+	public Page<MonthlySummaryDetails> getMonthlyDetailLogReport(String organization, String applicationId, String apiId,
 			String searchFilter, Pageable pageable, Integer year, Integer month, Boolean showDeletedSubscription,
 			String keyType);
 
@@ -90,7 +90,7 @@ public interface ReportUsageService {
 	public Map<String, Object> getTotalApisAndRequestsByOwnerAndFilters(String owner, Integer year, Integer month,
 			String apiId, String applicationId, String organization, Boolean showDeleted, String keyType);
 
-	public Map<String, Object> totalMonthlyDetailLog(String owner, String applicationId, String apiId,
+	public Map<String, Object> totalMonthlyDetailLog(String organization, String applicationId, String apiId,
 			String searchFilter, Integer year, Integer month, Boolean showDeleted, String keyType);
 
 	public Page<MonthlySummaryDetails> fetchMonthlyDetailLogData(Pageable pageable, String owner, String applicationId,

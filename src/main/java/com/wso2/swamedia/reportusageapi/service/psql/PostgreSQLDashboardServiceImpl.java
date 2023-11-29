@@ -31,8 +31,6 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import com.wso2.swamedia.reportusageapi.DBUtilsBilling;
-import com.wso2.swamedia.reportusageapi.DBUtilsUser;
 import com.wso2.swamedia.reportusageapi.dto.ChartDTO;
 import com.wso2.swamedia.reportusageapi.dto.DashboardPercentageDTO;
 import com.wso2.swamedia.reportusageapi.dto.TotalReportDashboard;
@@ -40,10 +38,12 @@ import com.wso2.swamedia.reportusageapi.mapper.DashboardApiPercentageMapper;
 import com.wso2.swamedia.reportusageapi.mapper.DashboardAppPercentageMapper;
 import com.wso2.swamedia.reportusageapi.mapper.DashboardResCodePercentageMapper;
 import com.wso2.swamedia.reportusageapi.service.DashboardService;
+import com.wso2.swamedia.reportusageapi.utils.DatabaseUtilsBilling;
+import com.wso2.swamedia.reportusageapi.utils.DatabaseUtilsUser;
 
 @Service
 @Profile("postgres")
-public class PSQLDashboardServiceImpl implements DashboardService {
+public class PostgreSQLDashboardServiceImpl implements DashboardService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DashboardService.class);
 
@@ -51,10 +51,10 @@ public class PSQLDashboardServiceImpl implements DashboardService {
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
 	@Autowired
-	private DBUtilsBilling dbUtilsBilling;
+	private DatabaseUtilsBilling dbUtilsBilling;
 
 	@Autowired
-	private DBUtilsUser dbUtilsUser;
+	private DatabaseUtilsUser dbUtilsUser;
 
 	public List<?> getTopTenApiUsage(String filter, String owner, int top, String keyType) throws Exception {
 		String query = "";

@@ -37,7 +37,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wso2.swamedia.reportusageapi.DBUtilsUser;
 import com.wso2.swamedia.reportusageapi.dto.DashboardPercentageDTO;
 import com.wso2.swamedia.reportusageapi.dto.DataUsageApiResponse;
 import com.wso2.swamedia.reportusageapi.dto.ErrorSummary;
@@ -51,12 +50,13 @@ import com.wso2.swamedia.reportusageapi.dto.TableRemainingDayQuota;
 import com.wso2.swamedia.reportusageapi.mapper.DashboardApiPercentageMapper;
 import com.wso2.swamedia.reportusageapi.mapper.DashboardAppPercentageMapper;
 import com.wso2.swamedia.reportusageapi.mapper.DashboardResCodePercentageMapper;
-import com.wso2.swamedia.reportusageapi.repo.mysql.AmApiRepository;
-import com.wso2.swamedia.reportusageapi.repo.mysql.DataUsageApiRepository;
+import com.wso2.swamedia.reportusageapi.repo.mysql.AmApiRepositoryMySQL;
+import com.wso2.swamedia.reportusageapi.repo.mysql.DataUsageApiRepositoryMySQL;
 import com.wso2.swamedia.reportusageapi.service.ReportUsageService;
+import com.wso2.swamedia.reportusageapi.utils.DatabaseUtilsUser;
 @Service
 @Profile("mysql")
-public class MYSQLReportUsageServiceImpl implements ReportUsageService{
+public class MySQLReportUsageServiceImpl implements ReportUsageService{
 	private static final Logger LOGGER = LoggerFactory.getLogger(ReportUsageService.class);
 
 	@Value("${spring.billing-datasource.url}")
@@ -70,26 +70,26 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 	}
 
 	@Autowired
-	private DataUsageApiRepository dataUsageApiRepository;
+	private DataUsageApiRepositoryMySQL dataUsageApiRepository;
 
 	@Autowired
-	private AmApiRepository amApiRepository;
+	private AmApiRepositoryMySQL amApiRepository;
 
 	@Autowired
-	private DBUtilsUser dbUtilsUser;
+	private DatabaseUtilsUser dbUtilsUser;
 
 	@Autowired
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
 	public MonthlySummary getMonthlyReport(Integer year, Integer month, String applicationId, String apiId,
-			String username, int page, int size, String search, String organization, Boolean showDeleted,String keyType)
+			String organizationToken, int page, int size, String search, String organization, Boolean showDeleted,String keyType)
 			throws Exception {
-		LOGGER.info("Retrieving monthly report for year: {}, month: {}, username: {}", year, month, username);
+		LOGGER.info("Retrieving monthly report for year: {}, month: {}, organizationToken: {}", year, month, organizationToken);
 
 		MonthlySummary monthlySummary = new MonthlySummary();
 
 		try {
-			Map<String, Object> dataTotal = getTotalApisAndRequestsByOwnerAndFilters(username, year, month, apiId,
+			Map<String, Object> dataTotal = getTotalApisAndRequestsByOwnerAndFilters(organizationToken, year, month, apiId,
 					applicationId, organization, showDeleted,keyType);
 			monthlySummary.setTotalApis(Integer.parseInt(dataTotal.get("total_apis").toString()));
 			monthlySummary.setRequestCount(Integer.parseInt(dataTotal.get("total_request").toString()));
@@ -101,7 +101,7 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 
 		try {
 			Pageable pageable = PageRequest.of(page, size);
-			Page<MonthlySummary.ApiDetails> result = getMonthlyTotalRowByGroupByWithSearchAndPageable(username, year,
+			Page<MonthlySummary.ApiDetails> result = getMonthlyTotalRowByGroupByWithSearchAndPageable(organizationToken, year,
 					month, apiId, showDeleted, applicationId, search, organization, pageable,keyType);
 
 			monthlySummary.setDetails(result);
@@ -184,7 +184,7 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 	}
 
 	public List<DashboardPercentageDTO> getApiUsageByApi(LocalDate startDate, LocalDate endDate, String username) {
-		String query = SqlQueryReport.getApiUsageByApi(startDate, endDate);
+		String query = MySQLQueryReport.getApiUsageByApi(startDate, endDate);
 
 		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
 		params.put("owner", username);
@@ -241,7 +241,7 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 	public List<DashboardPercentageDTO> getApiUsageByApplication(LocalDate startDate, LocalDate endDate,
 			String username) {
 
-		String query = SqlQueryReport.getApiUsageByApplication(startDate, endDate);
+		String query = MySQLQueryReport.getApiUsageByApplication(startDate, endDate);
 		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
 		params.put("owner", username);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
@@ -251,7 +251,7 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 
 	public List<DashboardPercentageDTO> getApiUsageByResponseCode(LocalDate startDate, LocalDate endDate,
 			String username) {
-		String query = SqlQueryReport.getApiUsageByResponseCode(startDate, endDate);
+		String query = MySQLQueryReport.getApiUsageByResponseCode(startDate, endDate);
 
 		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
 		params.put("owner", username);
@@ -280,7 +280,7 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 	}
 
 	public List<Map<String, Object>> getApiNameAndId(String owner, String organization) {
-		String query = SqlQueryReport.getApiNameAndId(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String query = MySQLQueryReport.getApiNameAndId(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -296,7 +296,7 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 	}
 
 	public List<Map<String, Object>> getApis(String owner, String organization) {
-		String query = SqlQueryReport.getApis(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String query = MySQLQueryReport.getApis(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -312,7 +312,7 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 	}
 
 	public List<Map<String, Object>> getYears(String owner) {
-		String query = SqlQueryReport.getYears();
+		String query = MySQLQueryReport.getYears();
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -326,7 +326,7 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 	}
 
 	public List<Map<String, Object>> getCustomers(String owner) {
-		String sqlQuery = SqlQueryReport.getCustomers(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String sqlQuery = MySQLQueryReport.getCustomers(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 //		parameters.addValue("owner", owner);
@@ -342,7 +342,7 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 	}
 
 	public int getTotalCustomers(String username) {
-		String sqlQuery = SqlQueryReport.getTotalCustomers(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String sqlQuery = MySQLQueryReport.getTotalCustomers(dbUtilsUser.getSchemaName(), getBillingSchema());
 		try {
 
 			Integer result = namedParameterJdbcTemplate.queryForObject(sqlQuery, new MapSqlParameterSource(),
@@ -372,7 +372,7 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 
 	public List<Map<String, Object>> getMonth(String owner, int year) {
 
-		String query = SqlQueryReport.getMonth();
+		String query = MySQLQueryReport.getMonth();
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
 		parameters.addValue("year", year);
@@ -387,7 +387,7 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 	}
 
 	public List<Map<String, Object>> getApiResourceByAPI(String owner, String apiId) {
-		String query = SqlQueryReport.getApiResourceByAPI();
+		String query = MySQLQueryReport.getApiResourceByAPI();
 		LOGGER.info(query);
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -418,7 +418,7 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 
 	public List<OrganizationDTO> getOrganizations() throws Exception {
 		List<OrganizationDTO> result = new ArrayList<>();
-		String sql = SqlQueryReport.getOrganizations();
+		String sql = MySQLQueryReport.getOrganizations();
 
 		try (Connection connection = dbUtilsUser.getConnection();
 				PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -440,7 +440,7 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 	}
 
 	public Page<TableRemainingDayQuota> getSubscriptionsRemaining(String owner, Pageable pageable) {
-		String query = SqlQueryReport.getSubscriptionsRemaining(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String query = MySQLQueryReport.getSubscriptionsRemaining(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
 		parameters.addValue("owner", owner);
@@ -597,16 +597,16 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 		return map;
 	}
 
-	public Page<MonthlySummary.ApiDetails> getMonthlyTotalRowByGroupByWithSearchAndPageable(String owner, Integer year,
+	public Page<MonthlySummary.ApiDetails> getMonthlyTotalRowByGroupByWithSearchAndPageable(String organizationToken, Integer year,
 			Integer month, String apiId, Boolean showDeleted, String applicationId, String search, String organization,
 			Pageable pageable,String keyType) {
 
-		String sql = SqlQueryReport.getMonthlyTotalRowByGroupByWithSearchAndPageable(dbUtilsUser.getSchemaName(),
+		String sql = MySQLQueryReport.getMonthlyTotalRowByGroupByWithSearchAndPageable(dbUtilsUser.getSchemaName(),
 				getBillingSchema());
 
 		// Create the parameters to be used in the query
 		MapSqlParameterSource params = new MapSqlParameterSource();
-		params.addValue("owner", owner);
+		params.addValue("organizationToken", organizationToken);
 		params.addValue("year", year);
 		params.addValue("month", month);
 		params.addValue("apiId", apiId);
@@ -647,13 +647,13 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 		}
 	}
 
-	public Map<String, Object> getTotalApisAndRequestsByOwnerAndFilters(String owner, Integer year, Integer month,
+	public Map<String, Object> getTotalApisAndRequestsByOwnerAndFilters(String organizationToken, Integer year, Integer month,
 			String apiId, String applicationId, String organization, Boolean showDeleted,String keyType) {
-		String sqlQuery = SqlQueryReport.getTotalApisAndRequestsByOwnerAndFilters(dbUtilsUser.getSchemaName(),
+		String sqlQuery = MySQLQueryReport.getTotalApisAndRequestsByOwnerAndFilters(dbUtilsUser.getSchemaName(),
 				getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", owner);
+		params.put("organizationToken", organizationToken);
 		params.put("showDeleted", showDeleted);
 		params.put("year", year);
 		params.put("month", month);
@@ -665,12 +665,12 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 		return namedParameterJdbcTemplate.queryForMap(sqlQuery.toString(), params);
 	}
 
-	public Map<String, Object> totalMonthlyDetailLog(String owner, String applicationId, String apiId,
+	public Map<String, Object> totalMonthlyDetailLog(String organization, String applicationId, String apiId,
 			String searchFilter, Integer year, Integer month, Boolean showDeleted,String keyType) {
-		String sql = SqlQueryReport.totalMonthlyDetailLog(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String sql = MySQLQueryReport.totalMonthlyDetailLog(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", owner);
+		params.put("organization", organization);
 		params.put("applicationId", applicationId);
 		params.put("apiId", apiId);
 		params.put("searchFilter", searchFilter);
@@ -682,13 +682,13 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 		return namedParameterJdbcTemplate.queryForMap(sql, params);
 	}
 
-	public Page<MonthlySummaryDetails> fetchMonthlyDetailLogData(Pageable pageable, String owner, String applicationId,
+	public Page<MonthlySummaryDetails> fetchMonthlyDetailLogData(Pageable pageable, String organization, String applicationId,
 			String apiId, String searchFilter, Integer year, Integer month, Boolean showDeleted,String keyType) {
-		String baseSql = SqlQueryReport.fetchMonthlyDetailLogData(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String baseSql = MySQLQueryReport.fetchMonthlyDetailLogData(dbUtilsUser.getSchemaName(), getBillingSchema());
 		String countSql = "SELECT COUNT(*) " + baseSql.substring(baseSql.indexOf("FROM"));
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", owner);
+		params.put("organization",organization);
 		params.put("applicationId", applicationId);
 		params.put("apiId", apiId);
 		params.put("searchFilter", searchFilter);
@@ -716,7 +716,7 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 
 	public Map<String, Object> getResourceSumTotalData(String owner, Integer year, Integer month, String apiId,
 			String resource, Boolean showDeleted,String keyType) {
-		String sql = SqlQueryReport.getResourceSumTotalData(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String sql = MySQLQueryReport.getResourceSumTotalData(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
 		params.put("owner", owner);
@@ -732,9 +732,9 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 
 	public Page<ResourceSummary.ApiDetails> getResourceSumListData(String owner, Integer year, Integer month,
 			String apiId, String resource, String search, Pageable pageable, Boolean showDeleted,String keyType) {
-		String baseSql = SqlQueryReport.getResourceSumListDataBaseSql(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String baseSql = MySQLQueryReport.getResourceSumListDataBaseSql(dbUtilsUser.getSchemaName(), getBillingSchema());
 
-		String countSql = SqlQueryReport.getResourceSumListDataCounteSql(dbUtilsUser.getSchemaName(),
+		String countSql = MySQLQueryReport.getResourceSumListDataCounteSql(dbUtilsUser.getSchemaName(),
 				getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
@@ -777,9 +777,9 @@ public class MYSQLReportUsageServiceImpl implements ReportUsageService{
 
 	public Page<ResourceSummaryDetails> getDetailLogResourceSum(Pageable pageable, String owner, String resource,
 			String apiId, String searchFilter, Boolean showDeleted,String keyType) {
-		String baseSql = SqlQueryReport.getDetailLogResourceSumBaseSQl(dbUtilsUser.getSchemaName(), getBillingSchema());
+		String baseSql = MySQLQueryReport.getDetailLogResourceSumBaseSQl(dbUtilsUser.getSchemaName(), getBillingSchema());
 
-		String countSql = SqlQueryReport.getDetailLogResourceSumCountSql(dbUtilsUser.getSchemaName(),
+		String countSql = MySQLQueryReport.getDetailLogResourceSumCountSql(dbUtilsUser.getSchemaName(),
 				getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();

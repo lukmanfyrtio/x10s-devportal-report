@@ -15,7 +15,7 @@ import com.wso2.swamedia.reportusageapi.model.AmApi;
 
 @Repository
 @Profile("postgres")
-public interface AmApiRepositoryPSQL extends JpaRepository<AmApi, String> {
+public interface AmApiRepositoryPostgreSQL extends JpaRepository<AmApi, String> {
 	
 	@Query("SELECT new com.wso2.swamedia.reportusageapi.dto.DataUsageApiResponse(a.apiUuid, a.apiName, a.apiVersion, a.context, COUNT(d.apiId) AS requestCount, d.applicationOwner, d.applicationId) " +
 		       "FROM AmApi a " +
