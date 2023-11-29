@@ -163,9 +163,7 @@ public class ReportUsageController {
 
 		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
 				.getPrincipal();
-		String username = Utils.isAdmin(principal.getAttributes()) ? null
-				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
-		
+
 		if (!Utils.isAdmin(principal.getAttributes())) {
 			ApiResponse<Resource> response = ApiResponse.error("You do not have permission to access this API.");
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -175,7 +173,7 @@ public class ReportUsageController {
 		try {
 			Pageable pageable = PageRequest.of(page, size);
 			ApiResponse<?> response = ApiResponse.success("Backend api usage summary retrieval successful.",
-					reportUsageService.getBackendAPIUsage(username, year, month, apiId, search, pageable, keyType));
+					reportUsageService.getBackendAPIUsage(Utils.getOrganization(), year, month, apiId, search, pageable, keyType));
 
 			LOGGER.info("Backend api usage summary retrieval completed");
 

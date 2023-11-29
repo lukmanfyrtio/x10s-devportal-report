@@ -73,7 +73,7 @@ public interface ReportUsageService {
 
 	public OrganizationDTO findOrganizationByUsername(List<OrganizationDTO> organizationDTOs, String username);
 
-	public Page<DataUsageApiResponse> getBackendAPIUsage(String owner, Integer year, Integer month, String apiId,
+	public Page<DataUsageApiResponse> getBackendAPIUsage(String organization, Integer year, Integer month, String apiId,
 			String searchFilter, Pageable pageable, String keyType);
 
 	public Page<RequestCountDTO> getBackendAPIUsageDetails(String apiId, Pageable pageable, String keyType);

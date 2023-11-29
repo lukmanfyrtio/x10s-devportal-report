@@ -20,11 +20,11 @@ public interface DataUsageApiRepositoryMySQL extends JpaRepository<DataUsageApi,
 
 	@Query("SELECT new com.wso2.swamedia.reportusageapi.dto.RequestCountDTO(d.apiResourceTemplate, d.apiMethod, COUNT(d)) " +
 	        "FROM DataUsageApi d " +
-	        "WHERE d.apiId = :apiId " +
+	        "WHERE d.apiId = :apiId and d.applicationId = :applicationId " +
 	        "AND d.keyType = :keyType "+
 	        "AND applicationOwner NOT IN ('anonymous','internal-key-app','UNKNOWN') "+
 	        "GROUP BY d.apiResourceTemplate, d.apiMethod")
-	List<RequestCountDTO> countRequestByResource(@Param("apiId") String apiId, @Param("keyType") String keyType);
+	List<RequestCountDTO> countRequestByResource(@Param("apiId") String apiId,@Param("applicationId") String applicationId, @Param("keyType") String keyType);
 	
 	@Query("SELECT new com.wso2.swamedia.reportusageapi.dto.RequestCountDTO(d.apiResourceTemplate, d.apiMethod, COUNT(d)) " +
 	        "FROM DataUsageApi d " +
