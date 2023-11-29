@@ -112,15 +112,10 @@ public class ReportUsageController {
 			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
 			Authentication authentication) {
 		
-		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
-				.getPrincipal();
-		String username = Utils.isAdmin(principal.getAttributes()) ? null
-				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
-		
 		LOGGER.info("Received request for resource summary");
 		try {
 			ApiResponse<?> response = ApiResponse.success("Resource summary retrieval successful.",
-					reportUsageService.getResourceReport(year, month, resource, apiId, username, page, size, search,
+					reportUsageService.getResourceReport(year, month, resource, apiId, Utils.getOrganization(), page, size, search,
 							showDeletedSubscription,keyType));
 
 			LOGGER.info("Resource summary retrieval completed");
@@ -142,16 +137,11 @@ public class ReportUsageController {
 			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
 			Authentication authentication) {
 
-		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
-				.getPrincipal();
-		String username = Utils.isAdmin(principal.getAttributes()) ? null
-				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
-
 		LOGGER.info("Received request for resource detail log");
 		try {
 			Pageable pageable = PageRequest.of(page, size);
 			ApiResponse<?> response = ApiResponse.success("Resource detail log retrieval successful.",
-					reportUsageService.getDetailLogResourceSum(username, resource, apiId, search, pageable,
+					reportUsageService.getDetailLogResourceSum(Utils.getOrganization(), resource, apiId, search, pageable,
 							showDeletedSubscription,keyType));
 
 			LOGGER.info("Resource detail log retrieval completed");

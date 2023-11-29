@@ -164,9 +164,14 @@ public class MySQLQueryReport {
 
 	public static String getResourceSumTotalData(String dbUserSchema, String dbBillingSchema) {
 		String sql = "SELECT COUNT(DISTINCT DATA_USAGE_API.API_ID) AS total_apis, COUNT(*) AS total_request "
-				+ "FROM DATA_USAGE_API " + "LEFT JOIN " + dbBillingSchema
+				+ "FROM DATA_USAGE_API " 
+				+ "LEFT JOIN " + dbBillingSchema
 				+ ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
+				+ "LEFT JOIN " + dbUserSchema + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
+				+ "LEFT JOIN " + dbUserSchema + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+				+ "AND attr.UM_ATTR_NAME = 'organizationName' "
+				+ "WHERE "
+				+ "(:organization IS NULL OR :organization ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE = :organization) "
 				+ "AND (:showDeleted = true OR s.is_active = true) "
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
@@ -239,12 +244,15 @@ public class MySQLQueryReport {
 
 	public static String getResourceSumListDataBaseSql(String dbUserSchema, String dbBillingSchema) {
 		String baseSql = "SELECT API_NAME, API_VERSION, API_RESOURCE_TEMPLATE, API_METHOD, "
-				+ "COUNT(*) AS request_count, DATA_USAGE_API.API_ID " + "FROM DATA_USAGE_API " + "LEFT JOIN "
-				+ dbBillingSchema + ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
+				+ "COUNT(*) AS request_count, DATA_USAGE_API.API_ID " 
+				+ "FROM DATA_USAGE_API " 
+				+ "LEFT JOIN " + dbBillingSchema
+				+ ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
 				+ "LEFT JOIN " + dbUserSchema + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
 				+ "LEFT JOIN " + dbUserSchema + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+				+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 				+ "WHERE "
-				+ "(:organization IS NULL OR attr.UM_ATTR_NAME = :organization) "
+				+ "(:organization IS NULL OR :organization ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE = :organization) "
 				+ "AND (:showDeleted = true OR s.is_active = true) "
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
@@ -259,9 +267,14 @@ public class MySQLQueryReport {
 	
 	public static String getResourceSumListDataCounteSql(String dbUserSchema, String dbBillingSchema) {
 		String countSql = "SELECT COUNT(DISTINCT API_NAME, API_VERSION, API_RESOURCE_TEMPLATE, API_METHOD, DATA_USAGE_API.API_ID) "
-				+ "FROM DATA_USAGE_API " + "LEFT JOIN " + dbBillingSchema
+				+ "FROM DATA_USAGE_API " 
+				+ "LEFT JOIN " + dbBillingSchema
 				+ ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
+				+ "LEFT JOIN " + dbUserSchema + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
+				+ "LEFT JOIN " + dbUserSchema + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
+				+ "AND attr.UM_ATTR_NAME = 'organizationName' "
+				+ "WHERE "
+				+ "(:organization IS NULL OR :organization ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE = :organization) "
 				+ "AND (:showDeleted = true OR s.is_active = true) "
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
@@ -281,10 +294,10 @@ public class MySQLQueryReport {
 				+ "DATA_USAGE_API.API_ID, APPLICATION_ID, APPLICATION_OWNER, attr.UM_ATTR_VALUE AS organization "
 				+ "FROM DATA_USAGE_API " + "LEFT JOIN " + dbBillingSchema
 				+ ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID " + "LEFT JOIN "
-				+ dbUserSchema + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
-				+ "LEFT JOIN " + dbUserSchema
+				+ dbUserSchema + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME " + "LEFT JOIN "
+				+ dbUserSchema
 				+ ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID AND attr.UM_ATTR_NAME = 'organizationName' "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
+				+ "WHERE (:organization IS NULL OR :organization ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE = :organization) "
 				+ "AND (:showDeleted = true OR s.is_active = true) " + "AND API_RESOURCE_TEMPLATE = :resource "
 				+ "AND DATA_USAGE_API.API_ID = :apiId "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
@@ -293,11 +306,14 @@ public class MySQLQueryReport {
 				+ "OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :searchFilter, '%'))) ";
 		return baseSql;
 	}
-	
+
 	public static String getDetailLogResourceSumCountSql(String dbUserSchema, String dbBillingSchema) {
 		String countSql = "SELECT COUNT(DISTINCT APPLICATION_ID) " + "FROM DATA_USAGE_API " + "LEFT JOIN "
 				+ dbBillingSchema + ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
+				+ "LEFT JOIN " + dbUserSchema + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
+				+ "LEFT JOIN " + dbUserSchema
+				+ ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID AND attr.UM_ATTR_NAME = 'organizationName' "
+				+ "WHERE (:organization IS NULL OR :organization ='PT Swamedia Informatika' OR attr.UM_ATTR_VALUE = :organization) "
 				+ "AND (:showDeleted = true OR s.is_active = true) " + "AND API_RESOURCE_TEMPLATE = :resource "
 				+ "AND DATA_USAGE_API.API_ID = :apiId "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "

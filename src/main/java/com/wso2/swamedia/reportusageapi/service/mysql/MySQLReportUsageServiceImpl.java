@@ -133,14 +133,15 @@ public class MySQLReportUsageServiceImpl implements ReportUsageService{
 		}
 	}
 
+	@Override
 	public ResourceSummary getResourceReport(Integer year, Integer month, String resource, String apiId,
-			String username, int page, int size, String search, Boolean showDeletedSubscription,String keyType) {
-		LOGGER.info("Retrieving resource summary for year: {}, month: {}, resource: {}, username: {}", year, month,
-				resource, username);
+			String organization, int page, int size, String search, Boolean showDeletedSubscription,String keyType) {
+		LOGGER.info("Retrieving resource summary for year: {}, month: {}, resource: {}, organization: {}", year, month,
+				resource, organization);
 
 		ResourceSummary resourceSummary = new ResourceSummary();
 		try {
-			Map<String, Object> resourceSumTotal = getResourceSumTotalData(username, year, month, apiId, resource,
+			Map<String, Object> resourceSumTotal = getResourceSumTotalData(organization, year, month, apiId, resource,
 					showDeletedSubscription,keyType);
 			resourceSummary.setTotalApis(Integer.valueOf(resourceSumTotal.get("total_apis").toString()));
 			resourceSummary.setRequestCount(Integer.valueOf(resourceSumTotal.get("total_request").toString()));
@@ -151,7 +152,7 @@ public class MySQLReportUsageServiceImpl implements ReportUsageService{
 
 		try {
 			Pageable pageable = PageRequest.of(page, size);
-			Page<ResourceSummary.ApiDetails> resourceSummaryPage = getResourceSumListData(username, year, month, apiId,
+			Page<ResourceSummary.ApiDetails> resourceSummaryPage = getResourceSumListData(organization, year, month, apiId,
 					resource, search, pageable, showDeletedSubscription,keyType);
 			resourceSummary.setDetails(resourceSummaryPage);
 		} catch (Exception e) {
@@ -164,14 +165,14 @@ public class MySQLReportUsageServiceImpl implements ReportUsageService{
 		return resourceSummary;
 	}
 
-	public Page<ResourceSummaryDetails> getDetailLogResourceSum(String owner, String resource, String apiId,
+	public Page<ResourceSummaryDetails> getDetailLogResourceSum(String organization, String resource, String apiId,
 			String searchFilter, Pageable pageable, Boolean showDeletedSubscription,String keyType) throws Exception {
-		LOGGER.info("Retrieving resource detail log for owner: {}, resource: {}, apiId: {}", owner, resource, apiId);
+		LOGGER.info("Retrieving resource detail log for owner: {}, resource: {}, apiId: {}", organization, resource, apiId);
 
 		Page<ResourceSummaryDetails> pageM = null;
 		try {
 
-			pageM = getDetailLogResourceSum(pageable, owner, resource, apiId, searchFilter, showDeletedSubscription, keyType);
+			pageM = getDetailLogResourceSum(pageable, organization, resource, apiId, searchFilter, showDeletedSubscription, keyType);
 		} catch (Exception e) {
 			String error = String.format("Error retrieving resource detail log: {}", e.getMessage());
 			LOGGER.error(error);
@@ -714,12 +715,12 @@ public class MySQLReportUsageServiceImpl implements ReportUsageService{
 		return new PageImpl<>(results, pageable, totalRowCount);
 	}
 
-	public Map<String, Object> getResourceSumTotalData(String owner, Integer year, Integer month, String apiId,
+	public Map<String, Object> getResourceSumTotalData(String organization, Integer year, Integer month, String apiId,
 			String resource, Boolean showDeleted,String keyType) {
 		String sql = MySQLQueryReport.getResourceSumTotalData(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", owner);
+		params.put("organization", organization);
 		params.put("year", year);
 		params.put("month", month);
 		params.put("apiId", apiId);
@@ -730,7 +731,7 @@ public class MySQLReportUsageServiceImpl implements ReportUsageService{
 		return namedParameterJdbcTemplate.queryForMap(sql, params);
 	}
 
-	public Page<ResourceSummary.ApiDetails> getResourceSumListData(String owner, Integer year, Integer month,
+	public Page<ResourceSummary.ApiDetails> getResourceSumListData(String organization, Integer year, Integer month,
 			String apiId, String resource, String search, Pageable pageable, Boolean showDeleted,String keyType) {
 		String baseSql = MySQLQueryReport.getResourceSumListDataBaseSql(dbUtilsUser.getSchemaName(), getBillingSchema());
 
@@ -738,7 +739,7 @@ public class MySQLReportUsageServiceImpl implements ReportUsageService{
 				getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", owner);
+		params.put("organization", organization);
 		params.put("year", year);
 		params.put("month", month);
 		params.put("apiId", apiId);
@@ -775,7 +776,7 @@ public class MySQLReportUsageServiceImpl implements ReportUsageService{
 		return new PageImpl<>(apiDetailsList, pageable, totalRowCount);
 	}
 
-	public Page<ResourceSummaryDetails> getDetailLogResourceSum(Pageable pageable, String owner, String resource,
+	public Page<ResourceSummaryDetails> getDetailLogResourceSum(Pageable pageable, String organization, String resource,
 			String apiId, String searchFilter, Boolean showDeleted,String keyType) {
 		String baseSql = MySQLQueryReport.getDetailLogResourceSumBaseSQl(dbUtilsUser.getSchemaName(), getBillingSchema());
 
@@ -783,7 +784,7 @@ public class MySQLReportUsageServiceImpl implements ReportUsageService{
 				getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", owner);
+		params.put("organization", organization);
 		params.put("resource", resource);
 		params.put("apiId", apiId);
 		params.put("searchFilter", searchFilter);

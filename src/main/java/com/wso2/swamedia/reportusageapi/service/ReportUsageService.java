@@ -30,9 +30,9 @@ public interface ReportUsageService {
 			String keyType);
 
 	public ResourceSummary getResourceReport(Integer year, Integer month, String resource, String apiId,
-			String username, int page, int size, String search, Boolean showDeletedSubscription, String keyType);
+			String organization, int page, int size, String search, Boolean showDeletedSubscription, String keyType);
 
-	public Page<ResourceSummaryDetails> getDetailLogResourceSum(String owner, String resource, String apiId,
+	public Page<ResourceSummaryDetails> getDetailLogResourceSum(String organization, String resource, String apiId,
 			String searchFilter, Pageable pageable, Boolean showDeletedSubscription, String keyType) throws Exception;
 
 	public List<DashboardPercentageDTO> getApiUsageByApi(LocalDate startDate, LocalDate endDate, String username);
