@@ -40,6 +40,19 @@ public class QueryReport {
 
 		return query;
 	}
+	
+	public static String getUsernameByUserId(String databaseName) {
+		return "SELECT x.UM_USER_NAME FROM " + databaseName + ".UM_USER x WHERE x.UM_USER_ID =:userId";
+	}
+	
+	public static String getUserData(String databaseName) {
+		return "SELECT uu.*, "
+				+ "CASE WHEN uu.UM_TENANT_ID = -1234 THEN 'carbon.super' ELSE ut.UM_DOMAIN_NAME END as UM_DOMAIN_NAME "
+				+ "FROM " + databaseName + ".UM_USER uu " + "LEFT JOIN " + databaseName
+				+ ".UM_TENANT ut ON ut.UM_ID = uu.UM_TENANT_ID "
+				+ "WHERE CASE WHEN uu.UM_TENANT_ID = -1234 THEN 'carbon.super' ELSE ut.UM_DOMAIN_NAME END = :tenantDomainName "
+				+ "AND uu.UM_USER_NAME = :username";
+	}
 
 	public static String getMonthlyTotalRowByGroupByWithSearchAndPageable(String dbUserSchema, String dbBillingSchema) {
 
