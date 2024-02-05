@@ -55,6 +55,7 @@ import com.wso2.swamedia.reportusageapi.repo.DataUsageApiRepository;
 import com.wso2.swamedia.reportusageapi.service.QueryReport;
 import com.wso2.swamedia.reportusageapi.service.ReportUsageService;
 import com.wso2.swamedia.reportusageapi.utils.DBUtilsUser;
+import com.wso2.swamedia.reportusageapi.utils.Utils;
 @Service
 @Profile("mysql")
 public class ReportUsageServiceImpl implements ReportUsageService{
@@ -188,7 +189,7 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 		String query = QueryReport.getApiUsageByApi(startDate, endDate);
 
 		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
-		params.put("owner", username);
+		params.put("tenantDomain", Utils.getTenantFromUsername());
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
 
 		LOGGER.info("SQL Query: {}", query); // Use parameterized logging
@@ -244,7 +245,7 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 
 		String query = QueryReport.getApiUsageByApplication(startDate, endDate);
 		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
-		params.put("owner", username);
+		params.put("tenantDomain", Utils.getTenantFromUsername());
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
 		LOGGER.info(query);
 		return namedParameterJdbcTemplate.query(query, parameters, new DashboardAppPercentageMapper());
@@ -255,7 +256,7 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 		String query = QueryReport.getApiUsageByResponseCode(startDate, endDate);
 
 		Map<String, Object> params = getOptionalDateRangeNamedParams(startDate, endDate);
-		params.put("owner", username);
+		params.put("tenantDomain", Utils.getTenantFromUsername());
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
 		LOGGER.info(query);
 		return namedParameterJdbcTemplate.query(query, parameters, new DashboardResCodePercentageMapper());
@@ -284,7 +285,7 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 		String query = QueryReport.getApiNameAndId(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-		parameters.addValue("owner", owner);
+		parameters.addValue("tenantDomain", Utils.getTenantFromUsername());
 		parameters.addValue("organizationName", organization);
 
 		return namedParameterJdbcTemplate.query(query, parameters, (rs, rowNum) -> {
@@ -300,7 +301,7 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 		String query = QueryReport.getApis(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-		parameters.addValue("owner", owner);
+		parameters.addValue("tenantDomain", Utils.getTenantFromUsername());
 		parameters.addValue("organizationName", organization);
 
 		return namedParameterJdbcTemplate.query(query, parameters, (rs, rowNum) -> {
@@ -316,7 +317,7 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 		String query = QueryReport.getYears();
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-		parameters.addValue("owner", owner);
+		parameters.addValue("tenantDomain", Utils.getTenantFromUsername());
 
 		return namedParameterJdbcTemplate.query(query, parameters, (rs, rowNum) -> {
 			Map<String, Object> apiInfo = new HashMap<>();
@@ -374,7 +375,7 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 
 		String query = QueryReport.getMonth();
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-		parameters.addValue("owner", owner);
+		parameters.addValue("tenantDomain", Utils.getTenantFromUsername());
 		parameters.addValue("year", year);
 
 		return namedParameterJdbcTemplate.query(query, parameters, (rs, rowNum) -> {
@@ -390,7 +391,7 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 		String query = QueryReport.getApiResourceByAPI();
 		LOGGER.info(query);
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-		parameters.addValue("owner", owner);
+		parameters.addValue("tenantDomain", Utils.getTenantFromUsername());
 		parameters.addValue("apiId", apiId);
 
 		return namedParameterJdbcTemplate.query(query, parameters, (rs, rowNum) -> {
@@ -443,7 +444,8 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 		String query = QueryReport.getSubscriptionsRemaining(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-		parameters.addValue("owner", owner);
+		parameters.addValue("tenantDomain", Utils.getTenantFromUsername());
+		parameters.addValue("isAdmin", Utils.isAdmin());
 		List<TableRemainingDayQuota> dtos = namedParameterJdbcTemplate.query(query, parameters, (resultSet, rowNum) -> {
 			TableRemainingDayQuota dto = new TableRemainingDayQuota();
 			String subsStateId = resultSet.getString("subs_state_id");
@@ -546,7 +548,7 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 	public Page<DataUsageApiResponse> getBackendAPIUsage(String owner, Integer year, Integer month, String apiId,
 			String searchFilter, Pageable pageable, String keyType) {
 		Page<DataUsageApiResponse> dataUsageApiResponsePage = amApiRepository
-				.findByOwnerAndYearAndMonthAndApiIdAndSearchFilter(owner, year, month, apiId, searchFilter, keyType,pageable);
+				.findByOwnerAndYearAndMonthAndApiIdAndSearchFilter(Utils.getTenantFromUsername(), year, month, apiId, searchFilter, keyType,pageable);
 
 		for (DataUsageApiResponse dataUsageApiResponse : dataUsageApiResponsePage.getContent()) {
 			List<RequestCountDTO> requestCountDTOList = dataUsageApiRepository
@@ -606,11 +608,11 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 
 		// Create the parameters to be used in the query
 		MapSqlParameterSource params = new MapSqlParameterSource();
-		params.addValue("owner", owner);
+		params.addValue("isAdmin", Utils.isAdmin());
+		params.addValue("tenantDomain", Utils.getTenantFromUsername());
 		params.addValue("year", year);
 		params.addValue("month", month);
 		params.addValue("apiId", apiId);
-		params.addValue("showDeleted", showDeleted);
 		params.addValue("applicationId", applicationId);
 		params.addValue("search", search);
 		params.addValue("organization", organization);
@@ -653,8 +655,8 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 				getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", owner);
-		params.put("showDeleted", showDeleted);
+		params.put("isAdmin", Utils.isAdmin());
+		params.put("tenantDomain", Utils.getTenantFromUsername());
 		params.put("year", year);
 		params.put("month", month);
 		params.put("apiId", apiId);
@@ -670,13 +672,13 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 		String sql = QueryReport.totalMonthlyDetailLog(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", owner);
+		params.put("tenantDomain", Utils.getTenantFromUsername());
+		params.put("isAdmin", Utils.isAdmin());
 		params.put("applicationId", applicationId);
 		params.put("apiId", apiId);
 		params.put("searchFilter", searchFilter);
 		params.put("year", year);
 		params.put("month", month);
-		params.put("showDeleted", showDeleted);
 		params.put("keyType", keyType);
 
 		return namedParameterJdbcTemplate.queryForMap(sql, params);
@@ -688,7 +690,9 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 		String countSql = "SELECT COUNT(*) " + baseSql.substring(baseSql.indexOf("FROM"));
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", owner);
+
+		params.put("tenantDomain", Utils.getTenantFromUsername());
+		params.put("isAdmin", Utils.isAdmin());
 		params.put("applicationId", applicationId);
 		params.put("apiId", apiId);
 		params.put("searchFilter", searchFilter);
@@ -719,12 +723,12 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 		String sql = QueryReport.getResourceSumTotalData(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", owner);
+		params.put("tenantDomain", Utils.getTenantFromUsername());
+		params.put("isAdmin", Utils.isAdmin());
 		params.put("year", year);
 		params.put("month", month);
 		params.put("apiId", apiId);
 		params.put("resource", resource);
-		params.put("showDeleted", showDeleted);
 		params.put("keyType", keyType);
 
 		return namedParameterJdbcTemplate.queryForMap(sql, params);
@@ -738,13 +742,14 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 				getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", owner);
+
+		params.put("tenantDomain", Utils.getTenantFromUsername());
+		params.put("isAdmin", Utils.isAdmin());
 		params.put("year", year);
 		params.put("month", month);
 		params.put("apiId", apiId);
 		params.put("resource", resource);
 		params.put("search", search);
-		params.put("showDeleted", showDeleted);
 		params.put("keyType", keyType);
 
 // Get total count for pagination
@@ -783,7 +788,8 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 				getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", owner);
+		params.put("tenantDomain", Utils.getTenantFromUsername());
+		params.put("isAdmin", Utils.isAdmin());
 		params.put("resource", resource);
 		params.put("apiId", apiId);
 		params.put("searchFilter", searchFilter);

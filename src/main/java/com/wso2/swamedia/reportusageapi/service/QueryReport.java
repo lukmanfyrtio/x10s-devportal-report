@@ -34,8 +34,8 @@ public class QueryReport {
 				+ "		APPLICATION_OWNER  "
 				+ ") AS DATA_USAGE ON subs.subscription_id  = DATA_USAGE.SUBSCRIPTION_UUID " + "WHERE "
 				+ "AM_POLICY_SUBSCRIPTION.BILLING_PLAN != 'FREE' "
-				+ "AND (:owner IS NULL OR AM_SUBSCRIBER.USER_ID = :owner) "
-				+ "AND (:owner IS NULL OR subs.is_active = 1 ) "
+				+" AND (subs.tenant_domain = :tenantDomain) "
+				+" AND (:isAdmin = true OR subs.is_active = true) "
 				+ "ORDER BY REMAINING_DAYS ASC, REMAINING_QUOTA DESC, API_USAGE DESC;";
 
 		return query;
@@ -64,8 +64,8 @@ public class QueryReport {
 				+ dbUserSchema + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME " + "LEFT JOIN "
 				+ dbUserSchema
 				+ ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID AND attr.UM_ATTR_NAME = 'organizationName' "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) "
+				+"WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
+				+" AND (:isAdmin = true OR s.is_active = true) "
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
 				+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
@@ -92,8 +92,8 @@ public class QueryReport {
 						+ ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME ")
 				.append("LEFT JOIN " + dbUserSchema + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID ")
 				.append("AND attr.UM_ATTR_NAME = 'organizationName' ")
-				.append("WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) ")
-				.append("AND (:showDeleted = true OR s.is_active = true) ")
+				.append("WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) ")
+				.append("AND (:isAdmin = true OR s.is_active = true) ")
 				.append("AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) ")
 				.append("AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) ")
 				.append("AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) ")
@@ -107,12 +107,12 @@ public class QueryReport {
 
 	public static String getApiUsageByApi(LocalDate startDate, LocalDate endDate) {
 		String query = "WITH TotalDataUsage AS (" + "   SELECT COUNT(*) AS total_count FROM DATA_USAGE_API "
-				+ "   WHERE 1=1 AND (APPLICATION_OWNER = :owner OR :owner IS NULL) "
+				+ "   WHERE 1=1 AND (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
 				+ "   AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 				+ getOptionalDateRangeCondition(startDate, endDate) + ") "
 				+ "SELECT API_ID, API_NAME, COUNT(*) AS row_count, "
 				+ "(COUNT(*) / (SELECT total_count FROM TotalDataUsage)) * 100 AS percentage " + "FROM DATA_USAGE_API "
-				+ "WHERE 1=1 AND (APPLICATION_OWNER = :owner OR :owner IS NULL) "
+				+ "WHERE 1=1 AND (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 				+ getOptionalDateRangeCondition(startDate, endDate) + "GROUP BY API_ID, API_NAME";
 
@@ -121,11 +121,11 @@ public class QueryReport {
 	
 	public static String getApiUsageByResponseCode(LocalDate startDate, LocalDate endDate) {
 		String query = "SELECT PROXY_RESPONSE_CODE, COUNT(*) AS row_count, (COUNT(*) / (SELECT COUNT(*) FROM DATA_USAGE_API WHERE 1=1"
-				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
+				+ " AND (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 				+ getOptionalDateRangeCondition(startDate, endDate)
 				+ ") * 100) AS percentage FROM DATA_USAGE_API WHERE 1=1"
-				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
+				+ " AND (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 				+ getOptionalDateRangeCondition(startDate, endDate) + " GROUP BY PROXY_RESPONSE_CODE";
 
@@ -134,11 +134,11 @@ public class QueryReport {
 
 	public static String getApiUsageByApplication(LocalDate startDate, LocalDate endDate) {
 		String query = "SELECT APPLICATION_ID, APPLICATION_NAME, COUNT(*) AS row_count, (COUNT(*) / (SELECT COUNT(*) FROM DATA_USAGE_API WHERE 1=1"
-				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
+				+ " AND (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 				+ getOptionalDateRangeCondition(startDate, endDate)
 				+ ") * 100) AS percentage FROM DATA_USAGE_API WHERE 1=1"
-				+ " AND (:owner IS NULL OR APPLICATION_OWNER = :owner ) "
+				+ " AND (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 				+ getOptionalDateRangeCondition(startDate, endDate) + " GROUP BY APPLICATION_ID, APPLICATION_NAME";
 
@@ -154,8 +154,9 @@ public class QueryReport {
 				+ "LEFT JOIN " + dbUserSchema + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
 				+ "LEFT JOIN " + dbUserSchema + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
 				+ "AND attr.UM_ATTR_NAME = 'organizationName' "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) " + "AND APPLICATION_ID = :applicationId "
+				+"WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
+				+"AND (:isAdmin = true OR s.is_active = true) "
+				+ "AND APPLICATION_ID = :applicationId "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
@@ -172,8 +173,8 @@ public class QueryReport {
 		String sql = "SELECT COUNT(DISTINCT DATA_USAGE_API.API_ID) AS total_apis, COUNT(*) AS total_request "
 				+ "FROM DATA_USAGE_API " + "LEFT JOIN " + dbBillingSchema
 				+ ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) "
+				+"WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
+				+" AND (:isAdmin = true OR s.is_active = true) "
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
 				+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
@@ -197,14 +198,15 @@ public class QueryReport {
 
 	public static String getMonth() {
 		String query = "SELECT DISTINCT MONTH(REQUEST_TIMESTAMP) AS year FROM DATA_USAGE_API "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) AND "
+				+ "WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) AND "
 				+ " (:year IS NULL OR  YEAR(REQUEST_TIMESTAMP) = :year ) "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') ";
 		return query;
 	}
 
 	public static String getApiResourceByAPI() {
-		String query = "SELECT DISTINCT API_RESOURCE_TEMPLATE  FROM DATA_USAGE_API WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner)"
+		String query = "SELECT DISTINCT API_RESOURCE_TEMPLATE  FROM DATA_USAGE_API "
+				+ "WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain)"
 				+ " AND (:apiId IS NULL OR API_ID = :apiId) "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') AND API_RESOURCE_TEMPLATE IS NOT NULL";
 		return query;
@@ -223,8 +225,9 @@ public class QueryReport {
 				+ "COUNT(CASE WHEN PROXY_RESPONSE_CODE = 200 THEN 1 END) AS count_200 " + "FROM DATA_USAGE_API "
 				+ "LEFT JOIN " + dbBillingSchema
 				+ ".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) " + "AND APPLICATION_ID = :applicationId "
+				+"WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
+				+"AND (:isAdmin = true OR s.is_active = true) "
+				+ "AND APPLICATION_ID = :applicationId "
 				+ "AND DATA_USAGE_API.API_ID = :apiId " 
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
@@ -241,8 +244,8 @@ public class QueryReport {
 		String baseSql = "SELECT API_NAME, API_VERSION, API_RESOURCE_TEMPLATE, API_METHOD, "
 				+ "COUNT(*) AS request_count, DATA_USAGE_API.API_ID " + "FROM DATA_USAGE_API " + "LEFT JOIN "
 				+ dbBillingSchema + ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) "
+				+"WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
+				+"AND (:isAdmin = true OR s.is_active = true) "
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
 				+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
@@ -258,8 +261,8 @@ public class QueryReport {
 		String countSql = "SELECT COUNT(DISTINCT API_NAME, API_VERSION, API_RESOURCE_TEMPLATE, API_METHOD, DATA_USAGE_API.API_ID) "
 				+ "FROM DATA_USAGE_API " + "LEFT JOIN " + dbBillingSchema
 				+ ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) "
+				+"WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
+				+"AND (:isAdmin = true OR s.is_active = true) "
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
 				+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
@@ -281,8 +284,9 @@ public class QueryReport {
 				+ dbUserSchema + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
 				+ "LEFT JOIN " + dbUserSchema
 				+ ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID AND attr.UM_ATTR_NAME = 'organizationName' "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) " + "AND API_RESOURCE_TEMPLATE = :resource "
+				+"WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
+				+"AND (:isAdmin = true OR s.is_active = true) "
+				+ "AND API_RESOURCE_TEMPLATE = :resource "
 				+ "AND DATA_USAGE_API.API_ID = :apiId "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
 				+ "AND DATA_USAGE_API.KEY_TYPE = :keyType "
@@ -294,8 +298,9 @@ public class QueryReport {
 	public static String getDetailLogResourceSumCountSql(String dbUserSchema, String dbBillingSchema) {
 		String countSql = "SELECT COUNT(DISTINCT APPLICATION_ID) " + "FROM DATA_USAGE_API " + "LEFT JOIN "
 				+ dbBillingSchema + ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
-				+ "WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
-				+ "AND (:showDeleted = true OR s.is_active = true) " + "AND API_RESOURCE_TEMPLATE = :resource "
+				+"WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
+				+"AND (:isAdmin = true OR s.is_active = true) "
+				+ "AND API_RESOURCE_TEMPLATE = :resource "
 				+ "AND DATA_USAGE_API.API_ID = :apiId "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
 				+ "AND DATA_USAGE_API.KEY_TYPE = :keyType "
@@ -319,7 +324,8 @@ public class QueryReport {
 	}
 	
 	public static String getYears() {
-		String query = "SELECT DISTINCT YEAR(REQUEST_TIMESTAMP) AS year FROM DATA_USAGE_API WHERE (:owner IS NULL OR APPLICATION_OWNER = :owner) "
+		String query = "SELECT DISTINCT YEAR(REQUEST_TIMESTAMP) AS year FROM "
+				+ "DATA_USAGE_API WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') ";
 		return query;
 	}
@@ -333,7 +339,7 @@ public class QueryReport {
 				+ "LEFT JOIN " + dbUserSchema + ".UM_USER uu ON AM_SUBSCRIBER.USER_ID = uu.UM_USER_NAME "
 				+ "LEFT JOIN " + dbUserSchema + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
 				+ "AND attr.UM_ATTR_NAME = 'organizationName' "
-				+ "WHERE (:owner IS NULL OR AM_SUBSCRIBER.USER_ID  = :owner) "
+				+ "WHERE (AM_APPLICATION.ORGANIZATION  = :tenantDomain) "
 				+ "AND (:organizationName IS NULL OR attr.UM_ATTR_VALUE = :organizationName)";
 		return query;
 	}
@@ -346,7 +352,7 @@ public class QueryReport {
 				+ "LEFT JOIN " + dbUserSchema + ".UM_USER uu ON AM_SUBSCRIBER.USER_ID = uu.UM_USER_NAME "
 				+ "LEFT JOIN " + dbUserSchema + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
 				+ "AND attr.UM_ATTR_NAME = 'organizationName' "
-				+ "WHERE (:owner IS NULL OR AM_SUBSCRIBER.USER_ID  = :owner) "
+				+ "WHERE (AM_APPLICATION.ORGANIZATION  = :tenantDomain) "
 				+ "AND (:organizationName IS NULL OR attr.UM_ATTR_VALUE = :organizationName)";
 		return query;
 	}

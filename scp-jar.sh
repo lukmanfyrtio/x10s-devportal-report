@@ -1,8 +1,9 @@
 #!/bin/bash
 
-SERVER_IP="103.164.54.199"
+#SERVER_IP="103.164.54.199"
+SERVER_IP="bulog_2"
 USERNAME="root"
-TARGET_FOLDER="/root/apps/internal-report-app"
+TARGET_FOLDER="/root/x10s-backend/devportal"
 
 echo "Copying JAR file to server $SERVER_IP as user $USERNAME..."
 

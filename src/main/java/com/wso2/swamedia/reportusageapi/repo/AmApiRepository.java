@@ -19,7 +19,7 @@ public interface AmApiRepository extends JpaRepository<AmApi, String> {
 			+ "a.apiName, a.apiVersion, a.context, COUNT(d.apiId) AS requestCount,d.applicationOwner,d.applicationId) "
 			+ "FROM AmApi a " 
 			+ "LEFT JOIN DataUsageApi d ON a.apiUuid = d.apiId "
-			+ "WHERE (:owner IS NULL OR d.applicationOwner = :owner) "
+			+ "WHERE (d.apiCreatorTenantDomain = :tenantDomain) "
 			+"AND d.applicationOwner NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 			+ "AND (:year IS NULL OR YEAR(d.requestTimestamp) = :year) "
 			+ "AND (:month IS NULL OR MONTH(d.requestTimestamp) = :month) "
@@ -28,7 +28,7 @@ public interface AmApiRepository extends JpaRepository<AmApi, String> {
 			+ "AND (:searchFilter IS NULL OR LOWER(a.context) LIKE LOWER(CONCAT('%', :searchFilter, '%')) "
 			+ "OR LOWER(a.apiName) LIKE LOWER(CONCAT('%', :searchFilter, '%'))) "
 			+ "GROUP BY a.apiId, a.apiName, a.apiVersion, a.context ,d.applicationOwner,d.applicationId " + "ORDER BY requestCount DESC")
-	Page<DataUsageApiResponse> findByOwnerAndYearAndMonthAndApiIdAndSearchFilter(@Param("owner") String owner,
+	Page<DataUsageApiResponse> findByOwnerAndYearAndMonthAndApiIdAndSearchFilter(@Param("tenantDomain") String tenantDomain,
 			@Param("year") Integer year, @Param("month") Integer month, @Param("apiId") String apiId,
 			@Param("searchFilter") String searchFilter,@Param("keyType") String keyType ,Pageable pageable);
 	

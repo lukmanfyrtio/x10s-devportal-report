@@ -24,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.DefaultOAuth2AuthenticatedPrincipal;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -67,7 +68,20 @@ public class Utils {
 	}).build();
 	public static boolean isAdmin(Map<String, Object> map) {
 		// Cek apakah roles mengandung "Internal/admin"
-
+		
+		String roles = map.get("http://wso2.org/claims/role").toString();
+		if (roles.contains("admin")) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public static boolean isAdmin() {
+		// Cek apakah roles mengandung "Internal/admin"
+		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) SecurityContextHolder
+				.getContext().getAuthentication().getPrincipal();
+		Map<String, Object> map = principal.getAttributes();
 		String roles = map.get("http://wso2.org/claims/role").toString();
 		if (roles.contains("admin")) {
 			return true;
@@ -311,4 +325,6 @@ public class Utils {
 			return new HashMap<>(); // Return an empty map in case of an error
 		}
 	}
+	
+	
 }

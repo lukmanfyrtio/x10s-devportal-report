@@ -40,6 +40,7 @@ import com.wso2.swamedia.reportusageapi.mapper.DashboardResCodePercentageMapper;
 import com.wso2.swamedia.reportusageapi.service.DashboardService;
 import com.wso2.swamedia.reportusageapi.utils.DBUtilsBilling;
 import com.wso2.swamedia.reportusageapi.utils.DBUtilsUser;
+import com.wso2.swamedia.reportusageapi.utils.Utils;
 @Service
 @Profile("mysql")
 public class DashboardServiceImpl implements DashboardService{
@@ -70,8 +71,8 @@ public class DashboardServiceImpl implements DashboardService{
 					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME "
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) AND "
-					+ "(:owner IS NULL OR s.is_active = true) AND "
+					+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) AND "
+					+ " (:isAdmin = true  OR s.is_active = true) AND "
 					+ "DATE(du.REQUEST_TIMESTAMP) = CURDATE() " 
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 					+ " AND du.KEY_TYPE = :keyType "
@@ -90,8 +91,8 @@ public class DashboardServiceImpl implements DashboardService{
 					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME "
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) AND "
-					+ "(:owner IS NULL OR s.is_active = true) AND "
+					+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) AND "
+					+ " (:isAdmin = true  OR s.is_active = true) AND "
 					+ "YEARWEEK(du.REQUEST_TIMESTAMP) = YEARWEEK(CURDATE()) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
 					+ " AND du.KEY_TYPE = :keyType "
@@ -107,8 +108,8 @@ public class DashboardServiceImpl implements DashboardService{
 					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME "
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) AND "
-					+ "(:owner IS NULL OR s.is_active = true) AND "
+					+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) AND "
+					+ " (:isAdmin = true  OR s.is_active = true) AND "
 					+ "YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
 					+ "AND MONTH(du.REQUEST_TIMESTAMP) = MONTH(CURDATE()) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
@@ -129,8 +130,8 @@ public class DashboardServiceImpl implements DashboardService{
 					+ "            LIMIT :top) top_10 ON du.API_NAME = top_10.API_NAME "
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) AND "
-					+ "(:owner IS NULL OR s.is_active = true) AND "
+					+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) AND "
+					+ " (:isAdmin = true  OR s.is_active = true) AND "
 					+ "YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
 					+ " AND du.KEY_TYPE = :keyType "
@@ -142,8 +143,10 @@ public class DashboardServiceImpl implements DashboardService{
 			throw new Exception("Invalid filter provided. Valid filters: today, week, month, year");
 		}
 
+
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-		parameters.addValue("owner", owner);
+		parameters.addValue("isAdmin", Utils.isAdmin());
+		parameters.addValue("tenantDomain", Utils.getTenantFromUsername());
 		parameters.addValue("top", top);
 		parameters.addValue("keyType", keyType);
 		LOGGER.info(query);
@@ -296,8 +299,8 @@ public class DashboardServiceImpl implements DashboardService{
 	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner IS NULL OR s.is_active = true) "
+						+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
+						+ "AND (:isAdmin = true  OR s.is_active = true) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 	                    + "AND DATE(du.REQUEST_TIMESTAMP) = CURDATE() ";
@@ -309,8 +312,8 @@ public class DashboardServiceImpl implements DashboardService{
 	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner IS NULL OR s.is_active = true) "
+						+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
+						+ "AND (:isAdmin = true  OR s.is_active = true) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 	                    + "AND DATE(du.REQUEST_TIMESTAMP) = CURDATE() ";
@@ -322,8 +325,8 @@ public class DashboardServiceImpl implements DashboardService{
 	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner IS NULL OR s.is_active = true) "
+						+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
+						+ "AND (:isAdmin = true  OR s.is_active = true) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 	                    + "AND YEARWEEK(du.REQUEST_TIMESTAMP) = YEARWEEK(CURDATE()) ";
@@ -335,8 +338,8 @@ public class DashboardServiceImpl implements DashboardService{
 	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner IS NULL OR s.is_active = true) "
+						+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
+						+ "AND (:isAdmin = true  OR s.is_active = true) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 	                    + "AND YEARWEEK(du.REQUEST_TIMESTAMP) = YEARWEEK(CURDATE()) ";
@@ -348,8 +351,8 @@ public class DashboardServiceImpl implements DashboardService{
 	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner IS NULL OR s.is_active = true) "
+						+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
+						+ "AND (:isAdmin = true  OR s.is_active = true) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 	                    + "AND YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
@@ -362,8 +365,8 @@ public class DashboardServiceImpl implements DashboardService{
 	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner IS NULL OR s.is_active = true) "
+						+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
+						+ "AND (:isAdmin = true  OR s.is_active = true) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 	                    + "AND YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
@@ -376,8 +379,8 @@ public class DashboardServiceImpl implements DashboardService{
 	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner IS NULL OR s.is_active = true) "
+						+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
+						+ "AND (:isAdmin = true  OR s.is_active = true) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 	                    + "AND YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) ";
@@ -389,8 +392,8 @@ public class DashboardServiceImpl implements DashboardService{
 	        			+ "AND attr.UM_ATTR_NAME = 'organizationName' "
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-						+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-						+ "AND (:owner IS NULL OR s.is_active = true) "
+						+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
+						+ "AND (:isAdmin = true  OR s.is_active = true) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 	                    + "AND YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) ";
@@ -409,7 +412,8 @@ public class DashboardServiceImpl implements DashboardService{
 
 	    // Count total records per filter
 	    MapSqlParameterSource countParams = new MapSqlParameterSource();
-	    countParams.addValue("owner", owner);
+	    countParams.addValue("isAdmin", Utils.isAdmin());
+	    countParams.addValue("tenantDomain", Utils.getTenantFromUsername());
 	    countParams.addValue("searchQuery", searchQuery);
 	    int totalRecords = namedParameterJdbcTemplate.queryForObject(countQuery, countParams, Integer.class);
 
@@ -417,7 +421,8 @@ public class DashboardServiceImpl implements DashboardService{
 	    Pageable pageable = PageRequest.of(page, pageSize);
 	    query += "LIMIT :pageSize OFFSET :offset";
 	    MapSqlParameterSource queryParams = new MapSqlParameterSource();
-	    queryParams.addValue("owner", owner);
+	    queryParams.addValue("isAdmin", Utils.isAdmin());
+	    queryParams.addValue("tenantDomain", Utils.getTenantFromUsername());
 	    queryParams.addValue("searchQuery", searchQuery);
 	    queryParams.addValue("pageSize", pageable.getPageSize());
 	    queryParams.addValue("offset", pageable.getOffset());
@@ -470,8 +475,8 @@ public class DashboardServiceImpl implements DashboardService{
 					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-					+ "AND (:owner IS NULL OR s.is_active = true) "
+					+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) AND "
+					+ " (:isAdmin = true  OR s.is_active = true) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
 					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 					+ "AND " + "DATE(du.REQUEST_TIMESTAMP) = CURDATE() " 
@@ -484,8 +489,8 @@ public class DashboardServiceImpl implements DashboardService{
 					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-					+ "AND (:owner IS NULL OR s.is_active = true) "
+					+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) AND "
+					+ " (:isAdmin = true  OR s.is_active = true) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
 					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 					+ "AND " + "YEARWEEK(du.REQUEST_TIMESTAMP) = YEARWEEK(CURDATE()) "
@@ -496,8 +501,8 @@ public class DashboardServiceImpl implements DashboardService{
 					+ "FROM DATA_USAGE_API du "
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-					+ "AND (:owner IS NULL OR s.is_active = true) "
+					+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) AND "
+					+ " (:isAdmin = true  OR s.is_active = true) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
 					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 					+ "AND " + "YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
@@ -510,8 +515,8 @@ public class DashboardServiceImpl implements DashboardService{
 					+ "du.API_NAME, COUNT(*) AS total_usage " + "FROM DATA_USAGE_API du "
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
-					+ "WHERE (:owner IS NULL OR du.APPLICATION_OWNER = :owner) "
-					+ "AND (:owner IS NULL OR s.is_active = true) "
+					+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) AND "
+					+ " (:isAdmin = true  OR s.is_active = true) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
 					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
 					+ "AND " 
@@ -525,7 +530,8 @@ public class DashboardServiceImpl implements DashboardService{
 		}
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-		parameters.addValue("owner", owner);
+		parameters.addValue("isAdmin", Utils.isAdmin());
+		parameters.addValue("tenantDomain", Utils.getTenantFromUsername());
 		LOGGER.info(query);
 
 		List<ChartDTO> queryResult = namedParameterJdbcTemplate.query(query, parameters, (rs, rowNum) -> {
@@ -675,17 +681,18 @@ public class DashboardServiceImpl implements DashboardService{
 		         .append("        FROM DATA_USAGE_API\n")
 		         .append("        LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
 		         .append("        WHERE 1 = 1\n")
-		         .append("            AND (:owner IS NULL OR APPLICATION_OWNER = :owner)\n")
-		         .append("            AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
-		         .append("            AND (:owner IS NULL OR s.is_active = true)\n")
+		         .append("    AND (API_CREATOR_TENANT_DOMAIN = :tenantDomain)\n")
+		         .append("    AND (:isAdmin = true  OR s.is_active = true)\n")
+		         .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
+		         .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
 		         .append("    ) * 100) AS percentage\n")
 		         .append("FROM\n")
 		         .append("    DATA_USAGE_API\n")
 		         .append("    LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
 		         .append("WHERE 1 = 1\n")
-		         .append("    AND (:owner IS NULL OR APPLICATION_OWNER = :owner)\n")
+		         .append("    AND (API_CREATOR_TENANT_DOMAIN = :tenantDomain)\n")
+		         .append("    AND (:isAdmin = true  OR s.is_active = true)\n")
 		         .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
-		         .append("    AND (:owner IS NULL OR s.is_active = true)\n")
 		         .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
 		         .append("GROUP BY\n")
 		         .append("    API_ID,\n")
@@ -697,7 +704,8 @@ public class DashboardServiceImpl implements DashboardService{
 
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", username);
+		params.put("isAdmin", Utils.isAdmin());
+		params.put("tenantDomain", Utils.getTenantFromUsername());
 		params.put("top", top);
 		params.put("keyType", keyType);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
@@ -715,17 +723,18 @@ public class DashboardServiceImpl implements DashboardService{
 	         .append("            FROM DATA_USAGE_API\n")
 	         .append("            LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
 	         .append("            WHERE 1=1\n")
-	         .append("              AND (:owner IS NULL OR APPLICATION_OWNER = :owner)\n")
-	         .append("              AND (:owner IS NULL OR s.is_active  = true)\n")
-	         .append("              AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
+	         .append("    AND (API_CREATOR_TENANT_DOMAIN = :tenantDomain)\n")
+	         .append("    AND (:isAdmin = true  OR s.is_active = true)\n")
+	         .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
+	         .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
 	         .append("        ) * 100\n")
 	         .append("    ) AS percentage\n")
 	         .append("FROM\n")
 	         .append("    DATA_USAGE_API\n")
 	         .append("    LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
 	         .append("WHERE 1=1\n")
-	         .append("    AND (:owner IS NULL OR APPLICATION_OWNER = :owner)\n")
-	         .append("    AND (:owner IS NULL OR s.is_active  = true)\n")
+	         .append("    AND (API_CREATOR_TENANT_DOMAIN = :tenantDomain)\n")
+	         .append("    AND (:isAdmin = true  OR s.is_active = true)\n")
 	         .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
 	         .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
 	         .append("GROUP BY\n")
@@ -736,7 +745,8 @@ public class DashboardServiceImpl implements DashboardService{
 	         .append("LIMIT :top");
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", username);
+		params.put("isAdmin", Utils.isAdmin());
+		params.put("tenantDomain", Utils.getTenantFromUsername());
 		params.put("top", top);
 		params.put("keyType", keyType);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
@@ -765,9 +775,9 @@ public class DashboardServiceImpl implements DashboardService{
 	         .append("            DATA_USAGE_API\n")
 	         .append("            LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
 	         .append("        WHERE\n")
-	         .append("            (:owner IS NULL OR DATA_USAGE_API.APPLICATION_OWNER = :owner)\n")
+	         .append("    		  (DATA_USAGE_API.API_CREATOR_TENANT_DOMAIN = :tenantDomain)\n")
+	         .append("    		  AND (:isAdmin = true  OR s.is_active = true)\n")
 	         .append("            AND DATA_USAGE_API.APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
-	         .append("            AND (:owner IS NULL OR s.is_active = true)\n")
 	         .append("    		  AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
 	         .append("        GROUP BY\n")
 	         .append("            response_category\n")
@@ -779,7 +789,8 @@ public class DashboardServiceImpl implements DashboardService{
 
 
 		Map<String, Object> params = new HashMap<>();
-		params.put("owner", username);
+		params.put("isAdmin", Utils.isAdmin());
+		params.put("tenantDomain", Utils.getTenantFromUsername());
 		params.put("top", top);
 		params.put("keyType", keyType);
 		MapSqlParameterSource parameters = new MapSqlParameterSource(params);
@@ -806,12 +817,12 @@ public class DashboardServiceImpl implements DashboardService{
 
 	public int getTotalAPIsByUsername(String username) {
 		String query = "SELECT COUNT(*) AS totalAPI " + "FROM AM_API WHERE "
-				+ "(:username IS NULL OR AM_API.API_PROVIDER = :username) ";
+				+ " AM_API.ORGANIZATION = :tenantDomain ";
 
 		try {
 			// Create parameters for the named query
 			MapSqlParameterSource params = new MapSqlParameterSource();
-			params.addValue("username", username);
+			params.addValue("tenantDomain", Utils.getTenantFromUsername());
 
 			// Execute the query and retrieve the result
 			return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
@@ -822,14 +833,16 @@ public class DashboardServiceImpl implements DashboardService{
 	}
 
 	public int getTotalAppsByUsername(String username) {
-		String query = "SELECT COUNT(*) AS totalApps " + "FROM AM_APPLICATION " + "LEFT JOIN " + "AM_SUBSCRIBER ON "
-				+ "AM_SUBSCRIBER.SUBSCRIBER_ID =AM_APPLICATION.SUBSCRIBER_ID " + "WHERE " + "(:username IS NULL "
-				+ " OR AM_SUBSCRIBER.USER_ID =:username ) ";
+		String query = "SELECT COUNT(*) AS totalApps " + "FROM AM_APPLICATION " 
+				+ "LEFT JOIN " 
+				+ "AM_SUBSCRIBER ON "
+				+ "AM_SUBSCRIBER.SUBSCRIBER_ID =AM_APPLICATION.SUBSCRIBER_ID " 
+				+ "WHERE AM_APPLICATION.ORGANIZATION =:tenantDomain  ";
 
 		try {
 			// Create parameters for the named query
 			MapSqlParameterSource params = new MapSqlParameterSource();
-			params.addValue("username", username);
+			params.addValue("tenantDomain", Utils.getTenantFromUsername());
 
 			// Execute the query and retrieve the result
 			return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
@@ -840,13 +853,17 @@ public class DashboardServiceImpl implements DashboardService{
 	}
 
 	public int getTotalSubscriberByUsername(String username) {
-		String query = "SELECT COUNT(*) AS totalSubscriber " + "FROM AM_SUBSCRIBER " + "WHERE " + "(:username IS NULL "
-				+ " OR AM_SUBSCRIBER.USER_ID =:username )";
+		String query = "SELECT COUNT(*) AS totalSubscriber " 
+				+ "FROM AM_SUBSCRIBER " 
+				+ "WHERE " 
+				+ " AM_SUBSCRIBER.TENANT_ID =(SELECT COALESCE((SELECT x.UM_ID  "
+				+ "            FROM shared_database.UM_TENANT x  "
+				+ "            WHERE x.UM_DOMAIN_NAME = :tenantDomain),-1234) as UM_ID)";
 
 		try {
 			// Create parameters for the named query
 			MapSqlParameterSource params = new MapSqlParameterSource();
-			params.addValue("username", username);
+			params.addValue("tenantDomain", Utils.getTenantFromUsername());
 
 			// Execute the query and retrieve the result
 			return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
@@ -862,12 +879,12 @@ public class DashboardServiceImpl implements DashboardService{
 				+ "LEFT JOIN AM_APPLICATION ON AM_SUBSCRIPTION.APPLICATION_ID = AM_APPLICATION.APPLICATION_ID "
 				+ "LEFT JOIN AM_SUBSCRIBER ON AM_APPLICATION.SUBSCRIBER_ID = AM_SUBSCRIBER.SUBSCRIBER_ID "
 				+ "LEFT JOIN AM_API ON AM_API.API_ID = AM_SUBSCRIPTION.API_ID "
-				+ "WHERE (:username IS NULL OR AM_SUBSCRIBER.USER_ID = :username)";
+				+ "WHERE  AM_APPLICATION.ORGANIZATION =:tenantDomain ";
 
 		try {
 			// Create parameters for the named query
 			MapSqlParameterSource params = new MapSqlParameterSource();
-			params.addValue("username", username);
+			params.addValue("tenantDomain", Utils.getTenantFromUsername());
 
 			// Execute the query and retrieve the result
 			return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
@@ -882,14 +899,15 @@ public class DashboardServiceImpl implements DashboardService{
 				+ "FROM DATA_USAGE_API "
 				+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on s.subscription_id = DATA_USAGE_API.subscription_id "
 				+ "WHERE DATA_USAGE_API.PROXY_RESPONSE_CODE BETWEEN 200 AND 299  "
-				+ "AND (:username IS NULL OR DATA_USAGE_API.APPLICATION_OWNER = :username) "
-				+ "AND (:username IS NULL OR s.is_active = true) "
+				+ " AND (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
+				+ " AND (:isAdmin = true  OR s.is_active = true) "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') AND s.is_active = 1";
 
 		try {
 			// Create parameters for the named query
 			MapSqlParameterSource params = new MapSqlParameterSource();
-			params.addValue("username", username);
+			params.addValue("tenantDomain", Utils.getTenantFromUsername());
+			params.addValue("isAdmin", Utils.isAdmin());
 
 			// Execute the query and retrieve the result
 			return namedParameterJdbcTemplate.queryForObject(query, params, Integer.class);
@@ -900,13 +918,12 @@ public class DashboardServiceImpl implements DashboardService{
 	}
 
 	public int getTotalUnpaidInvoicesByUsername(String username) {
-		String query = "SELECT COUNT(i.id) as total FROM invoice i WHERE i.status = 1 AND (? IS NULL OR i.customer_id = ?)";
+		String query = "SELECT COUNT(i.id) as total FROM invoice i WHERE i.status = 1 AND i.tenant_domain = ? ";
 
 		try (Connection connection = dbUtilsBilling.getConnection();
 				PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
-			preparedStatement.setString(1, username);
-			preparedStatement.setString(2, username);
+			preparedStatement.setString(1, Utils.getTenantFromUsername());
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				

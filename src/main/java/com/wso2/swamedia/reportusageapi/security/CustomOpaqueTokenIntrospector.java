@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.slf4j.Logger;
@@ -57,7 +58,7 @@ public class CustomOpaqueTokenIntrospector implements OpaqueTokenIntrospector {
 	RestTemplate restTemplate = restTemplateBuilder.requestFactory(() -> {
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 		try {
-			requestFactory.setHttpClient(HttpClientBuilder.create()
+			requestFactory.setHttpClient(HttpClientBuilder.create().setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
 					.setSSLContext(SSLContextBuilder.create().loadTrustMaterial((chain, authType) -> true).build())
 					.build());
 		} catch (KeyManagementException e) {
@@ -147,9 +148,7 @@ public class CustomOpaqueTokenIntrospector implements OpaqueTokenIntrospector {
 	}
 
 	private String encodeUsernameAsPathParameter(String username) {
-		int atIndex = username.indexOf('@');
-		String usernamePart = (atIndex != -1) ? username.substring(0, atIndex) : username;
-		byte[] encodedBytes = Base64.getEncoder().encode(usernamePart.getBytes(StandardCharsets.UTF_8));
+		byte[] encodedBytes = Base64.getEncoder().encode(username.getBytes(StandardCharsets.UTF_8));
 		return new String(encodedBytes, StandardCharsets.UTF_8);
 	}
 
