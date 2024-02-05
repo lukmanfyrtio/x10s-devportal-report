@@ -1,4 +1,4 @@
-package com.wso2.swamedia.reportusageapi;
+package com.wso2.swamedia.reportusageapi.utils;
 
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;

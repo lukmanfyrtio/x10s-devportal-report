@@ -31,8 +31,6 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import com.wso2.swamedia.reportusageapi.DBUtilsBilling;
-import com.wso2.swamedia.reportusageapi.DBUtilsUser;
 import com.wso2.swamedia.reportusageapi.dto.ChartDTO;
 import com.wso2.swamedia.reportusageapi.dto.DashboardPercentageDTO;
 import com.wso2.swamedia.reportusageapi.dto.TotalReportDashboard;
@@ -40,6 +38,8 @@ import com.wso2.swamedia.reportusageapi.mapper.DashboardApiPercentageMapper;
 import com.wso2.swamedia.reportusageapi.mapper.DashboardAppPercentageMapper;
 import com.wso2.swamedia.reportusageapi.mapper.DashboardResCodePercentageMapper;
 import com.wso2.swamedia.reportusageapi.service.DashboardService;
+import com.wso2.swamedia.reportusageapi.utils.DBUtilsBilling;
+import com.wso2.swamedia.reportusageapi.utils.DBUtilsUser;
 @Service
 @Profile("mysql")
 public class DashboardServiceImpl implements DashboardService{

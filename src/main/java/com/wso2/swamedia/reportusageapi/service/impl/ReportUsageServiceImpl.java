@@ -37,7 +37,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wso2.swamedia.reportusageapi.DBUtilsUser;
 import com.wso2.swamedia.reportusageapi.dto.DashboardPercentageDTO;
 import com.wso2.swamedia.reportusageapi.dto.DataUsageApiResponse;
 import com.wso2.swamedia.reportusageapi.dto.ErrorSummary;
@@ -51,9 +50,11 @@ import com.wso2.swamedia.reportusageapi.dto.TableRemainingDayQuota;
 import com.wso2.swamedia.reportusageapi.mapper.DashboardApiPercentageMapper;
 import com.wso2.swamedia.reportusageapi.mapper.DashboardAppPercentageMapper;
 import com.wso2.swamedia.reportusageapi.mapper.DashboardResCodePercentageMapper;
-import com.wso2.swamedia.reportusageapi.repo.mysql.AmApiRepository;
-import com.wso2.swamedia.reportusageapi.repo.mysql.DataUsageApiRepository;
+import com.wso2.swamedia.reportusageapi.repo.AmApiRepository;
+import com.wso2.swamedia.reportusageapi.repo.DataUsageApiRepository;
+import com.wso2.swamedia.reportusageapi.service.QueryReport;
 import com.wso2.swamedia.reportusageapi.service.ReportUsageService;
+import com.wso2.swamedia.reportusageapi.utils.DBUtilsUser;
 @Service
 @Profile("mysql")
 public class ReportUsageServiceImpl implements ReportUsageService{

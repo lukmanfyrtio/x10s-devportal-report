@@ -1,4 +1,4 @@
-package com.wso2.swamedia.reportusageapi;
+package com.wso2.swamedia.reportusageapi.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

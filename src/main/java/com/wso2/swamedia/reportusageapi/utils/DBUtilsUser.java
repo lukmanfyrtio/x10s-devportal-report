@@ -1,4 +1,4 @@
-package com.wso2.swamedia.reportusageapi;
+package com.wso2.swamedia.reportusageapi.utils;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

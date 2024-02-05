@@ -1,4 +1,4 @@
-package com.wso2.swamedia.reportusageapi.repo.mysql;
+package com.wso2.swamedia.reportusageapi.repo;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
