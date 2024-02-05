@@ -1,8 +1,8 @@
-package com.wso2.swamedia.reportusageapi.service.mysql;
+package com.wso2.swamedia.reportusageapi.service.impl;
 
 import java.time.LocalDate;
 
-public class SqlQueryReport {
+public class QueryReport {
 
 	public static String getSubscriptionsRemaining(String dbUserSchema, String dbBillingSchema) {
 		String query = "SELECT " + "attr.UM_ATTR_VALUE as organizationName, uu.UM_USER_NAME, " + "subs.subs_state_id , "

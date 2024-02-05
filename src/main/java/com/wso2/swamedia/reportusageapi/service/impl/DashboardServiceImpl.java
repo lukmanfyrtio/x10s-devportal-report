@@ -1,4 +1,4 @@
-package com.wso2.swamedia.reportusageapi.service.mysql;
+package com.wso2.swamedia.reportusageapi.service.impl;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -42,7 +42,7 @@ import com.wso2.swamedia.reportusageapi.mapper.DashboardResCodePercentageMapper;
 import com.wso2.swamedia.reportusageapi.service.DashboardService;
 @Service
 @Profile("mysql")
-public class MYSQLDashboardServiceImpl implements DashboardService{
+public class DashboardServiceImpl implements DashboardService{
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DashboardService.class);
 
