@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +24,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.DefaultOAuth2AuthenticatedPrincipal;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -53,7 +56,9 @@ public class Utils {
 	RestTemplate restTemplate = restTemplateBuilder.requestFactory(() -> {
 	    HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory();
 	    try {
-			requestFactory.setHttpClient(HttpClientBuilder.create().setSSLContext(SSLContextBuilder.create().loadTrustMaterial((chain, authType) -> true).build()).build());
+			requestFactory.setHttpClient(HttpClientBuilder.create().setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+					.setSSLContext(SSLContextBuilder.create().loadTrustMaterial((chain, authType) -> true).build())
+					.build());
 		} catch (KeyManagementException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -89,6 +94,17 @@ public class Utils {
 			return false;
 		}
 	}
+	
+	public String getTokenFromSecurityContext() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication != null && authentication.getCredentials() != null) {
+			OAuth2AccessToken accessToken = (OAuth2AccessToken) authentication.getCredentials();
+			return accessToken.getTokenValue();
+		}
+
+		return null; // Handle the case where no token is found
+	}
 
 	public SubscriptionPolicies getSubscriptionThrottlingPolicies(String apiId) {
 		String url = baseWso2Url+"/api/am/devportal/v2/apis/" + apiId + "/subscription-policies";
@@ -115,9 +131,9 @@ public class Utils {
 	}
 
 	public List<SubPoliciesResponse> getSubscriptionThrottlingPoliciesPublisher(String apiId) {
-		String url = baseWso2Url+"/api/am/publisher/v3/apis/" + apiId + "/subscription-policies";
+		String url = baseWso2Url+"/api/am/devportal/v2/apis/" + apiId + "/subscription-policies";
 		HttpHeaders headers = new HttpHeaders();
-		headers.setBasicAuth(clientId, clientSecret, StandardCharsets.UTF_8);
+		headers.setBearerAuth(getTokenFromSecurityContext());
 		headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
 
 		
@@ -176,9 +192,15 @@ public class Utils {
 		List<SubPoliciesResponse> tierAttributesList = new ArrayList<>();
 
 		for (SubPoliciesResponse dto : dtoList) {
-			if (dto.getTierPlan().equals("FREE")) {
-				tierAttributesList.add(dto);
-			}
+//			if (dto.getTierPlan().equals("FREE")) {
+//				tierAttributesList.add(dto);
+//			}
+				Map<String, String> tierAttributes = dto.getTierAttributes();
+				if (tierAttributes != null && tierAttributes.containsKey("type_subscription")
+						&& tierAttributes.get("type_subscription").equals("time")
+						&& dto.getTierPlan().equals("COMMERCIAL")) {
+					tierAttributesList.add(dto);
+				}
 		}
 
 		return tierAttributesList;
@@ -261,6 +283,11 @@ public class Utils {
 				return parts[0].trim();
 			}
 		}
+		return input;
+	}
+	
+	public static String getUsernameWithTenantDomain() {
+		String input = SecurityContextHolder.getContext().getAuthentication().getName();
 		return input;
 	}
 	

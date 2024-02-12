@@ -19,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.DefaultOAuth2AuthenticatedPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,7 +27,7 @@ import com.wso2.swamedia.reportusageapi.service.ReportUsageService;
 import com.wso2.swamedia.reportusageapi.utils.Utils;
 
 @RestController
-@RequestMapping("/report")
+//@RequestMapping("/report")
 public class ReportUsageController {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ReportUsageController.class);
@@ -43,19 +42,13 @@ public class ReportUsageController {
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size, @RequestParam(required = false) String apiId,
 			@RequestParam(required = false, defaultValue = "false") Boolean showDeletedSubscription,
-			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
-			Authentication authentication) {
-
-		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
-				.getPrincipal();
-		String username = Utils.isAdmin(principal.getAttributes()) ? null
-				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
+			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType) {
 
 		LOGGER.info("Received request for monthly summary");
 		try {
 
 			ApiResponse<?> response = ApiResponse.success("Monthly summary retrieval successful.",
-					reportUsageService.getMonthlyReport(year, month, applicationId, apiId, username, page, size, search,
+					reportUsageService.getMonthlyReport(year, month, applicationId, apiId, page, size, search,
 							organization, showDeletedSubscription,keyType));
 			LOGGER.info("Monthly summary retrieval completed");
 
@@ -354,11 +347,11 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/customers")
-	public ResponseEntity<?> getListCustomers(@RequestParam(value = "username", required = false) String username) {
+	public ResponseEntity<?> getListCustomers() {
 		LOGGER.info("Received request to get the list of customers");
 		try {
 			ApiResponse<?> response = ApiResponse.success("List of customers retrieved successfully",
-					reportUsageService.getCustomers(username));
+					reportUsageService.getCustomers());
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			ApiResponse<?> responseError = ApiResponse.error("Failed to retrieve customers: " + e.getMessage());

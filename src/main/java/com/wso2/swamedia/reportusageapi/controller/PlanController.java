@@ -41,7 +41,7 @@ public class PlanController {
 			ApiResponse<?> response = ApiResponse.success("Get plan by payment type retrieval successful.",
 					subsTypeId.equals(PRE_PAID_SUBS_TYPE) ? Utils.getTierAttributesOfTypeTimeAndQuota(resData)
 							: subsTypeId.equals(POST_PAID_SUBS_TYPE) ? Utils.getTierAttributesOfTypeTime(resData)
-									: Utils.getTierAttributesOfTypeTimeAndFree(resData));
+									: Utils.getTierAttributesOfTypeTimeAndQuota(resData));
 			LOGGER.info("Get plan by payment type retrieval completed");
 
 			return ResponseEntity.ok(response);

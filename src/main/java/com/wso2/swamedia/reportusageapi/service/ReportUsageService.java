@@ -21,9 +21,8 @@ import com.wso2.swamedia.reportusageapi.dto.TableRemainingDayQuota;
 
 public interface ReportUsageService {
 
-	public MonthlySummary getMonthlyReport(Integer year, Integer month, String applicationId, String apiId,
-			String username, int page, int size, String search, String organization, Boolean showDeleted,
-			String keyType) throws Exception;
+	public MonthlySummary getMonthlyReport(Integer year, Integer month, String applicationId, String apiId, int page,
+			int size, String search, String organization, Boolean showDeleted, String keyType) throws Exception;
 
 	public Page<MonthlySummaryDetails> getMonthlyDetailLogReport(String owner, String applicationId, String apiId,
 			String searchFilter, Pageable pageable, Integer year, Integer month, Boolean showDeletedSubscription,
@@ -55,7 +54,7 @@ public interface ReportUsageService {
 
 	public List<Map<String, Object>> getYears(String owner);
 
-	public List<Map<String, Object>> getCustomers(String owner);
+	public List<Map<String, Object>> getCustomers();
 
 	public int getTotalCustomers(String username);
 
@@ -83,12 +82,12 @@ public interface ReportUsageService {
 
 	public LinkedHashMap<String, Object> convertErrorSummaryToMap(ErrorSummary errorSummary);
 
-	public Page<MonthlySummary.ApiDetails> getMonthlyTotalRowByGroupByWithSearchAndPageable(String owner, Integer year,
-			Integer month, String apiId, Boolean showDeleted, String applicationId, String search, String organization,
+	public Page<MonthlySummary.ApiDetails> getMonthlyTotalRowByGroupByWithSearchAndPageable(Integer year, Integer month,
+			String apiId, Boolean showDeleted, String applicationId, String search, String organization,
 			Pageable pageable, String keyType);
 
-	public Map<String, Object> getTotalApisAndRequestsByOwnerAndFilters(String owner, Integer year, Integer month,
-			String apiId, String applicationId, String organization, Boolean showDeleted, String keyType);
+	public Map<String, Object> getTotalApisAndRequestsByOwnerAndFilters(Integer year, Integer month, String apiId,
+			String applicationId, String organization, Boolean showDeleted, String keyType);
 
 	public Map<String, Object> totalMonthlyDetailLog(String owner, String applicationId, String apiId,
 			String searchFilter, Integer year, Integer month, Boolean showDeleted, String keyType);

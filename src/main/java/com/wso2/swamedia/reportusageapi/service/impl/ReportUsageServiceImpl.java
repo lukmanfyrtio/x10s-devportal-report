@@ -84,14 +84,14 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
 	public MonthlySummary getMonthlyReport(Integer year, Integer month, String applicationId, String apiId,
-			String username, int page, int size, String search, String organization, Boolean showDeleted,String keyType)
+			 int page, int size, String search, String organization, Boolean showDeleted,String keyType)
 			throws Exception {
-		LOGGER.info("Retrieving monthly report for year: {}, month: {}, username: {}", year, month, username);
+		LOGGER.info("Retrieving monthly report for year: {}, month: {}", year, month);
 
 		MonthlySummary monthlySummary = new MonthlySummary();
 
 		try {
-			Map<String, Object> dataTotal = getTotalApisAndRequestsByOwnerAndFilters(username, year, month, apiId,
+			Map<String, Object> dataTotal = getTotalApisAndRequestsByOwnerAndFilters( year, month, apiId,
 					applicationId, organization, showDeleted,keyType);
 			monthlySummary.setTotalApis(Integer.parseInt(dataTotal.get("total_apis").toString()));
 			monthlySummary.setRequestCount(Integer.parseInt(dataTotal.get("total_request").toString()));
@@ -103,7 +103,7 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 
 		try {
 			Pageable pageable = PageRequest.of(page, size);
-			Page<MonthlySummary.ApiDetails> result = getMonthlyTotalRowByGroupByWithSearchAndPageable(username, year,
+			Page<MonthlySummary.ApiDetails> result = getMonthlyTotalRowByGroupByWithSearchAndPageable( year,
 					month, apiId, showDeleted, applicationId, search, organization, pageable,keyType);
 
 			monthlySummary.setDetails(result);
@@ -327,15 +327,15 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 		});
 	}
 
-	public List<Map<String, Object>> getCustomers(String owner) {
+	public List<Map<String, Object>> getCustomers() {
 		String sqlQuery = QueryReport.getCustomers(dbUtilsUser.getSchemaName(), getBillingSchema());
 
 		MapSqlParameterSource parameters = new MapSqlParameterSource();
-//		parameters.addValue("owner", owner);
+		parameters.addValue("tenantDomain", Utils.getTenantFromUsername());
 
 		return namedParameterJdbcTemplate.query(sqlQuery, parameters, (rs, rowNum) -> {
 			Map<String, Object> customers = new HashMap<>();
-			customers.put("username", rs.getString("UM_USER_NAME"));
+			customers.put("username", rs.getString("USER_ID"));
 			customers.put("userId", rs.getString("UM_USER_ID"));
 			customers.put("tenantId", rs.getString("UM_TENANT_ID"));
 			customers.put("organizationName", rs.getString("organizationName"));
@@ -599,7 +599,7 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 		return map;
 	}
 
-	public Page<MonthlySummary.ApiDetails> getMonthlyTotalRowByGroupByWithSearchAndPageable(String owner, Integer year,
+	public Page<MonthlySummary.ApiDetails> getMonthlyTotalRowByGroupByWithSearchAndPageable( Integer year,
 			Integer month, String apiId, Boolean showDeleted, String applicationId, String search, String organization,
 			Pageable pageable,String keyType) {
 
@@ -609,6 +609,7 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 		// Create the parameters to be used in the query
 		MapSqlParameterSource params = new MapSqlParameterSource();
 		params.addValue("isAdmin", Utils.isAdmin());
+		params.addValue("username", Utils.getUsernameWithTenantDomain());
 		params.addValue("tenantDomain", Utils.getTenantFromUsername());
 		params.addValue("year", year);
 		params.addValue("month", month);
@@ -649,12 +650,13 @@ public class ReportUsageServiceImpl implements ReportUsageService{
 		}
 	}
 
-	public Map<String, Object> getTotalApisAndRequestsByOwnerAndFilters(String owner, Integer year, Integer month,
+	public Map<String, Object> getTotalApisAndRequestsByOwnerAndFilters(Integer year, Integer month,
 			String apiId, String applicationId, String organization, Boolean showDeleted,String keyType) {
 		String sqlQuery = QueryReport.getTotalApisAndRequestsByOwnerAndFilters(dbUtilsUser.getSchemaName(),
 				getBillingSchema());
 
 		Map<String, Object> params = new HashMap<>();
+		params.put("username", Utils.getUsernameWithTenantDomain());
 		params.put("isAdmin", Utils.isAdmin());
 		params.put("tenantDomain", Utils.getTenantFromUsername());
 		params.put("year", year);

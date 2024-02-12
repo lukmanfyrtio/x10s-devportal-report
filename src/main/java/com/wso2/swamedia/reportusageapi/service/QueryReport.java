@@ -65,7 +65,8 @@ public class QueryReport {
 				+ dbUserSchema
 				+ ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID AND attr.UM_ATTR_NAME = 'organizationName' "
 				+"WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-				+" AND (:isAdmin = true OR s.is_active = true) "
+				+ " AND (:isAdmin = true OR s.is_active = true) "
+				+ "AND (:isAdmin = true OR s.APPLICATION_OWNER = :username) "
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
 				+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
@@ -94,6 +95,7 @@ public class QueryReport {
 				.append("AND attr.UM_ATTR_NAME = 'organizationName' ")
 				.append("WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) ")
 				.append("AND (:isAdmin = true OR s.is_active = true) ")
+				.append("AND (:isAdmin = true OR s.APPLICATION_OWNER = :username) ")
 				.append("AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) ")
 				.append("AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) ")
 				.append("AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) ")
@@ -310,16 +312,45 @@ public class QueryReport {
 	}
 	
 	public static String getCustomers(String dbUserSchema, String dbBillingSchema) {
-		String sqlQuery = "SELECT uu.*, attr.UM_ATTR_VALUE AS organizationName " + "FROM AM_SUBSCRIBER as2 " + "JOIN "
-				+ dbUserSchema + ".UM_USER uu ON as2.USER_ID = uu.UM_USER_NAME " + "LEFT JOIN "
-				+ dbUserSchema + ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID "
-				+ "AND attr.UM_ATTR_NAME = 'organizationName'";
+		String sqlQuery = "SELECT "
+				+ "	uu.*, "
+				+ "	attr.UM_ATTR_VALUE AS organizationName,as2.USER_ID "
+				+ "FROM "
+				+ "	AM_SUBSCRIBER as2 "
+				+ "JOIN "+dbUserSchema+".UM_USER uu ON "
+				+ "	uu.UM_USER_NAME =  "
+				+ "    (CASE "
+				+ "		WHEN uu.UM_TENANT_ID != -1234 THEN SUBSTRING_INDEX(as2.USER_ID , '@', 1) "
+				+ "		ELSE as2.USER_ID "
+				+ "	END) "
+				+ "LEFT JOIN "+dbUserSchema+".UM_USER_ATTRIBUTE attr ON "
+				+ "	uu.UM_ID = attr.UM_USER_ID "
+				+ "	AND attr.UM_ATTR_NAME = 'organizationName' "
+				+ "WHERE "
+				+ "	as2.TENANT_ID =(SELECT COALESCE((SELECT x.UM_ID   "
+				+ "			          FROM "+dbUserSchema+".UM_TENANT x   "
+				+ "				          WHERE x.UM_DOMAIN_NAME = :tenantDomain),-1234) as UM_ID)";
 		return sqlQuery;
 	}
 	
 	public static String getTotalCustomers(String dbUserSchema, String dbBillingSchema) {
-		String sqlQuery = "select COUNT(DISTINCT UM_ATTR_VALUE)" + "from " + dbUserSchema
-		+ ".UM_USER_ATTRIBUTE " + "where UM_ATTR_NAME='organizationName'";
+		
+		String sqlQuery = "SELECT COUNT(*) "
+				+ "FROM "
+				+ "	AM_SUBSCRIBER as2 "
+				+ "JOIN "+dbUserSchema+".UM_USER uu ON "
+				+ "	uu.UM_USER_NAME =  "
+				+ "    (CASE "
+				+ "		WHEN uu.UM_TENANT_ID != -1234 THEN SUBSTRING_INDEX(as2.USER_ID , '@', 1) "
+				+ "		ELSE as2.USER_ID "
+				+ "	END) "
+				+ "LEFT JOIN "+dbUserSchema+".UM_USER_ATTRIBUTE attr ON "
+				+ "	uu.UM_ID = attr.UM_USER_ID "
+				+ "	AND attr.UM_ATTR_NAME = 'organizationName' "
+				+ "WHERE "
+				+ "	as2.TENANT_ID =(SELECT COALESCE((SELECT x.UM_ID   "
+				+ "			          FROM "+dbUserSchema+".UM_TENANT x   "
+				+ "				          WHERE x.UM_DOMAIN_NAME = :tenantDomain),-1234) as UM_ID)";
 		return sqlQuery;
 	}
 	
