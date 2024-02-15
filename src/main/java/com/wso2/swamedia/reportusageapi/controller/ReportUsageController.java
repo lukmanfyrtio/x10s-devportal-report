@@ -36,28 +36,23 @@ public class ReportUsageController {
 	private ReportUsageService reportUsageService;
 
 	@GetMapping("/monthly-summary")
-	public ResponseEntity<?> getMonthlySummary(@RequestParam(required = false) Integer year,
-			@RequestParam(required = false) Integer month, @RequestParam(required = false) String applicationId,
-			@RequestParam(required = false) String organization, @RequestParam(required = false) String search,
+	public ResponseEntity<?> getMonthlySummary(
+			@RequestParam(required = false) String applicationId,
+			@RequestParam(required = false) String search, @RequestParam(required = false) String apiId,
+			@RequestParam(required = false) String organization, 
+			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
+			@RequestParam(required = false) Integer year,
+			@RequestParam(required = false) Integer month, 
 			@RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size, @RequestParam(required = false) String apiId,
-			@RequestParam(required = false, defaultValue = "false") Boolean showDeletedSubscription,
-			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType) {
-
-		LOGGER.info("Received request for monthly summary");
+			@RequestParam(value = "size", defaultValue = "10") int size) {
 		try {
-
-			ApiResponse<?> response = ApiResponse.success("Monthly summary retrieval successful.",
-					reportUsageService.getMonthlyReport(year, month, applicationId, apiId, page, size, search,
-							organization, showDeletedSubscription,keyType));
-			LOGGER.info("Monthly summary retrieval completed");
-
+			ApiResponse<?> response = ApiResponse.success("Data retrieval successful.", reportUsageService
+					.getMonthlyReport(year, month, applicationId, apiId, page, size, search, organization, keyType));
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			ApiResponse<?> responseError = ApiResponse.error(e.getMessage());
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseError);
 		}
-
 	}
 
 	@GetMapping("/monthly-summary/details")
@@ -101,27 +96,20 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/resource-summary")
-	public ResponseEntity<?> getResourceSummary(@RequestParam(required = false) Integer year,
-			@RequestParam(required = false) Integer month, @RequestParam(required = false) String resource,
-			@RequestParam(required = false) String apiId, @RequestParam(required = false) String search,
+	public ResponseEntity<?> getResourceSummary(
+			@RequestParam(required = false) String search, 
+			@RequestParam(required = false) String apiId, 
+			@RequestParam(required = false) String resource,
+			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
+			@RequestParam(required = false) Integer year,
+			@RequestParam(required = false) Integer month,
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size,
-			@RequestParam(required = false, defaultValue = "false") Boolean showDeletedSubscription,
-			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
 			Authentication authentication) {
 		
-		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
-				.getPrincipal();
-		String username = Utils.isAdmin(principal.getAttributes()) ? null
-				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
-		
-		LOGGER.info("Received request for resource summary");
 		try {
 			ApiResponse<?> response = ApiResponse.success("Resource summary retrieval successful.",
-					reportUsageService.getResourceReport(year, month, resource, apiId, username, page, size, search,
-							showDeletedSubscription,keyType));
-
-			LOGGER.info("Resource summary retrieval completed");
+					reportUsageService.getResourceReport(year, month, resource, apiId, page, size, search, keyType));
 
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
@@ -162,19 +150,16 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/backend-api")
-	public ResponseEntity<?> getBackendAPIUsage(@RequestParam(required = false) Integer year,
-			@RequestParam(required = false) Integer month, @RequestParam(required = false) String apiId,
-			@RequestParam(required = false) String search, @RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size, 
+	public ResponseEntity<?> getBackendAPIUsage(
+			@RequestParam(required = false) String apiId,
+			@RequestParam(required = false) String search, 
 			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
-			Authentication authentication) {
-
-		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
-				.getPrincipal();
-		String username = Utils.isAdmin(principal.getAttributes()) ? null
-				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
+			@RequestParam(required = false) Integer year,
+			@RequestParam(required = false) Integer month, 
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "size", defaultValue = "10") int size) {
 		
-		if (!Utils.isAdmin(principal.getAttributes())) {
+		if (!Utils.isAdmin()) {
 			ApiResponse<Resource> response = ApiResponse.error("You do not have permission to access this API.");
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
 		}
@@ -183,7 +168,7 @@ public class ReportUsageController {
 		try {
 			Pageable pageable = PageRequest.of(page, size);
 			ApiResponse<?> response = ApiResponse.success("Backend api usage summary retrieval successful.",
-					reportUsageService.getBackendAPIUsage(username, year, month, apiId, search, pageable, keyType));
+					reportUsageService.getBackendAPIUsage(year, month, apiId, search, pageable, keyType));
 
 			LOGGER.info("Backend api usage summary retrieval completed");
 
@@ -195,17 +180,16 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/error-summary")
-	public ResponseEntity<?> getErrorSummary(@RequestParam(required = false) String apiId,
-			@RequestParam(required = false) String version, @RequestParam(required = false) String search,
+	public ResponseEntity<?> getErrorSummary(
+			@RequestParam(required = false) String search,
+			@RequestParam(required = false) String apiId,
+			@RequestParam(required = false) String version, 
 			@RequestParam(required = false, defaultValue = "false") boolean asPercent,
-			@RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size, 
 			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
-			Authentication authentication) {
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "size", defaultValue = "10") int size) {
 
-		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
-				.getPrincipal();
-		if (!Utils.isAdmin(principal.getAttributes())) {
+		if (!Utils.isAdmin()) {
 			ApiResponse<Resource> response = ApiResponse.error("You do not have permission to access this API.");
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
 		}
@@ -265,7 +249,7 @@ public class ReportUsageController {
 		
 		
 		try {
-			List<Map<String, Object>> apiNames = reportUsageService.getApis(username, organization);
+			List<Map<String, Object>> apiNames = reportUsageService.getApis(organization);
 			ApiResponse<List<Map<String, Object>>> response = ApiResponse.success("API names retrieved successfully",
 					apiNames);
 			return ResponseEntity.ok(response);
@@ -279,14 +263,9 @@ public class ReportUsageController {
 	public ResponseEntity<?> getListAPIResource(@RequestParam(value = "apiId") String apiId,
 			Authentication authentication) {
 		
-		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
-				.getPrincipal();
-		String username = Utils.isAdmin(principal.getAttributes()) ? null
-				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
-		
 		LOGGER.info("Received request to get the list of resources for API with ID: {}", apiId);
 		try {
-			List<Map<String, Object>> apiResources = reportUsageService.getApiResourceByAPI(username, apiId);
+			List<Map<String, Object>> apiResources = reportUsageService.getApiResourceByAPI( apiId);
 			ApiResponse<List<Map<String, Object>>> response = ApiResponse
 					.success("API resources retrieved successfully", apiResources);
 			return ResponseEntity.ok(response);
@@ -311,15 +290,10 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/years")
-	public ResponseEntity<?> getListYear(Authentication authentication) {
-		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
-				.getPrincipal();
-		String username = Utils.isAdmin(principal.getAttributes()) ? null
-				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
-		LOGGER.info("Received request to get the list of years");
+	public ResponseEntity<?> getListYear() {
 		try {
 			ApiResponse<?> response = ApiResponse.success("Years retrieved successfully",
-					reportUsageService.getYears(username));
+					reportUsageService.getYears());
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			ApiResponse<?> responseError = ApiResponse.error("Failed to retrieve years: " + e.getMessage());
@@ -330,15 +304,11 @@ public class ReportUsageController {
 	@GetMapping("/months")
 	public ResponseEntity<?> getListMonth(@RequestParam(value = "year") int year,Authentication authentication) {
 		
-		DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
-				.getPrincipal();
-		String username = Utils.isAdmin(principal.getAttributes()) ? null
-				: principal.getAttributes().get("http://wso2.org/claims/username").toString();
 		
 		LOGGER.info("Received request to get the list of months for year: {}", year);
 		try {
 			ApiResponse<?> response = ApiResponse.success("Months retrieved successfully",
-					reportUsageService.getMonth(username, year));
+					reportUsageService.getMonth(year));
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			ApiResponse<?> responseError = ApiResponse.error("Failed to retrieve months: " + e.getMessage());
@@ -385,19 +355,15 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/subscriptions/remaining")
-	public ResponseEntity<?> getRemainingSubscriptions(Authentication authentication,
+	public ResponseEntity<?> getRemainingSubscriptions(
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size) {
 
 		LOGGER.info("Received request for remaining subscriptions.");
 		try {
-			DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
-					.getPrincipal();
-			String username = Utils.isAdmin(principal.getAttributes()) ? null
-					: principal.getAttributes().get("http://wso2.org/claims/username").toString();
 			Pageable pageable = PageRequest.of(page, size);
 			ApiResponse<?> response = ApiResponse.success("Successful retrieval of remaining subscriptions.",
-					reportUsageService.getSubscriptionsRemaining(username, pageable));
+					reportUsageService.getSubscriptionsRemaining(pageable));
 			LOGGER.info("Completed retrieval of remaining subscriptions.");
 
 			return ResponseEntity.ok(response);

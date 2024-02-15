@@ -22,14 +22,14 @@ import com.wso2.swamedia.reportusageapi.dto.TableRemainingDayQuota;
 public interface ReportUsageService {
 
 	public MonthlySummary getMonthlyReport(Integer year, Integer month, String applicationId, String apiId, int page,
-			int size, String search, String organization, Boolean showDeleted, String keyType) throws Exception;
+			int size, String search, String organization, String keyType) throws Exception;
 
 	public Page<MonthlySummaryDetails> getMonthlyDetailLogReport(String owner, String applicationId, String apiId,
 			String searchFilter, Pageable pageable, Integer year, Integer month, Boolean showDeletedSubscription,
 			String keyType);
 
-	public ResourceSummary getResourceReport(Integer year, Integer month, String resource, String apiId,
-			String username, int page, int size, String search, Boolean showDeletedSubscription, String keyType);
+	public ResourceSummary getResourceReport(Integer year, Integer month, String resource, String apiId, int page,
+			int size, String search, String keyType);
 
 	public Page<ResourceSummaryDetails> getDetailLogResourceSum(String owner, String resource, String apiId,
 			String searchFilter, Pageable pageable, Boolean showDeletedSubscription, String keyType) throws Exception;
@@ -50,9 +50,9 @@ public interface ReportUsageService {
 
 	public List<Map<String, Object>> getApiNameAndId(String owner, String organization);
 
-	public List<Map<String, Object>> getApis(String owner, String organization);
+	public List<Map<String, Object>> getApis(String organization);
 
-	public List<Map<String, Object>> getYears(String owner);
+	public List<Map<String, Object>> getYears();
 
 	public List<Map<String, Object>> getCustomers();
 
@@ -60,20 +60,20 @@ public interface ReportUsageService {
 
 	public List<Map<String, Object>> getCustomersv2(String owner);
 
-	public List<Map<String, Object>> getMonth(String owner, int year);
+	public List<Map<String, Object>> getMonth(int year);
 
-	public List<Map<String, Object>> getApiResourceByAPI(String owner, String apiId);
+	public List<Map<String, Object>> getApiResourceByAPI(String apiId);
 
 	public List<Map<String, Object>> getVersions(String apiName);
 
 	public List<OrganizationDTO> getOrganizations() throws Exception;
 
-	public Page<TableRemainingDayQuota> getSubscriptionsRemaining(String owner, Pageable pageable);
+	public Page<TableRemainingDayQuota> getSubscriptionsRemaining(Pageable pageable);
 
 	public OrganizationDTO findOrganizationByUsername(List<OrganizationDTO> organizationDTOs, String username);
 
-	public Page<DataUsageApiResponse> getBackendAPIUsage(String owner, Integer year, Integer month, String apiId,
-			String searchFilter, Pageable pageable, String keyType);
+	public Page<DataUsageApiResponse> getBackendAPIUsage(Integer year, Integer month, String apiId, String searchFilter,
+			Pageable pageable, String keyType);
 
 	public Page<RequestCountDTO> getBackendAPIUsageDetails(String apiId, Pageable pageable, String keyType);
 
@@ -83,11 +83,10 @@ public interface ReportUsageService {
 	public LinkedHashMap<String, Object> convertErrorSummaryToMap(ErrorSummary errorSummary);
 
 	public Page<MonthlySummary.ApiDetails> getMonthlyTotalRowByGroupByWithSearchAndPageable(Integer year, Integer month,
-			String apiId, Boolean showDeleted, String applicationId, String search, String organization,
-			Pageable pageable, String keyType);
+			String apiId, String applicationId, String search, String organization, Pageable pageable, String keyType);
 
 	public Map<String, Object> getTotalApisAndRequestsByOwnerAndFilters(Integer year, Integer month, String apiId,
-			String applicationId, String organization, Boolean showDeleted, String keyType);
+			String applicationId, String organization, String keyType);
 
 	public Map<String, Object> totalMonthlyDetailLog(String owner, String applicationId, String apiId,
 			String searchFilter, Integer year, Integer month, Boolean showDeleted, String keyType);
@@ -95,11 +94,11 @@ public interface ReportUsageService {
 	public Page<MonthlySummaryDetails> fetchMonthlyDetailLogData(Pageable pageable, String owner, String applicationId,
 			String apiId, String searchFilter, Integer year, Integer month, Boolean showDeleted, String keyType);
 
-	public Map<String, Object> getResourceSumTotalData(String owner, Integer year, Integer month, String apiId,
-			String resource, Boolean showDeleted, String keyType);
+	public Map<String, Object> getResourceSumTotalData(Integer year, Integer month, String apiId, String resource,
+			String keyType);
 
-	public Page<ResourceSummary.ApiDetails> getResourceSumListData(String owner, Integer year, Integer month,
-			String apiId, String resource, String search, Pageable pageable, Boolean showDeleted, String keyType);
+	public Page<ResourceSummary.ApiDetails> getResourceSumListData(Integer year, Integer month, String apiId,
+			String resource, String search, Pageable pageable, String keyType);
 
 	public Page<ResourceSummaryDetails> getDetailLogResourceSum(Pageable pageable, String owner, String resource,
 			String apiId, String searchFilter, Boolean showDeleted, String keyType);

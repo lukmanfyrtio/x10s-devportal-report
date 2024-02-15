@@ -44,12 +44,14 @@ public interface DataUsageApiRepository extends JpaRepository<DataUsageApi, Stri
             "FROM DataUsageApi d " +
             "WHERE (:apiId IS NULL OR d.apiId = :apiId) " +
             "AND (:version IS NULL OR d.apiVersion = :version) " +
+            "AND (:isAdmin = true OR d.applicationOwner = :applicationOwner) "+
 	        "AND d.keyType = :keyType "
 			+ "AND (:search IS NULL "
 			+ "OR LOWER(d.apiResourceTemplate) LIKE LOWER(CONCAT('%', :search, '%'))  "
 			+ "OR LOWER(d.apiMethod) LIKE LOWER(CONCAT('%', :search, '%'))  ) "+
             "GROUP BY d.apiResourceTemplate, d.apiMethod,d.apiId,d.apiName")
 	Page<ErrorSummary> getAPIUsageByFilters(@Param("apiId") String apiId, @Param("version") String version,
-			@Param("search") String search, @Param("keyType") String keyType, Pageable pageable);
+			@Param("search") String search, @Param("keyType") String keyType, @Param("isAdmin") Boolean isAdmin,
+			@Param("applicationOwner") String applicationOwner, Pageable pageable);
 
 }

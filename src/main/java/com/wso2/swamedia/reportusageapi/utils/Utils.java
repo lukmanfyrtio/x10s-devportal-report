@@ -288,6 +288,12 @@ public class Utils {
 	
 	public static String getUsernameWithTenantDomain() {
 		String input = SecurityContextHolder.getContext().getAuthentication().getName();
+		if (input != null) {
+			String[] parts = input.split("@");
+			if(parts[1]=="carbon.super") {
+				return parts[0];
+			}
+		}
 		return input;
 	}
 	
