@@ -46,8 +46,8 @@ public class ReportUsageController {
 	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
 			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
 			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
-	public ResponseEntity<?> getMonthlySummary(@RequestParam(required = false) String applicationId,
-			@RequestParam(required = false) String search, @RequestParam(required = false) String apiId,
+	public ResponseEntity<?> getMonthlySummary(@RequestParam(required = false) String search,
+			@RequestParam(required = false) String applicationId, @RequestParam(required = false) String apiId,
 			@RequestParam(required = false) String organization,
 			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
 			@RequestParam(required = false) Integer year, @RequestParam(required = false) Integer month,
@@ -55,7 +55,7 @@ public class ReportUsageController {
 			@RequestParam(value = "size", defaultValue = "10") int size) {
 		try {
 			ApiResponse<?> response = ApiResponse.success("Data retrieval successful.", reportUsageService
-					.getMonthlyReport(year, month, applicationId, apiId, page, size, search, organization, keyType));
+					.getApiUsageSummary(year, month, applicationId, apiId, page, size, search, organization, keyType));
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			ApiResponse<?> responseError = ApiResponse.error(e.getMessage());
@@ -68,37 +68,34 @@ public class ReportUsageController {
 	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
 			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
 			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
-	public ResponseEntity<?> getApiDataUsage(@RequestParam(required = false) Integer year,
-			@RequestParam(required = false) Integer month, @RequestParam(value = "applicationId") String applicationId,
-			@RequestParam(value = "apiId") String apiId,
+	public ResponseEntity<?> getReportAPIDetailBySubscriptionId(
 			@RequestParam(value = "search", required = false) String search,
-			@RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size,
-			@RequestParam(required = false, defaultValue = "false") Boolean showDeletedSubscription,
+			@RequestParam(value = "subscriptionId") String subscriptionId,
 			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
-			Authentication authentication) {
+			@RequestParam(required = false) Integer year, @RequestParam(required = false) Integer month,
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "size", defaultValue = "10") int size) {
 
-		LOGGER.info("Received request for API Monthly detail log");
+		LOGGER.info("Received request for API getReportAPIDetailBySubscriptionId");
 		try {
 
-			DefaultOAuth2AuthenticatedPrincipal principal = (DefaultOAuth2AuthenticatedPrincipal) authentication
-					.getPrincipal();
-			String username = Utils.isAdmin(principal.getAttributes()) ? null
-					: principal.getAttributes().get("http://wso2.org/claims/username").toString();
+			String username = Utils.isAdmin() ? null : Utils.getUsernameWithTenantDomain();
 
-			Map<String, Object> total = reportUsageService.totalMonthlyDetailLog(username, applicationId, apiId, search,
-					year, month, showDeletedSubscription, keyType);
+			Map<String, Object> total = reportUsageService.getApiUsageStatsBySubscription(username, subscriptionId,
+					search, year, month, keyType);
+
 			Pageable pageable = PageRequest.of(page, size);
+
 			LinkedHashMap<String, Object> result = new LinkedHashMap<>();
 			result.put("requestCount", total.get("request_count"));
 			result.put("requestOK", total.get("count_200"));
 			result.put("requestNOK", total.get("count_not_200"));
-			result.put("details", reportUsageService.getMonthlyDetailLogReport(username, applicationId, apiId, search,
-					pageable, year, month, showDeletedSubscription, keyType));
+			result.put("details", reportUsageService.getApiUsageSummaryBySubscription(username, subscriptionId, search,
+					pageable, year, month, keyType));
 
-			ApiResponse<?> response = ApiResponse.success("Monthly detail log retrieval successful.", result);
+			ApiResponse<?> response = ApiResponse.success("Data retrieval successful.", result);
 
-			LOGGER.info("API Monthly detail log retrieval completed");
+			LOGGER.info("API getReportAPIDetailBySubscriptionId retrieval completed");
 
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
@@ -112,10 +109,13 @@ public class ReportUsageController {
 	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
 			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
 			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
-	public ResponseEntity<?> getResourceSummary(@RequestParam(required = false) String search,
-			@RequestParam(required = false) String apiId, @RequestParam(required = false) String resource,
+	public ResponseEntity<?> getResourceSummary(
+			@RequestParam(required = false) String search,
+			@RequestParam(required = false) String apiId, 
+			@RequestParam(required = false) String resource,
 			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
-			@RequestParam(required = false) Integer year, @RequestParam(required = false) Integer month,
+			@RequestParam(required = false) Integer year, 
+			@RequestParam(required = false) Integer month,
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size, Authentication authentication) {
 

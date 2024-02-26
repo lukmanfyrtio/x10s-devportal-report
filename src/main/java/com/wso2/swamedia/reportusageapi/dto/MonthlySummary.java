@@ -29,6 +29,10 @@ public class MonthlySummary {
 		private BigInteger requestCount;
 		private String applicationId;
 		private String organization;
+		private String startDate;
+		private String endDate;
+		private String tierId;
+		private String subscriptionId;
 
 	}
 
