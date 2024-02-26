@@ -782,7 +782,7 @@ public class ReportUsageServiceImpl implements ReportUsageService {
 		return map;
 	}
 
-	public Map<String, Object> totalMonthlyDetailLog(String owner, String subscriptionId,
+	public Map<String, Object> getApiUsageStatsBySubscription(String owner, String subscriptionId,
 			String searchFilter, Integer year, Integer month, String keyType) {
 		String sql = QueryReport.totalMonthlyDetailLog(dbUtilsUser.getSchemaName(), getBillingSchema());
 
