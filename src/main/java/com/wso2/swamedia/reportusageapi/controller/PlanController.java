@@ -17,8 +17,16 @@ import com.wso2.swamedia.reportusageapi.dto.ApiResponse;
 import com.wso2.swamedia.reportusageapi.dto.SubPoliciesResponse;
 import com.wso2.swamedia.reportusageapi.utils.Utils;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/plan")
+@SecurityRequirement(name = "bearerAuth")
+@Tag(name = "Plan Controller", description = "APIs for Retrieve plans")
 public class PlanController {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(PlanController.class);
@@ -31,6 +39,10 @@ public class PlanController {
 	private Utils utils;
 
 	@GetMapping
+	@Operation(summary = "Get Plan by Subscription Type", description = "Retrieve plan information based on subscription type and API ID.")
+	@ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Plan not found", content = @Content(mediaType = "application/json")) })
 	public ResponseEntity<?> getPlanByPaidType(@RequestParam(value = "subsTypeId", required = true) Integer subsTypeId,
 			@RequestParam(value = "apiId", required = true) String apiId, Authentication authentication) {
 		LOGGER.info("Received request for get plan by payment type");

@@ -19,8 +19,15 @@ import com.wso2.swamedia.reportusageapi.dto.ApiResponse;
 import com.wso2.swamedia.reportusageapi.dto.TotalReportDashboard;
 import com.wso2.swamedia.reportusageapi.service.DashboardService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/dashboard")
+@Tag(name = "Dashboard Controller", description = "APIs for dashboard and reports")
+@SecurityRequirement(name = "bearerAuth")
 public class DashboardController {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DashboardController.class);
@@ -29,6 +36,9 @@ public class DashboardController {
 	private DashboardService dashboardService;
 
 	@GetMapping("/percentage-report")
+	@Operation(summary = "Get API Usage Percentage", description = "Retrieve the percentage report for API usage.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")) })
 	public ResponseEntity<?> getApiUsagePercentage(
 			@RequestParam(value = "top", required = false, defaultValue = "10") Integer top,
 			@RequestParam(value = "byApplication", required = false, defaultValue = "false") Boolean byApplication,
@@ -50,11 +60,12 @@ public class DashboardController {
 		}
 	}
 
-
-
 	@GetMapping("/api-usage")
-	public ResponseEntity<?> getDashboardApiUsageByDate(
-			@RequestParam("filter") String filter, @RequestParam(value = "top", defaultValue = "10") int top,
+	@Operation(summary = "Get Dashboard API Usage by Date", description = "Retrieve dashboard information for API usage based on date.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")) })
+	public ResponseEntity<?> getDashboardApiUsageByDate(@RequestParam("filter") String filter,
+			@RequestParam(value = "top", defaultValue = "10") int top,
 			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType) {
 		LOGGER.info("Received request for get api usage");
 		try {
@@ -69,8 +80,15 @@ public class DashboardController {
 	}
 
 	@GetMapping("/api-fault")
-	public ResponseEntity<?> getDashboardApiFaultByDate(
-			@RequestParam("filter") String filter) {
+	@Operation(
+		    summary = "Get Dashboard API Fault by Date",
+		    description = "Retrieve dashboard information for API fault based on date."
+		)
+		@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+		    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation",
+		        content = @Content(mediaType = "application/json"))
+		})
+	public ResponseEntity<?> getDashboardApiFaultByDate(@RequestParam("filter") String filter) {
 		LOGGER.info("Received request for get api fault");
 		try {
 			ApiResponse<?> response = ApiResponse.success("Api fault overtime retrieved successfully .",
@@ -84,6 +102,14 @@ public class DashboardController {
 	}
 
 	@GetMapping("/api-fault/details")
+	@Operation(
+		    summary = "Get Dashboard API Fault Details",
+		    description = "Retrieve detailed dashboard information for API fault based on date."
+		)
+		@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+		    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation",
+		        content = @Content(mediaType = "application/json"))
+		})
 	public ResponseEntity<?> getDashboardApiFaultDetails(Authentication authentication,
 			@RequestParam("filter") String filter, @RequestParam(required = false) String search,
 			@RequestParam(value = "page", defaultValue = "0") int page,
@@ -101,6 +127,14 @@ public class DashboardController {
 	}
 
 	@GetMapping("/total-report")
+	@Operation(
+		    summary = "Get Dashboard Total Report",
+		    description = "Retrieve the total report information for the dashboard."
+		)
+		@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+		    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation",
+		        content = @Content(mediaType = "application/json"))
+		})
 	public ResponseEntity<?> getDashboardTotalReport(Authentication authentication) {
 		LOGGER.info("Received request to retrieve the dashboard total report");
 		try {

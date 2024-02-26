@@ -7,13 +7,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector;
+import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig {
 
 	@Value("${spring.security.oauth2.resourceserver.opaque.introspection-uri}")
 	private String introspectionUrl;
@@ -24,18 +24,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Autowired
 	private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+	private static final String[] AUTH_WHITELIST = { "/swagger-resources", "/swagger-resources/**", "/configuration/ui",
+			"/configuration/security", "/swagger-ui.html", "/webjars/**", "/v3/api-docs/**", "/api/public/**",
+			"/api/public/authenticate", "**/actuator/*", "/swagger-ui/**","/actuator**" };
 
-	@Override
-	protected void configure(HttpSecurity http) throws Exception {
-		http.authorizeRequests().antMatchers("/**")
-				.authenticated().anyRequest().permitAll().and().exceptionHandling()
-				.authenticationEntryPoint(customAuthenticationEntryPoint).and().oauth2ResourceServer().opaqueToken()
-				.introspector(introspector());
-
+	@Bean
+	protected SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+		http.authorizeRequests(requests -> requests
+				.antMatchers(AUTH_WHITELIST).permitAll().anyRequest().authenticated())
+				.exceptionHandling(handling -> handling.authenticationEntryPoint(customAuthenticationEntryPoint))
+				.oauth2ResourceServer(server -> server.opaqueToken().introspector(introspector()));
+		return http.build();
 	}
 
 	@Bean
-	public OpaqueTokenIntrospector introspector() {
+	protected OpaqueTokenIntrospector introspector() {
 		return new CustomOpaqueTokenIntrospector(introspectionUrl, clientId, clientSecret);
 	}
 

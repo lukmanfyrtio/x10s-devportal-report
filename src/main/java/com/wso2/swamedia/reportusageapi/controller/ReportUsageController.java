@@ -26,8 +26,14 @@ import com.wso2.swamedia.reportusageapi.dto.ApiResponse;
 import com.wso2.swamedia.reportusageapi.service.ReportUsageService;
 import com.wso2.swamedia.reportusageapi.utils.Utils;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
-//@RequestMapping("/report")
+@Tag(name = "Report Usage Controller", description = "APIs for reporting usage summary")
+@SecurityRequirement(name = "bearerAuth")
 public class ReportUsageController {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ReportUsageController.class);
@@ -36,13 +42,15 @@ public class ReportUsageController {
 	private ReportUsageService reportUsageService;
 
 	@GetMapping("/monthly-summary")
-	public ResponseEntity<?> getMonthlySummary(
-			@RequestParam(required = false) String applicationId,
+	@Operation(summary = "Get Monthly Summary", description = "Retrieve a monthly summary of usage.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
+	public ResponseEntity<?> getMonthlySummary(@RequestParam(required = false) String applicationId,
 			@RequestParam(required = false) String search, @RequestParam(required = false) String apiId,
-			@RequestParam(required = false) String organization, 
+			@RequestParam(required = false) String organization,
 			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
-			@RequestParam(required = false) Integer year,
-			@RequestParam(required = false) Integer month, 
+			@RequestParam(required = false) Integer year, @RequestParam(required = false) Integer month,
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size) {
 		try {
@@ -56,6 +64,10 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/monthly-summary/details")
+	@Operation(summary = "Get Monthly Summary Details", description = "Retrieve detailed monthly summary of API data usage.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
 	public ResponseEntity<?> getApiDataUsage(@RequestParam(required = false) Integer year,
 			@RequestParam(required = false) Integer month, @RequestParam(value = "applicationId") String applicationId,
 			@RequestParam(value = "apiId") String apiId,
@@ -96,17 +108,17 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/resource-summary")
-	public ResponseEntity<?> getResourceSummary(
-			@RequestParam(required = false) String search, 
-			@RequestParam(required = false) String apiId, 
-			@RequestParam(required = false) String resource,
+	@Operation(summary = "Get Resource Summary", description = "Retrieve resource summary information.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
+	public ResponseEntity<?> getResourceSummary(@RequestParam(required = false) String search,
+			@RequestParam(required = false) String apiId, @RequestParam(required = false) String resource,
 			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
-			@RequestParam(required = false) Integer year,
-			@RequestParam(required = false) Integer month,
+			@RequestParam(required = false) Integer year, @RequestParam(required = false) Integer month,
 			@RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size,
-			Authentication authentication) {
-		
+			@RequestParam(value = "size", defaultValue = "10") int size, Authentication authentication) {
+
 		try {
 			ApiResponse<?> response = ApiResponse.success("Resource summary retrieval successful.",
 					reportUsageService.getResourceReport(year, month, resource, apiId, page, size, search, keyType));
@@ -119,6 +131,10 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/resource-summary/details")
+	@Operation(summary = "Get Resource Detail Log", description = "Retrieve detailed log information for a specific resource and API.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
 	public ResponseEntity<?> getResourceDetailLog(@RequestParam(value = "resource") String resource,
 			@RequestParam(value = "apiId") String apiId,
 			@RequestParam(value = "search", required = false) String search,
@@ -138,7 +154,7 @@ public class ReportUsageController {
 			Pageable pageable = PageRequest.of(page, size);
 			ApiResponse<?> response = ApiResponse.success("Resource detail log retrieval successful.",
 					reportUsageService.getDetailLogResourceSum(username, resource, apiId, search, pageable,
-							showDeletedSubscription,keyType));
+							showDeletedSubscription, keyType));
 
 			LOGGER.info("Resource detail log retrieval completed");
 
@@ -150,15 +166,17 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/backend-api")
-	public ResponseEntity<?> getBackendAPIUsage(
-			@RequestParam(required = false) String apiId,
-			@RequestParam(required = false) String search, 
+	@Operation(summary = "Get Backend API Usage", description = "Retrieve information about the usage of backend APIs.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
+	public ResponseEntity<?> getBackendAPIUsage(@RequestParam(required = false) String apiId,
+			@RequestParam(required = false) String search,
 			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
-			@RequestParam(required = false) Integer year,
-			@RequestParam(required = false) Integer month, 
+			@RequestParam(required = false) Integer year, @RequestParam(required = false) Integer month,
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size) {
-		
+
 		if (!Utils.isAdmin()) {
 			ApiResponse<Resource> response = ApiResponse.error("You do not have permission to access this API.");
 			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -180,10 +198,12 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/error-summary")
-	public ResponseEntity<?> getErrorSummary(
-			@RequestParam(required = false) String search,
-			@RequestParam(required = false) String apiId,
-			@RequestParam(required = false) String version, 
+	@Operation(summary = "Get Error Summary", description = "Retrieve summary information for errors.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
+	public ResponseEntity<?> getErrorSummary(@RequestParam(required = false) String search,
+			@RequestParam(required = false) String apiId, @RequestParam(required = false) String version,
 			@RequestParam(required = false, defaultValue = "false") boolean asPercent,
 			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
 			@RequestParam(value = "page", defaultValue = "0") int page,
@@ -198,7 +218,7 @@ public class ReportUsageController {
 		try {
 			Pageable pageable = PageRequest.of(page, size);
 			ApiResponse<?> response = ApiResponse.success("Error summary retrieval successful.",
-					reportUsageService.getErrorSummary(apiId, version, asPercent, search, pageable,keyType));
+					reportUsageService.getErrorSummary(apiId, version, asPercent, search, pageable, keyType));
 
 			LOGGER.info("Error summary retrieval completed");
 
@@ -210,9 +230,13 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/backend-api/details")
+	@Operation(summary = "Get Backend API Usage Details", description = "Retrieve detailed information for a specific backend API.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
 	public ResponseEntity<?> getBackendAPIUsageDetails(@RequestParam(required = false) String apiId,
 			@RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size, 
+			@RequestParam(value = "size", defaultValue = "10") int size,
 			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
 			Authentication authentication) {
 
@@ -243,11 +267,14 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/apis")
+	@Operation(summary = "Get List of API Names", description = "Retrieve the list of API names based on optional parameters.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
 	public ResponseEntity<?> getListAPIName(@RequestParam(value = "username", required = false) String username,
 			@RequestParam(value = "organization", required = false) String organization) {
 		LOGGER.info("Received request to get the list of API names");
-		
-		
+
 		try {
 			List<Map<String, Object>> apiNames = reportUsageService.getApis(organization);
 			ApiResponse<List<Map<String, Object>>> response = ApiResponse.success("API names retrieved successfully",
@@ -260,12 +287,16 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/resources")
+	@Operation(summary = "Get List of API Resources", description = "Retrieve the list of resources for a specific API.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
 	public ResponseEntity<?> getListAPIResource(@RequestParam(value = "apiId") String apiId,
 			Authentication authentication) {
-		
+
 		LOGGER.info("Received request to get the list of resources for API with ID: {}", apiId);
 		try {
-			List<Map<String, Object>> apiResources = reportUsageService.getApiResourceByAPI( apiId);
+			List<Map<String, Object>> apiResources = reportUsageService.getApiResourceByAPI(apiId);
 			ApiResponse<List<Map<String, Object>>> response = ApiResponse
 					.success("API resources retrieved successfully", apiResources);
 			return ResponseEntity.ok(response);
@@ -276,7 +307,11 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/versions")
-	public ResponseEntity<?> getListAPIResource(@RequestParam(value = "apiName") String apiName) {
+	@Operation(summary = "Get List of API Versions", description = "Retrieve the list of versions for a specific API.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
+	public ResponseEntity<?> getListAPIVersions(@RequestParam(value = "apiName") String apiName) {
 		LOGGER.info("Received request to get the list of versions for API with NAME: {}", apiName);
 		try {
 			List<Map<String, Object>> apiResources = reportUsageService.getVersions(apiName);
@@ -290,6 +325,10 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/years")
+	@Operation(summary = "Get List of Years", description = "Retrieve the list of available years for reporting.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
 	public ResponseEntity<?> getListYear() {
 		try {
 			ApiResponse<?> response = ApiResponse.success("Years retrieved successfully",
@@ -302,9 +341,12 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/months")
-	public ResponseEntity<?> getListMonth(@RequestParam(value = "year") int year,Authentication authentication) {
-		
-		
+	@Operation(summary = "Get List of Months", description = "Retrieve the list of available months for reporting.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
+	public ResponseEntity<?> getListMonth(@RequestParam(value = "year") int year, Authentication authentication) {
+
 		LOGGER.info("Received request to get the list of months for year: {}", year);
 		try {
 			ApiResponse<?> response = ApiResponse.success("Months retrieved successfully",
@@ -317,6 +359,10 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/customers")
+	@Operation(summary = "Get List of Customers", description = "Retrieve the list of available Customers for reporting.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
 	public ResponseEntity<?> getListCustomers() {
 		LOGGER.info("Received request to get the list of customers");
 		try {
@@ -330,6 +376,10 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/v2/customers")
+	@Operation(summary = "Get List of Customers V2", description = "Retrieve the list of available Customers for reporting V2.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
 	public ResponseEntity<?> getListCustomersv2(@RequestParam(value = "username", required = false) String username) {
 		LOGGER.info("Received request to get the list of customers");
 		try {
@@ -355,8 +405,11 @@ public class ReportUsageController {
 	}
 
 	@GetMapping("/subscriptions/remaining")
-	public ResponseEntity<?> getRemainingSubscriptions(
-			@RequestParam(value = "page", defaultValue = "0") int page,
+	@Operation(summary = "Get Remaining Subscriptions", description = "Retrieve information about remaining subscriptions.")
+	@io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(mediaType = "application/json")),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Data not found", content = @Content(mediaType = "application/json")) })
+	public ResponseEntity<?> getRemainingSubscriptions(@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size) {
 
 		LOGGER.info("Received request for remaining subscriptions.");

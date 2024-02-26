@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme;
 
 @OpenAPIDefinition( 
 //		servers = {@Server(url = "https://apicentrum.store/v1/api/publisher")},
-info = @Info(title = "APICentrum Devportal Report", description = "This is REST API for Revamp WSO2 Devportal", version = "v1.0"))
+info = @Info(title = "APICentrum Report Devportal", description = "This is REST API for Revamp WSO2 Report Devportal", version = "v1.0"))
 @SecurityScheme(
 	    name = "bearerAuth",
 	    type = SecuritySchemeType.HTTP,
