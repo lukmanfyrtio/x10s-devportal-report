@@ -19,6 +19,11 @@ public class ResourceSummaryDetails {
 	private BigInteger responseNOK;
 	private String applicationOwner;
 	private String organization;
+	private String startDate;
+	private String endDate;
+	private String tierId;
+	private String subscriptionId;
+	private String subsTypeId;
 
 
 }

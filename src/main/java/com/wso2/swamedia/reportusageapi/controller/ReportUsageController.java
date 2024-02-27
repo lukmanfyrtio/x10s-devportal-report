@@ -121,7 +121,7 @@ public class ReportUsageController {
 
 		try {
 			ApiResponse<?> response = ApiResponse.success("Resource summary retrieval successful.",
-					reportUsageService.getResourceReport(year, month, resource, apiId, page, size, search, keyType));
+					reportUsageService.getResourceUsageReport(year, month, resource, apiId, page, size, search, keyType));
 
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
@@ -140,7 +140,6 @@ public class ReportUsageController {
 			@RequestParam(value = "search", required = false) String search,
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size,
-			@RequestParam(required = false, defaultValue = "false") Boolean showDeletedSubscription,
 			@RequestParam(value = "keyType", required = false, defaultValue = "PRODUCTION") String keyType,
 			Authentication authentication) {
 
@@ -153,8 +152,7 @@ public class ReportUsageController {
 		try {
 			Pageable pageable = PageRequest.of(page, size);
 			ApiResponse<?> response = ApiResponse.success("Resource detail log retrieval successful.",
-					reportUsageService.getDetailLogResourceSum(username, resource, apiId, search, pageable,
-							showDeletedSubscription, keyType));
+					reportUsageService.getResourcesUsageDetails(username, resource, apiId, search, pageable, keyType));
 
 			LOGGER.info("Resource detail log retrieval completed");
 

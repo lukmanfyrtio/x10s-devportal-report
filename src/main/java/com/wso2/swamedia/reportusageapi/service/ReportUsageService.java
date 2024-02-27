@@ -27,11 +27,11 @@ public interface ReportUsageService {
 	public Page<MonthlySummaryDetails> getApiUsageSummaryBySubscription(String owner, String subscriptionId,
 			String searchFilter, Pageable pageable, Integer year, Integer month, String keyType);
 
-	public ResourceSummary getResourceReport(Integer year, Integer month, String resource, String apiId, int page,
+	public ResourceSummary getResourceUsageReport(Integer year, Integer month, String resource, String apiId, int page,
 			int size, String search, String keyType);
 
-	public Page<ResourceSummaryDetails> getDetailLogResourceSum(String owner, String resource, String apiId,
-			String searchFilter, Pageable pageable, Boolean showDeletedSubscription, String keyType) throws Exception;
+	public Page<ResourceSummaryDetails> getResourcesUsageDetails(String owner, String resource, String apiId,
+			String searchFilter, Pageable pageable, String keyType) throws Exception;
 
 	public List<DashboardPercentageDTO> getApiUsageByApi(LocalDate startDate, LocalDate endDate, String username);
 
@@ -87,14 +87,6 @@ public interface ReportUsageService {
 	public Page<MonthlySummaryDetails> fetchMonthlyDetailLogData(Pageable pageable, String owner, String subscriptionId,
 			String searchFilter, Integer year, Integer month, String keyType);
 
-	public Map<String, Object> getResourceSumTotalData(Integer year, Integer month, String apiId, String resource,
-			String keyType);
-
-	public Page<ResourceSummary.ApiDetails> getResourceSumListData(Integer year, Integer month, String apiId,
-			String resource, String search, Pageable pageable, String keyType);
-
-	public Page<ResourceSummaryDetails> getDetailLogResourceSum(Pageable pageable, String owner, String resource,
-			String apiId, String searchFilter, Boolean showDeleted, String keyType);
 
 	public String buildCountQuery(String originalQuery);
 }

@@ -194,13 +194,12 @@ public class QueryReport {
 				+ "FROM DATA_USAGE_API " + "LEFT JOIN " + dbBillingSchema
 				+ ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
 				+"WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-				+" AND (:isAdmin = true OR s.is_active = true) "
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
 				+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
 				+ "AND DATA_USAGE_API.KEY_TYPE = :keyType "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
-				+ "AND (:resource IS NULL OR API_RESOURCE_TEMPLATE = :resource)";
+				+ "AND (:resource IS NULL OR API_RESOURCE_TEMPLATE = :resource) AND s.subscription_id is not null ";
 		return sql;
 	}
 
@@ -263,10 +262,10 @@ public class QueryReport {
 
 	public static String getResourceSumListDataBaseSql(String dbUserSchema, String dbBillingSchema) {
 		String baseSql = "SELECT API_NAME, API_VERSION, API_RESOURCE_TEMPLATE, API_METHOD, "
-				+ "COUNT(*) AS request_count, DATA_USAGE_API.API_ID " + "FROM DATA_USAGE_API " + "LEFT JOIN "
+				+ "COUNT(*) AS request_count, DATA_USAGE_API.API_ID " 
+				+ "FROM DATA_USAGE_API " + "LEFT JOIN "
 				+ dbBillingSchema + ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
 				+"WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-				+"AND (:isAdmin = true OR s.is_active = true) "
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
 				+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
@@ -274,7 +273,7 @@ public class QueryReport {
 				+ "AND (:resource IS NULL OR API_RESOURCE_TEMPLATE = :resource) "
 				+ "AND DATA_USAGE_API.KEY_TYPE = :keyType "
 				+ "AND (:search IS NULL OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :search, '%')) "
-				+ "OR LOWER(API_RESOURCE_TEMPLATE) LIKE LOWER(CONCAT('%', :search, '%'))) ";
+				+ "OR LOWER(API_RESOURCE_TEMPLATE) LIKE LOWER(CONCAT('%', :search, '%'))) AND s.subscription_id is not null ";
 		return baseSql;
 	}
 	
@@ -283,7 +282,6 @@ public class QueryReport {
 				+ "FROM DATA_USAGE_API " + "LEFT JOIN " + dbBillingSchema
 				+ ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
 				+"WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-				+"AND (:isAdmin = true OR s.is_active = true) "
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
 				+ "AND (:apiId IS NULL OR DATA_USAGE_API.API_ID = :apiId) "
@@ -296,23 +294,25 @@ public class QueryReport {
 	}
 	
 	public static String getDetailLogResourceSumBaseSQl(String dbUserSchema, String dbBillingSchema) {
-		String baseSql = "SELECT APPLICATION_NAME, API_NAME, COUNT(*) AS request_count, "
+		String baseSql = "SELECT APPLICATION_NAME, "
+				+ "API_NAME, COUNT(*) AS request_count, "
 				+ "COUNT(CASE WHEN PROXY_RESPONSE_CODE BETWEEN 200 AND 299 THEN 1 END) AS count_200, "
 				+ "COUNT(CASE WHEN PROXY_RESPONSE_CODE NOT BETWEEN 200 AND 299 THEN 1 END) AS count_not_200, "
 				+ "DATA_USAGE_API.API_ID, APPLICATION_ID, APPLICATION_OWNER, attr.UM_ATTR_VALUE AS organization "
-				+ "FROM DATA_USAGE_API " + "LEFT JOIN " + dbBillingSchema
+				+ ",s.start_date as startDate ,s.end_date as endDate ,s.tier_id as tierId ,s.subscription_id as subscriptionId,s.subs_type_id "
+				+ "FROM DATA_USAGE_API " 
+				+ "LEFT JOIN " + dbBillingSchema
 				+ ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID " + "LEFT JOIN "
 				+ dbUserSchema + ".UM_USER uu ON DATA_USAGE_API.APPLICATION_OWNER = uu.UM_USER_NAME "
 				+ "LEFT JOIN " + dbUserSchema
 				+ ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID AND attr.UM_ATTR_NAME = 'organizationName' "
 				+"WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-				+"AND (:isAdmin = true OR s.is_active = true) "
 				+ "AND API_RESOURCE_TEMPLATE = :resource "
 				+ "AND DATA_USAGE_API.API_ID = :apiId "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "
 				+ "AND DATA_USAGE_API.KEY_TYPE = :keyType "
 				+ "AND (:searchFilter IS NULL OR LOWER(APPLICATION_NAME) LIKE LOWER(CONCAT('%', :searchFilter, '%')) "
-				+ "OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :searchFilter, '%'))) ";
+				+ "OR LOWER(API_NAME) LIKE LOWER(CONCAT('%', :searchFilter, '%'))) AND s.subscription_id is not null ";
 		return baseSql;
 	}
 	
