@@ -95,6 +95,11 @@ public class Utils {
 		}
 	}
 	
+	public static String getSubsTypeName(int subsTypeId) {
+		return subsTypeId == 1 ? "PRE-PAID" : subsTypeId==2?"POST-PAID":"NON-MONETIZATION";
+
+	}
+	
 	public String getTokenFromSecurityContext() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

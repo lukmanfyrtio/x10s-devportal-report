@@ -177,6 +177,7 @@ public class ReportUsageServiceImpl implements ReportUsageService {
 	            apiDetails.setEndDate(rs.getString("endDate"));
 	            apiDetails.setTierId(rs.getString("tierId"));
 	            apiDetails.setSubscriptionId(rs.getString("subscriptionId"));
+	            apiDetails.setSubsTypeId(Utils.getSubsTypeName(Integer.valueOf(rs.getString("subs_type_id"))));
 	            return apiDetails;
 	        });
 

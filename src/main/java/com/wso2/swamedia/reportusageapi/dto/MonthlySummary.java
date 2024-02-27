@@ -33,6 +33,7 @@ public class MonthlySummary {
 		private String endDate;
 		private String tierId;
 		private String subscriptionId;
+		private String subsTypeId;
 
 	}
 

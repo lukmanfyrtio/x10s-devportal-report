@@ -72,7 +72,7 @@ public class QueryReport {
 		// Construct the SQL query
 		String sql = "SELECT DATA_USAGE_API.API_NAME, DATA_USAGE_API.API_VERSION, APPLICATION_OWNER, DATA_USAGE_API.API_ID, APPLICATION_NAME, "
 				+ "COUNT(*) AS total_row_count, APPLICATION_ID, attr.UM_ATTR_VALUE "
-				+ ",s.start_date as startDate ,s.end_date as endDate ,s.tier_id as tierId ,s.subscription_id as subscriptionId " 
+				+ ",s.start_date as startDate ,s.end_date as endDate ,s.tier_id as tierId ,s.subscription_id as subscriptionId,s.subs_type_id  " 
 				+ "FROM DATA_USAGE_API "
 				+ "LEFT JOIN " + dbBillingSchema
 				+ ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID " 
@@ -95,7 +95,7 @@ public class QueryReport {
 				+ "OR LOWER(APPLICATION_NAME) LIKE LOWER(CONCAT('%', :search, '%'))) "
 				+ "AND DATA_USAGE_API.KEY_TYPE = :keyType AND s.subscription_id is not null "
 				+ "GROUP BY DATA_USAGE_API.APPLICATION_ID, API_NAME, API_VERSION, DATA_USAGE_API.APPLICATION_OWNER, DATA_USAGE_API.API_ID, APPLICATION_NAME, attr.UM_ATTR_VALUE,"
-				+ "s.start_date ,s.end_date ,s.tier_id ,s.subscription_id 	 "
+				+ "s.start_date ,s.end_date ,s.tier_id ,s.subscription_id ,s.subs_type_id	 "
 				+ "ORDER BY API_ID, APPLICATION_NAME";
 
 		return sql;
