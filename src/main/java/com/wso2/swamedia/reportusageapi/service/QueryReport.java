@@ -47,7 +47,6 @@ public class QueryReport {
 				+ ") AS DATA_USAGE ON subs.subscription_id  = DATA_USAGE.SUBSCRIPTION_UUID " + "WHERE "
 				+ "AM_POLICY_SUBSCRIPTION.BILLING_PLAN != 'FREE' "
 				+" AND (subs.tenant_domain = :tenantDomain) "
-				+" AND (:isAdmin = true OR subs.is_active = true) "
 				+" AND (:isAdmin = true OR AM_SUBSCRIBER.CREATED_BY  = true) "
 				+ "ORDER BY REMAINING_DAYS ASC, REMAINING_QUOTA DESC, API_USAGE DESC;";
 
@@ -83,7 +82,6 @@ public class QueryReport {
 				+ dbUserSchema
 				+ ".UM_USER_ATTRIBUTE attr ON uu.UM_ID = attr.UM_USER_ID AND attr.UM_ATTR_NAME = 'organizationName' "
 				+"WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-//				+ " AND (:isAdmin = true OR s.is_active = true) "
 				+ "AND (:isAdmin = true OR APPLICATION_OWNER = :username) "
 				+ "AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) "
 				+ "AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) "
@@ -120,7 +118,6 @@ public class QueryReport {
 				.append("AND DATA_USAGE_API.KEY_TYPE = :keyType ")
 				.append("AND (:year IS NULL OR YEAR(REQUEST_TIMESTAMP) = :year) ")
 				.append("AND (:month IS NULL OR MONTH(REQUEST_TIMESTAMP) = :month) ")
-//				.append("AND (:isAdmin = true OR s.is_active = true) ")
 				.append("AND (:isAdmin = true OR APPLICATION_OWNER = :username) ")
 				.append("AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') AND s.subscription_id is not null");
 
@@ -320,7 +317,6 @@ public class QueryReport {
 		String countSql = "SELECT COUNT(DISTINCT APPLICATION_ID) " + "FROM DATA_USAGE_API " + "LEFT JOIN "
 				+ dbBillingSchema + ".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID "
 				+"WHERE (API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-				+"AND (:isAdmin = true OR s.is_active = true) "
 				+ "AND API_RESOURCE_TEMPLATE = :resource "
 				+ "AND DATA_USAGE_API.API_ID = :apiId "
 				+ "AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN') "

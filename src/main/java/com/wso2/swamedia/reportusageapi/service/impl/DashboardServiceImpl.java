@@ -72,8 +72,6 @@ public class DashboardServiceImpl implements DashboardService{
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 					+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-					+ " AND (:isAdmin = true  OR s.is_active = true) "
-					+ " AND (:isAdmin = true  OR du.APPLICATION_OWNER = :username) "
 					+ " AND DATE(du.REQUEST_TIMESTAMP) = CURDATE() " 
 					+ " AND du.KEY_TYPE = :keyType "
 					+ " AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
@@ -93,7 +91,6 @@ public class DashboardServiceImpl implements DashboardService{
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 					+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-					+ " AND (:isAdmin = true  OR s.is_active = true) "
 					+ " AND (:isAdmin = true  OR du.APPLICATION_OWNER = :username) "
 					+ " AND YEARWEEK(du.REQUEST_TIMESTAMP) = YEARWEEK(CURDATE()) "
 					+ " AND du.KEY_TYPE = :keyType "
@@ -111,7 +108,6 @@ public class DashboardServiceImpl implements DashboardService{
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 					+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-					+ " AND (:isAdmin = true  OR s.is_active = true) "
 					+ " AND (:isAdmin = true  OR du.APPLICATION_OWNER = :username) "
 					+ " AND YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
 					+ " AND MONTH(du.REQUEST_TIMESTAMP) = MONTH(CURDATE()) "
@@ -134,7 +130,6 @@ public class DashboardServiceImpl implements DashboardService{
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 					+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) AND "
-					+ " (:isAdmin = true  OR s.is_active = true) AND "
 					+ " (:isAdmin = true  OR du.APPLICATION_OWNER = :username) "
 					+ " AND YEAR(du.REQUEST_TIMESTAMP) = YEAR(CURDATE()) "
 					+ " AND du.KEY_TYPE = :keyType "
@@ -305,7 +300,6 @@ public class DashboardServiceImpl implements DashboardService{
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 						+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-						+ "AND (:isAdmin = true  OR s.is_active = true) "
 						+ "AND (:isAdmin = true  OR du.APPLICATION_OWNER = :username) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
@@ -319,7 +313,6 @@ public class DashboardServiceImpl implements DashboardService{
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 						+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-						+ "AND (:isAdmin = true  OR s.is_active = true) "
 						+ "AND (:isAdmin = true  OR du.APPLICATION_OWNER = :username) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
@@ -333,7 +326,6 @@ public class DashboardServiceImpl implements DashboardService{
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 						+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-						+ "AND (:isAdmin = true  OR s.is_active = true) "
 						+ "AND (:isAdmin = true  OR du.APPLICATION_OWNER = :username) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
@@ -348,7 +340,6 @@ public class DashboardServiceImpl implements DashboardService{
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 						+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-						+ "AND (:isAdmin = true  OR s.is_active = true) "
 						+ "AND (:isAdmin = true  OR du.APPLICATION_OWNER = :username) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
@@ -363,7 +354,6 @@ public class DashboardServiceImpl implements DashboardService{
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 						+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-						+ "AND (:isAdmin = true  OR s.is_active = true) "
 						+ "AND (:isAdmin = true  OR du.APPLICATION_OWNER = :username) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
@@ -378,7 +368,6 @@ public class DashboardServiceImpl implements DashboardService{
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 						+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-						+ "AND (:isAdmin = true  OR s.is_active = true) "
 						+ "AND (:isAdmin = true  OR du.APPLICATION_OWNER = :username) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
@@ -393,7 +382,6 @@ public class DashboardServiceImpl implements DashboardService{
 						+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 						+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 						+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-						+ "AND (:isAdmin = true  OR s.is_active = true) "
 						+ "AND (:isAdmin = true  OR du.APPLICATION_OWNER = :username) "
 	                    + "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') "
 	                    + "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
@@ -493,7 +481,6 @@ public class DashboardServiceImpl implements DashboardService{
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 					+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-					+ "AND (:isAdmin = true  OR s.is_active = true) "
 					+ "AND (:isAdmin = true  OR du.APPLICATION_OWNER = :username) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
 					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
@@ -508,7 +495,6 @@ public class DashboardServiceImpl implements DashboardService{
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 					+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-					+ "AND (:isAdmin = true  OR s.is_active = true) "
 					+ "AND (:isAdmin = true  OR du.APPLICATION_OWNER = :username) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
 					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
@@ -522,7 +508,6 @@ public class DashboardServiceImpl implements DashboardService{
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 					+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-					+ "AND (:isAdmin = true  OR s.is_active = true) "
 					+ "AND (:isAdmin = true  OR du.APPLICATION_OWNER = :username) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
 					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
@@ -538,7 +523,6 @@ public class DashboardServiceImpl implements DashboardService{
 					+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on "
 					+ "s.subscription_id = du.SUBSCRIPTION_UUID "
 					+ "WHERE (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-					+ "AND (:isAdmin = true  OR s.is_active = true) "
 					+ "AND (:isAdmin = true  OR du.APPLICATION_OWNER = :username) "
 					+ "AND du.APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') " 
 					+ "AND NOT (du.PROXY_RESPONSE_CODE BETWEEN 200 AND 299) "
@@ -705,7 +689,6 @@ public class DashboardServiceImpl implements DashboardService{
 		         .append("        LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
 		         .append("        WHERE 1 = 1\n")
 		         .append("    AND (API_CREATOR_TENANT_DOMAIN = :tenantDomain)\n")
-		         .append("    AND (:isAdmin = true  OR s.is_active = true)\n")
 		         .append("    AND (:isAdmin = true  OR DATA_USAGE_API.APPLICATION_OWNER = :username)\n")
 		         .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
 		         .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
@@ -715,7 +698,6 @@ public class DashboardServiceImpl implements DashboardService{
 		         .append("    LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
 		         .append("WHERE 1 = 1\n")
 		         .append("    AND (API_CREATOR_TENANT_DOMAIN = :tenantDomain)\n")
-		         .append("    AND (:isAdmin = true  OR s.is_active = true)\n")
 		         .append("    AND (:isAdmin = true  OR DATA_USAGE_API.APPLICATION_OWNER = :username)\n")
 		         .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
 		         .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
@@ -750,7 +732,6 @@ public class DashboardServiceImpl implements DashboardService{
 	         .append("            LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
 	         .append("            WHERE 1=1\n")
 	         .append("    AND (API_CREATOR_TENANT_DOMAIN = :tenantDomain)\n")
-	         .append("    AND (:isAdmin = true  OR s.is_active = true)\n")
 	         .append("    AND (:isAdmin = true  OR DATA_USAGE_API.APPLICATION_OWNER = :username)\n")
 	         .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
 	         .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
@@ -761,7 +742,6 @@ public class DashboardServiceImpl implements DashboardService{
 	         .append("    LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
 	         .append("WHERE 1=1\n")
 	         .append("    AND (API_CREATOR_TENANT_DOMAIN = :tenantDomain)\n")
-	         .append("    AND (:isAdmin = true  OR s.is_active = true)\n")
 	         .append("    AND (:isAdmin = true  OR DATA_USAGE_API.APPLICATION_OWNER = :username)\n")
 	         .append("    AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
 	         .append("    AND APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
@@ -805,7 +785,6 @@ public class DashboardServiceImpl implements DashboardService{
 	         .append("            LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s ON s.subscription_id = DATA_USAGE_API.SUBSCRIPTION_UUID\n")
 	         .append("        WHERE\n")
 	         .append("    		  (DATA_USAGE_API.API_CREATOR_TENANT_DOMAIN = :tenantDomain)\n")
-	         .append("    		  AND (:isAdmin = true  OR s.is_active = true)\n")
 	         .append("    		  AND (:isAdmin = true  OR DATA_USAGE_API.APPLICATION_OWNER = :username)\n")
 	         .append("            AND DATA_USAGE_API.APPLICATION_OWNER NOT IN ('anonymous', 'internal-key-app', 'UNKNOWN')\n")
 	         .append("    		  AND (:keyType IS NULL OR DATA_USAGE_API.KEY_TYPE = :keyType)\n")
@@ -941,9 +920,8 @@ public class DashboardServiceImpl implements DashboardService{
 				+ "LEFT JOIN "+dbUtilsBilling.getSchemaName()+".subscription s on s.subscription_id = DATA_USAGE_API.subscription_id "
 				+ "WHERE DATA_USAGE_API.PROXY_RESPONSE_CODE BETWEEN 200 AND 299  "
 				+ " AND (du.API_CREATOR_TENANT_DOMAIN = :tenantDomain) "
-				+ " AND (:isAdmin = true  OR s.is_active = true) "
 				+ " AND (:isAdmin = true  OR DATA_USAGE_API.APPLICATION_OWNER = :username) "
-				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') AND s.is_active = 1";
+				+ "AND APPLICATION_OWNER NOT IN ('anonymous','internal-key-app','UNKNOWN') ";
 
 		try {
 			// Create parameters for the named query
